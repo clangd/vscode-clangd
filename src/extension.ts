@@ -151,7 +151,7 @@ export function activate(context: vscode.ExtensionContext) {
   console.log('Clang Language Server is now active!');
   context.subscriptions.push(clangdClient.start());
   context.subscriptions.push(vscode.commands.registerCommand(
-      'clangd-vscode.switchheadersource', async () => {
+      'clangd.switchheadersource', async () => {
         const uri =
             vscode.Uri.file(vscode.window.activeTextEditor.document.fileName);
         if (!uri) {
@@ -186,5 +186,5 @@ export function activate(context: vscode.ExtensionContext) {
   // An empty place holder for the activate command, otherwise we'll get an
   // "command is not registered" error.
   context.subscriptions.push(vscode.commands.registerCommand(
-      'clangd-vscode.activate', async () => {}));
+      'clangd.activate', async () => {}));
 }

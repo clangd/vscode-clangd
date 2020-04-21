@@ -27,7 +27,7 @@
         "onLanguage:cuda",
         "onLanguage:objective-c",
         "onLanguage:objective-cpp",
-        "onCommand:clangd-vscode.activate"
+        "onCommand:clangd.activate"
     ],
     "main": "./out/src/extension",
     "scripts": {
@@ -112,17 +112,17 @@
         },
         "commands": [
             {
-                "command": "clangd-vscode.switchheadersource",
+                "command": "clangd.switchheadersource",
                 "title": "Switch between Source/Header"
             },
             {
-                "command": "clangd-vscode.activate",
+                "command": "clangd.activate",
                 "title": "Manually activate clangd extension"
             }
         ],
         "keybindings": [
             {
-                "command": "clangd-vscode.switchheadersource",
+                "command": "clangd.switchheadersource",
                 "key": "Alt+o",
                 "mac": "Alt+cmd+o",
                 "when": "editorTextFocus"

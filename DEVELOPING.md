@@ -15,7 +15,7 @@ point to the binary.
 3. To start a development instance of VS code extended with this, run:
 
 ```bash
-   $ cd clangd-vscode
+   $ cd vscode-clangd
    $ npm install
    $ code .
    # When VSCode starts, press <F5>.
@@ -28,7 +28,7 @@ recommend to run `npm run format` before sending a patch.
 
 # Publish to VS Code Marketplace
 
-New changes to `clangd-vscode` are not released until a new version is published
+New changes to `vscode-clangd` are not released until a new version is published
 to the marketplace.
 
 ## Requirements
@@ -44,7 +44,7 @@ contact clangd-dev@lists.llvm.org.
 ## Steps
 
 ```bash
-  $ cd clangd-vscode
+  $ cd vscode-clangd
   # For the first time, you need to login into the account. vsce will ask you
     for the Personal Access Token and will remember it for future commands.
   $ vsce login llvm-vs-code-extensions
