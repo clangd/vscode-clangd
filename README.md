@@ -1,4 +1,4 @@
-# vscode-clangd
+# clangd
 
 Provides C/C++ language IDE features for VS Code using [clangd](https://clang.llvm.org/extra/clangd.html):
 
@@ -15,8 +15,7 @@ Provides C/C++ language IDE features for VS Code using [clangd](https://clang.ll
 
 `clangd` is a language server that must be installed separately, see
 [getting started](https://clang.llvm.org/extra/clangd/Installation.html#installing-clangd).
-The vscode-clangd extension will look for `clangd` on your PATH (you can change
-this in the settings).
+The extension will look for `clangd` on your PATH (you can change this in the settings).
 
 ### Project setup
 
@@ -96,7 +95,7 @@ Current refactorings include:
 
 ## Bugs/contributing
 
-clangd and vscode-clangd are part of the [LLVM project](https://llvm.org).
+clangd is part of the [LLVM project](https://llvm.org).
 
 If you'd like to help out, reach out to clangd-dev@lists.llvm.org.
 
