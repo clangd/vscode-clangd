@@ -35,8 +35,8 @@
         "compile": "tsc -watch -p ./",
         "format": "clang-format --style=LLVM -i --glob=\"{src,test}/*.ts\"",
         "test": "tsc -p ./ && node ./out/test/runTest.js",
-        "package": "vsce package --baseImagesUrl https://raw.githubusercontent.com/llvm/llvm-project/master/clang-tools-extra/clangd/clients/clangd-vscode/",
-        "publish": "vsce publish --baseImagesUrl https://raw.githubusercontent.com/llvm/llvm-project/master/clang-tools-extra/clangd/clients/clangd-vscode/"
+        "package": "vsce package --baseImagesUrl https://raw.githubusercontent.com/clangd/vscode-clangd/master/",
+        "publish": "vsce publish --baseImagesUrl https://raw.githubusercontent.com/clangd/vscode-clangd/master/"
     },
     "dependencies": {
         "jsonc-parser": "^2.1.0",
@@ -57,8 +57,7 @@
     },
     "repository": {
         "type": "git",
-        "url": "https://github.com/llvm/llvm-project.git",
-        "directory": "clang-tools/extra/clangd/clients/clangd-vscode"
+        "url": "https://github.com/clangd/vscode-clangd.git"
     },
     "contributes": {
         "languages": [

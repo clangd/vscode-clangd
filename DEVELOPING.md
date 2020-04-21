@@ -15,7 +15,7 @@ point to the binary.
 3. To start a development instance of VS code extended with this, run:
 
 ```bash
-   $ cd /path/to/clang-tools-extra/clangd/clients/clangd-vscode/
+   $ cd clangd-vscode
    $ npm install
    $ code .
    # When VSCode starts, press <F5>.
@@ -35,7 +35,7 @@ to the marketplace.
 
 * Make sure install the `vsce` command (`npm install -g vsce`)
 * `llvm-vs-code-extensions` account
-* Bump the version in `package.json`, and commit the change to upstream
+* Bump the version in `package.json`, and commit the change.
 
 The extension is published under `llvm-vs-code-extensions` account, which is
 maintained by clangd developers. If you want to make a new release, please
@@ -44,7 +44,7 @@ contact clangd-dev@lists.llvm.org.
 ## Steps
 
 ```bash
-  $ cd /path/to/clang-tools-extra/clangd/clients/clangd-vscode/
+  $ cd clangd-vscode
   # For the first time, you need to login into the account. vsce will ask you
     for the Personal Access Token and will remember it for future commands.
   $ vsce login llvm-vs-code-extensions
