@@ -18,5 +18,6 @@ jobs:
     - run: npm test
     - name: check format
       uses: DoozyX/clang-format-lint-action@v0.5
-      source: 'src test'
-      with: { extensions: 'ts' }
+      with:
+        source: 'src test'
+        extensions: 'ts'
