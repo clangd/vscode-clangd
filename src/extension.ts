@@ -45,8 +45,6 @@ class EnableEditsNearCursorFeature implements vscodelc.StaticFeature {
  *  activated the very first time a command is executed.
  */
 export function activate(context: vscode.ExtensionContext) {
-  const syncFileEvents = getConfig<boolean>('syncFileEvents', true);
-
   const clangd: vscodelc.Executable = {
     command : getConfig<string>('path'),
     args : getConfig<string[]>('arguments')
@@ -68,9 +66,6 @@ export function activate(context: vscode.ExtensionContext) {
       { scheme: 'file', language: 'objective-c' },
       { scheme: 'file', language: 'objective-cpp' }
     ],
-    synchronize: !syncFileEvents ? undefined : {
-      // FIXME: send sync file events when clangd provides implementations.
-    },
     initializationOptions: { clangdFileStatus: true },
     // Do not switch to output window when clangd returns output.
     revealOutputChannelOn: vscodelc.RevealOutputChannelOn.Never,
