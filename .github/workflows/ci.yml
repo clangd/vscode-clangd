@@ -8,6 +8,10 @@ jobs:
   build:
     runs-on: ubuntu-latest
     steps:
+    - name: start X server
+      run: |
+        Xvfb :99 -screen 0 1024x768x24 > /dev/null 2>&1 &
+        echo "::set-env name=DISPLAY:::99"
     - uses: actions/checkout@v2
     - run: npm ci
     - run: npm build
