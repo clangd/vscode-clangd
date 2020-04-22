@@ -8,7 +8,7 @@ import {runTests} from 'vscode-test';
 
 // The entry point under VSCode - find the test files and run them in Mocha.
 export function run(): Promise<void> {
-  const mocha = new Mocha({ui : 'tdd', color: true});
+  const mocha = new Mocha({ui : 'tdd', color : true});
   const testsRoot = path.resolve(__dirname, '..');
 
   return new Promise((c, e) => {
@@ -52,4 +52,3 @@ async function main() {
 if (require.main === module) {
   main();
 }
-
