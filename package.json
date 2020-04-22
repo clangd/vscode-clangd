@@ -34,7 +34,7 @@
         "vscode:prepublish": "tsc -p ./",
         "compile": "tsc -watch -p ./",
         "format": "clang-format -i --glob=\"{src,test}/*.ts\"",
-        "test": "tsc -p ./ && node ./out/test/runTest.js",
+        "test": "tsc -p ./ && node ./out/test/index.js",
         "package": "vsce package --baseImagesUrl https://raw.githubusercontent.com/clangd/vscode-clangd/master/",
         "publish": "vsce publish --baseImagesUrl https://raw.githubusercontent.com/clangd/vscode-clangd/master/"
     },
@@ -46,7 +46,7 @@
     },
     "devDependencies": {
         "@types/glob": "^7.1.1",
-        "@types/mocha": "^2.2.32",
+        "@types/mocha": "^7.0.2",
         "@types/node": "^6.0.40",
         "@types/vscode": "^1.41.0",
         "glob": "^7.1.4",
