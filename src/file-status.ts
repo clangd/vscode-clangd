@@ -1,7 +1,8 @@
 import * as vscode from 'vscode';
 import * as vscodelc from 'vscode-languageclient';
 
-export function activate(client : vscodelc.LanguageClient, context : vscode.ExtensionContext) {
+export function activate(client: vscodelc.LanguageClient,
+                         context: vscode.ExtensionContext) {
   const status = new FileStatus();
   context.subscriptions.push(vscode.Disposable.from(status));
   context.subscriptions.push(vscode.window.onDidChangeActiveTextEditor(
@@ -16,35 +17,35 @@ export function activate(client : vscodelc.LanguageClient, context : vscode.Exte
       // Clear all cached statuses when clangd crashes.
       status.clear();
     }
-  }));  
+  }));
 }
 
 class FileStatus {
-    private statuses = new Map<string, any>();
-    private readonly statusBarItem =
-        vscode.window.createStatusBarItem(vscode.StatusBarAlignment.Left, 10);
-  
-    onFileUpdated(fileStatus: any) {
-      const filePath = vscode.Uri.parse(fileStatus.uri);
-      this.statuses.set(filePath.fsPath, fileStatus);
-      this.updateStatus();
-    }
-  
-    updateStatus() {
-      const path = vscode.window.activeTextEditor.document.fileName;
-      const status = this.statuses.get(path);
-      if (!status) {
-        this.statusBarItem.hide();
-        return;
-      }
-      this.statusBarItem.text = `clangd: ` + status.state;
-      this.statusBarItem.show();
-    }
-  
-    clear() {
-      this.statuses.clear();
+  private statuses = new Map<string, any>();
+  private readonly statusBarItem =
+      vscode.window.createStatusBarItem(vscode.StatusBarAlignment.Left, 10);
+
+  onFileUpdated(fileStatus: any) {
+    const filePath = vscode.Uri.parse(fileStatus.uri);
+    this.statuses.set(filePath.fsPath, fileStatus);
+    this.updateStatus();
+  }
+
+  updateStatus() {
+    const path = vscode.window.activeTextEditor.document.fileName;
+    const status = this.statuses.get(path);
+    if (!status) {
       this.statusBarItem.hide();
+      return;
     }
-  
-    dispose() { this.statusBarItem.dispose(); }
+    this.statusBarItem.text = `clangd: ` + status.state;
+    this.statusBarItem.show();
+  }
+
+  clear() {
+    this.statuses.clear();
+    this.statusBarItem.hide();
+  }
+
+  dispose() { this.statusBarItem.dispose(); }
 }

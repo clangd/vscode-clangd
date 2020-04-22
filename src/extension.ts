@@ -24,7 +24,7 @@ class ClangdLanguageClient extends vscodelc.LanguageClient {
   // prompt up the failure to users.
   logFailedRequest(rpcReply: vscodelc.RPCMessageType, error: any) {
     if (error instanceof vscodelc.ResponseError &&
-      rpcReply.method === "workspace/executeCommand")
+        rpcReply.method === "workspace/executeCommand")
       vscode.window.showErrorMessage(error.message);
     // Call default implementation.
     super.logFailedRequest(rpcReply, error);
@@ -32,10 +32,10 @@ class ClangdLanguageClient extends vscodelc.LanguageClient {
 }
 
 class EnableEditsNearCursorFeature implements vscodelc.StaticFeature {
-  initialize() { }
+  initialize() {}
   fillClientCapabilities(capabilities: vscodelc.ClientCapabilities): void {
     const extendedCompletionCapabilities: any =
-      capabilities.textDocument.completion;
+        capabilities.textDocument.completion;
     extendedCompletionCapabilities.editsNearCursor = true;
   }
 }
@@ -48,13 +48,13 @@ export function activate(context: vscode.ExtensionContext) {
   const syncFileEvents = getConfig<boolean>('syncFileEvents', true);
 
   const clangd: vscodelc.Executable = {
-    command: getConfig<string>('path'),
-    args: getConfig<string[]>('arguments')
+    command : getConfig<string>('path'),
+    args : getConfig<string[]>('arguments')
   };
   const traceFile = getConfig<string>('trace');
   if (!!traceFile) {
-    const trace = { CLANGD_TRACE: traceFile };
-    clangd.options = { env: { ...process.env, ...trace } };
+    const trace = {CLANGD_TRACE : traceFile};
+    clangd.options = {env : {...process.env, ...trace}};
   }
   const serverOptions: vscodelc.ServerOptions = clangd;
 
@@ -104,7 +104,7 @@ export function activate(context: vscode.ExtensionContext) {
   };
 
   const client = new ClangdLanguageClient('Clang Language Server',
-    serverOptions, clientOptions);
+                                          serverOptions, clientOptions);
   if (getConfig<boolean>('semanticHighlighting'))
     semanticHighlighting.activate(client, context);
   client.registerFeature(new EnableEditsNearCursorFeature);
@@ -114,6 +114,6 @@ export function activate(context: vscode.ExtensionContext) {
   switchSourceHeader.activate(client, context);
   // An empty place holder for the activate command, otherwise we'll get an
   // "command is not registered" error.
-  context.subscriptions.push(vscode.commands.registerCommand(
-    'clangd.activate', async () => { }));
+  context.subscriptions.push(
+      vscode.commands.registerCommand('clangd.activate', async () => {}));
 }
