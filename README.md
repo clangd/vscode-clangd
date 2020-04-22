@@ -1,6 +1,6 @@
 # clangd
 
-Provides C/C++ language IDE features for VS Code using [clangd](https://clang.llvm.org/extra/clangd.html):
+Provides C/C++ language IDE features for VS Code using [clangd](https://clangd.llvm.org):
 
  - code completion
  - compile errors and warnings
