@@ -1,6 +1,10 @@
+import * as util from 'util';
 import * as vscode from 'vscode';
 import * as vscodelc from 'vscode-languageclient';
+import * as which from 'which';
+
 import * as fileStatus from './file-status';
+import * as install from './install';
 import * as semanticHighlighting from './semantic-highlighting';
 import * as switchSourceHeader from './switch-source-header';
 
@@ -44,9 +48,18 @@ class EnableEditsNearCursorFeature implements vscodelc.StaticFeature {
  *  This method is called when the extension is activated. The extension is
  *  activated the very first time a command is executed.
  */
-export function activate(context: vscode.ExtensionContext) {
+export async function activate(context: vscode.ExtensionContext) {
   const syncFileEvents = getConfig<boolean>('syncFileEvents', true);
 
+  const clangdPath = getConfig<string>('path');
+  try {
+    await util.promisify(which)(clangdPath);
+  } catch (e) {
+    install.recover(context)
+    return
+  }
+  if (getConfig<boolean>('checkUpdates'))
+    install.checkUpdates(clangdPath, false, context);
   const clangd: vscodelc.Executable = {
     command : getConfig<string>('path'),
     args : getConfig<string[]>('arguments')
@@ -112,6 +125,7 @@ export function activate(context: vscode.ExtensionContext) {
   console.log('Clang Language Server is now active!');
   fileStatus.activate(client, context);
   switchSourceHeader.activate(client, context);
+  install.activate(context);
   // An empty place holder for the activate command, otherwise we'll get an
   // "command is not registered" error.
   context.subscriptions.push(
