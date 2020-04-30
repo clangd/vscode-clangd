@@ -58,20 +58,19 @@ export function activate(context: vscode.ExtensionContext) {
 
   const clientOptions: vscodelc.LanguageClientOptions = {
     // Register the server for c-family and cuda files.
-    documentSelector: [
-      { scheme: 'file', language: 'c' },
-      { scheme: 'file', language: 'cpp' },
+    documentSelector : [
+      {scheme : 'file', language : 'c'}, {scheme : 'file', language : 'cpp'},
       // CUDA is not supported by vscode, but our extension does supports it.
-      { scheme: 'file', language: 'cuda' },
-      { scheme: 'file', language: 'objective-c' },
-      { scheme: 'file', language: 'objective-cpp' }
+      {scheme : 'file', language : 'cuda'},
+      {scheme : 'file', language : 'objective-c'},
+      {scheme : 'file', language : 'objective-cpp'}
     ],
-    initializationOptions: { clangdFileStatus: true },
+    initializationOptions : {clangdFileStatus : true},
     // Do not switch to output window when clangd returns output.
-    revealOutputChannelOn: vscodelc.RevealOutputChannelOn.Never,
+    revealOutputChannelOn : vscodelc.RevealOutputChannelOn.Never,
 
-    // We hack up the completion items a bit to prevent VSCode from re-ranking them
-    // and throwing away all our delicious signals like type information.
+    // We hack up the completion items a bit to prevent VSCode from re-ranking
+    // them and throwing away all our delicious signals like type information.
     //
     // VSCode sorts by (fuzzymatch(prefix, item.filterText), item.sortText)
     // By adding the prefix to the beginning of the filterText, we get a perfect
@@ -81,20 +80,23 @@ export function activate(context: vscode.ExtensionContext) {
     // differences in how fuzzy filtering is applies, e.g. enable dot-to-arrow
     // fixes in completion.
     //
-    // We also have to mark the list as incomplete to force retrieving new rankings.
+    // We also have to mark the list as incomplete to force retrieving new
+    // rankings.
     // See https://github.com/microsoft/language-server-protocol/issues/898
-    middleware: {
-      provideCompletionItem: async (document, position, context, token, next) => {
-        let list = await next(document, position, context, token);
-        let items = (Array.isArray(list) ? list : list.items).map(item => {
-          // Gets the prefix used by VSCode when doing fuzzymatch.
-          let prefix = document.getText(new vscode.Range(item.range.start, position))
-          if (prefix)
-            item.filterText = prefix + "_" + item.filterText;
-          return item;
-        })
-        return new vscode.CompletionList(items, /*isIncomplete=*/true);
-      }
+    middleware : {
+      provideCompletionItem :
+          async (document, position, context, token, next) => {
+            let list = await next(document, position, context, token);
+            let items = (Array.isArray(list) ? list : list.items).map(item => {
+              // Gets the prefix used by VSCode when doing fuzzymatch.
+              let prefix =
+                  document.getText(new vscode.Range(item.range.start, position))
+              if (prefix)
+              item.filterText = prefix + "_" + item.filterText;
+              return item;
+            })
+            return new vscode.CompletionList(items, /*isIncomplete=*/ true);
+          }
     },
   };
 
