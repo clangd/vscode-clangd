@@ -24,7 +24,7 @@ class ClangdLanguageClient extends vscodelc.LanguageClient {
   // prompt up the failure to users.
   logFailedRequest(rpcReply: vscodelc.RPCMessageType, error: any) {
     if (error instanceof vscodelc.ResponseError &&
-        rpcReply.method === "workspace/executeCommand")
+        rpcReply.method === 'workspace/executeCommand')
       vscode.window.showErrorMessage(error.message);
     // Call default implementation.
     super.logFailedRequest(rpcReply, error);
@@ -92,7 +92,7 @@ export function activate(context: vscode.ExtensionContext) {
               let prefix =
                   document.getText(new vscode.Range(item.range.start, position))
               if (prefix)
-              item.filterText = prefix + "_" + item.filterText;
+              item.filterText = prefix + '_' + item.filterText;
               return item;
             })
             return new vscode.CompletionList(items, /*isIncomplete=*/ true);
