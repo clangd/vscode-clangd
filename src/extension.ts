@@ -28,7 +28,7 @@ class ClangdLanguageClient extends vscodelc.LanguageClient {
   // prompt up the failure to users.
   logFailedRequest(rpcReply: vscodelc.RPCMessageType, error: any) {
     if (error instanceof vscodelc.ResponseError &&
-        rpcReply.method === "workspace/executeCommand")
+        rpcReply.method === 'workspace/executeCommand')
       vscode.window.showErrorMessage(error.message);
     // Call default implementation.
     super.logFailedRequest(rpcReply, error);
@@ -49,8 +49,6 @@ class EnableEditsNearCursorFeature implements vscodelc.StaticFeature {
  *  activated the very first time a command is executed.
  */
 export async function activate(context: vscode.ExtensionContext) {
-  const syncFileEvents = getConfig<boolean>('syncFileEvents', true);
-
   const clangdPath = getConfig<string>('path');
   try {
     await util.promisify(which)(clangdPath);
@@ -60,35 +58,33 @@ export async function activate(context: vscode.ExtensionContext) {
   }
   if (getConfig<boolean>('checkUpdates'))
     install.checkUpdates(clangdPath, false, context);
+
   const clangd: vscodelc.Executable = {
-    command : getConfig<string>('path'),
-    args : getConfig<string[]>('arguments')
+    command: clangdPath,
+    args: getConfig<string[]>('arguments')
   };
   const traceFile = getConfig<string>('trace');
   if (!!traceFile) {
-    const trace = {CLANGD_TRACE : traceFile};
-    clangd.options = {env : {...process.env, ...trace}};
+    const trace = {CLANGD_TRACE: traceFile};
+    clangd.options = {env: {...process.env, ...trace}};
   }
   const serverOptions: vscodelc.ServerOptions = clangd;
 
   const clientOptions: vscodelc.LanguageClientOptions = {
     // Register the server for c-family and cuda files.
     documentSelector: [
-      { scheme: 'file', language: 'c' },
-      { scheme: 'file', language: 'cpp' },
+      {scheme: 'file', language: 'c'},
+      {scheme: 'file', language: 'cpp'},
       // CUDA is not supported by vscode, but our extension does supports it.
-      { scheme: 'file', language: 'cuda' },
-      { scheme: 'file', language: 'objective-c' },
-      { scheme: 'file', language: 'objective-cpp' }
+      {scheme: 'file', language: 'cuda'},
+      {scheme: 'file', language: 'objective-c'},
+      {scheme: 'file', language: 'objective-cpp'},
     ],
-    synchronize: !syncFileEvents ? undefined : {
-      // FIXME: send sync file events when clangd provides implementations.
-    },
-    initializationOptions: { clangdFileStatus: true },
+    initializationOptions: {clangdFileStatus: true},
     // Do not switch to output window when clangd returns output.
     revealOutputChannelOn: vscodelc.RevealOutputChannelOn.Never,
 
-    // We hack up the completion items a bit to prevent VSCode from re-ranking them
+    // We hack up the completion items a bit to prevent VSCode from re-ranking
     // and throwing away all our delicious signals like type information.
     //
     // VSCode sorts by (fuzzymatch(prefix, item.filterText), item.sortText)
@@ -99,20 +95,22 @@ export async function activate(context: vscode.ExtensionContext) {
     // differences in how fuzzy filtering is applies, e.g. enable dot-to-arrow
     // fixes in completion.
     //
-    // We also have to mark the list as incomplete to force retrieving new rankings.
+    // We also mark the list as incomplete to force retrieving new rankings.
     // See https://github.com/microsoft/language-server-protocol/issues/898
     middleware: {
-      provideCompletionItem: async (document, position, context, token, next) => {
-        let list = await next(document, position, context, token);
-        let items = (Array.isArray(list) ? list : list.items).map(item => {
-          // Gets the prefix used by VSCode when doing fuzzymatch.
-          let prefix = document.getText(new vscode.Range(item.range.start, position))
-          if (prefix)
-            item.filterText = prefix + "_" + item.filterText;
-          return item;
-        })
-        return new vscode.CompletionList(items, /*isIncomplete=*/true);
-      }
+      provideCompletionItem:
+          async (document, position, context, token, next) => {
+            let list = await next(document, position, context, token);
+            let items = (Array.isArray(list) ? list : list.items).map(item => {
+              // Gets the prefix used by VSCode when doing fuzzymatch.
+              let prefix =
+                  document.getText(new vscode.Range(item.range.start, position))
+              if (prefix)
+              item.filterText = prefix + '_' + item.filterText;
+              return item;
+            })
+            return new vscode.CompletionList(items, /*isIncomplete=*/ true);
+          }
     },
   };
 

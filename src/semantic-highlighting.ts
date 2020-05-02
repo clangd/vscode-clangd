@@ -1,5 +1,5 @@
 import * as fs from 'fs';
-import * as jsonc from "jsonc-parser";
+import * as jsonc from 'jsonc-parser';
 import * as path from 'path';
 import * as vscode from 'vscode';
 import * as vscodelc from 'vscode-languageclient';
@@ -82,10 +82,10 @@ export class SemanticHighlightingFeature implements vscodelc.StaticFeature {
     // Extend the ClientCapabilities type and add semantic highlighting
     // capability to the object.
     const textDocumentCapabilities: vscodelc.TextDocumentClientCapabilities&
-        {semanticHighlightingCapabilities?: {semanticHighlighting : boolean}} =
+        {semanticHighlightingCapabilities?: {semanticHighlighting: boolean}} =
         capabilities.textDocument;
     textDocumentCapabilities.semanticHighlightingCapabilities = {
-      semanticHighlighting : true,
+      semanticHighlighting: true,
     };
   }
 
@@ -102,7 +102,7 @@ export class SemanticHighlightingFeature implements vscodelc.StaticFeature {
     // object but to access the data we must first extend the ServerCapabilities
     // type.
     const serverCapabilities: vscodelc.ServerCapabilities&
-        {semanticHighlighting?: {scopes : string[][]}} = capabilities;
+        {semanticHighlighting?: {scopes: string[][]}} = capabilities;
     if (!serverCapabilities.semanticHighlighting)
       return;
     this.scopeLookupTable = serverCapabilities.semanticHighlighting.scopes;
@@ -129,7 +129,7 @@ export class SemanticHighlightingFeature implements vscodelc.StaticFeature {
 
   handleNotification(params: SemanticHighlightingParams) {
     const lines: SemanticHighlightingLine[] = params.lines.map(
-        (line) => ({line : line.line, tokens : decodeTokens(line.tokens)}));
+        (line) => ({line: line.line, tokens: decodeTokens(line.tokens)}));
     this.highlighter.highlight(vscode.Uri.parse(params.textDocument.uri),
                                lines);
   }
@@ -153,7 +153,7 @@ export function decodeTokens(tokens: string): SemanticHighlightingToken[] {
     const lenKind = buf.readUInt32BE((i + 1) * uint32Size);
     const scopeIndex = lenKind & scopeMask;
     const len = lenKind >>> lenShift;
-    retTokens.push({character : start, scopeIndex : scopeIndex, length : len});
+    retTokens.push({character: start, scopeIndex: scopeIndex, length: len});
   }
 
   return retTokens;
@@ -192,10 +192,10 @@ export class Highlighter {
         // If there exists no rule for this scope the matcher returns an empty
         // color. That's ok because vscode does not do anything when applying
         // empty decorations.
-        color : themeRuleMatcher.getBestThemeRule(scopes[0]).foreground,
+        color: themeRuleMatcher.getBestThemeRule(scopes[0]).foreground,
         // If the rangeBehavior is set to Open in any direction the
         // highlighting becomes weird in certain cases.
-        rangeBehavior : vscode.DecorationRangeBehavior.ClosedClosed,
+        rangeBehavior: vscode.DecorationRangeBehavior.ClosedClosed,
       };
       return vscode.window.createTextEditorDecorationType(options);
     });
@@ -293,7 +293,7 @@ export class ThemeRuleMatcher {
   getBestThemeRule(scope: string): TokenColorRule {
     if (this.bestRuleCache.has(scope))
       return this.bestRuleCache.get(scope);
-    let bestRule: TokenColorRule = {scope : '', foreground : ''};
+    let bestRule: TokenColorRule = {scope: '', foreground: ''};
     this.themeRules.forEach((rule) => {
       // The best rule for a scope is the rule that is the longest prefix of the
       // scope (unless a perfect match exists in which case the perfect match is
@@ -367,7 +367,7 @@ export async function parseThemeFile(
       const addColor = (scope: string) => {
         if (seenScopes.has(scope))
           return;
-        rules.push({scope, foreground : textColor});
+        rules.push({scope, foreground: textColor});
         seenScopes.add(scope);
       };
       if (rule.scope instanceof Array) {
