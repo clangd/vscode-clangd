@@ -66,7 +66,10 @@ export function activate(context: vscode.ExtensionContext) {
       {scheme: 'file', language: 'objective-c'},
       {scheme: 'file', language: 'objective-cpp'},
     ],
-    initializationOptions: {clangdFileStatus: true},
+    initializationOptions: {
+      clangdFileStatus: true,
+      fallbackFlags: getConfig<string[]>('fallbackFlags')
+    },
     // Do not switch to output window when clangd returns output.
     revealOutputChannelOn: vscodelc.RevealOutputChannelOn.Never,
 
