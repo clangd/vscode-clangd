@@ -53,8 +53,8 @@ export async function activate(context: vscode.ExtensionContext) {
   try {
     await util.promisify(which)(clangdPath);
   } catch (e) {
-    install.recover(context)
-    return
+    install.recover(context);
+    return;
   }
   if (getConfig<boolean>('checkUpdates'))
     install.checkUpdates(clangdPath, false, context);

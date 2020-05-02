@@ -86,8 +86,7 @@ export async function checkUpdates(clangdPath: string, requested: boolean,
     console.log('Failed to check for clangd update: ', e);
     // We're not sure whether there's an upgrade: stay quiet unless asked.
     if (requested)
-      vscode.window.showInformationMessage(
-          'Failed to check for clangd update: ' + e);
+      vscode.window.showErrorMessage('Failed to check for clangd update: ' + e);
     return;
   }
   console.log('Checking for clangd update: available=', upgrade.new,
@@ -136,7 +135,7 @@ export async function latestRelease(): Promise<Release> {
   const response = await fetch(url);
   if (!response.ok) {
     console.log(response.url, response.status, response.statusText);
-    throw new Error('Can\'t fetch release: ' + response.statusText);
+    throw new Error(`Can't fetch release: ${response.statusText}`);
   }
   return await response.json() as Release;
 }
@@ -151,9 +150,9 @@ export function chooseAsset(release: Github.Release): Github.Asset|null {
   const variant = variants[os.platform()];
   // 32-bit vscode is still common on 64-bit windows, so don't reject that.
   if (variant && (os.arch() == 'x64' || variant == 'windows'))
-    return release.assets.find(a => a.name.indexOf(variant) >= 0)
-    throw new Error(
-        `No clangd ${release.name} binary available for your platform`);
+    return release.assets.find(a => a.name.indexOf(variant) >= 0);
+  throw new Error(
+      `No clangd ${release.name} binary available for your platform`);
 }
 }
 
@@ -162,9 +161,9 @@ namespace End {
 // The configuration is not valid, the user should install clangd manually.
 export async function showInstallationHelp(message: string) {
   const url = 'https://clangd.llvm.org/installation.html';
-  message += `\nSee ${url} for help.`
+  message += `\nSee ${url} for help.`;
   if (await vscode.window.showErrorMessage(message, 'Open website'))
-  vscode.env.openExternal(vscode.Uri.parse(url));
+    vscode.env.openExternal(vscode.Uri.parse(url));
 }
 
 // We tried to install clangd, but something went wrong.
@@ -296,6 +295,9 @@ async function download(url: string, dest: string,
 // We parse both github release numbers and installed `clangd --version` output
 // by treating them as SemVer ranges, and offer an upgrade if the version
 // is unambiguously newer.
+//
+// These functions throw if versions can't be parsed (e.g. installed clangd
+// is a vendor-modified version).
 namespace Version {
 export async function upgrade(release: Github.Release, clangdPath: string) {
   const releasedVer = released(release);
