@@ -16,8 +16,16 @@ jobs:
     - run: npm ci
     - run: npm build
     - run: npm test
-    - name: check format
-      uses: DoozyX/clang-format-lint-action@v0.5
-      with:
-        source: 'src test'
-        extensions: 'ts'
+    - name: clang-format (diff)
+      if: github.event_name == 'pull_request'
+      env:
+        BASE: ${{ github['base_ref'] }}
+      run: |
+        git fetch --no-tags --prune --depth=1 origin +refs/heads/$BASE:refs/remotes/origin/$BASE
+        npm run git-clang-format -- --diff origin/$BASE |\
+        awk -v s="^diff" '$0~s{r=1} 1; END{exit(r)}'
+    - name: clang-format (project)
+      if: github.event_name == 'push'
+      run: |
+        npm run git-clang-format -- --diff --commit $(git hash-object -t tree /dev/null) |\
+        awk -v s="^diff" '$0~s{r=1} 1; END{exit(r)}'

@@ -36,7 +36,8 @@
         "format": "clang-format -i --glob=\"{src,test}/*.ts\"",
         "test": "tsc -p ./ && node ./out/test/index.js",
         "package": "vsce package --baseImagesUrl https://raw.githubusercontent.com/clangd/vscode-clangd/master/",
-        "publish": "vsce publish --baseImagesUrl https://raw.githubusercontent.com/clangd/vscode-clangd/master/"
+        "publish": "vsce publish --baseImagesUrl https://raw.githubusercontent.com/clangd/vscode-clangd/master/",
+        "git-clang-format": "git-clang-format"
     },
     "dependencies": {
         "jsonc-parser": "^2.1.0",
@@ -79,12 +80,12 @@
         ],
         "configuration": {
             "type": "object",
-            "title": "clangd configuration",
+            "title": "clangd",
             "properties": {
                 "clangd.path": {
                     "type": "string",
                     "default": "clangd",
-                    "description": "The path to clangd executable, e.g.: /usr/bin/clangd"
+                    "description": "The path to clangd executable, e.g.: /usr/bin/clangd."
                 },
                 "clangd.arguments": {
                     "type": "array",
@@ -92,7 +93,7 @@
                     "items": {
                         "type": "string"
                     },
-                    "description": "Arguments for clangd server"
+                    "description": "Arguments for clangd server."
                 },
                 "clangd.trace": {
                     "type": "string",
@@ -101,13 +102,13 @@
                 "clangd.semanticHighlighting": {
                     "type": "boolean",
                     "default": "true",
-                    "description": "Enable semantic highlighting in clangd"
+                    "description": "Enable semantic highlighting in clangd."
                 },
                 "clangd.fallbackFlags": {
                     "type": "array",
                     "default": [],
                     "items": { "type": "string" },
-                    "description": "Extra clang flags used to parse files when no compilation database is found"
+                    "description": "Extra clang flags used to parse files when no compilation database is found."
                 }
             }
         },
