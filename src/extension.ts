@@ -14,7 +14,7 @@ function getConfig<T>(option: string, defaultValue?: any): T {
   return config.get<T>(option, defaultValue);
 }
 
-class ClangdLanguageClient extends vscodelc.LanguageClient {
+class ClangdLanguageClient extends vscodelc.LanguageClient   {
   // Override the default implementation for failed requests. The default
   // behavior is just to log failures in the output panel, however output panel
   // is designed for extension debugging purpose, normal users will not open it,
@@ -22,7 +22,7 @@ class ClangdLanguageClient extends vscodelc.LanguageClient {
   //
   // For user-interactive operations (e.g. applyFixIt, applyTweaks), we will
   // prompt up the failure to users.
-  logFailedRequest(rpcReply: vscodelc.RPCMessageType, error: any) {
+  logFailedRequest(rpcReply: vscodelc.RPCMessageType, error : any) {
     if (error instanceof vscodelc.ResponseError &&
         rpcReply.method === "workspace/executeCommand")
       vscode.window.showErrorMessage(error.message);
