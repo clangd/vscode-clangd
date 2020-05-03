@@ -115,6 +115,12 @@
                     "default": "true",
                     "description": "Enable semantic highlighting in clangd."
                 },
+                "clangd.fallbackFlags": {
+                    "type": "array",
+                    "default": [],
+                    "items": { "type": "string" },
+                    "description": "Extra clang flags used to parse files when no compilation database is found."
+                },
                 "clangd.checkUpdates": {
                     "type": "boolean",
                     "default": "false",
