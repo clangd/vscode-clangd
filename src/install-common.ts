@@ -31,41 +31,44 @@ type UI = {
   clangdPath: string;
 
   // Show a generic message to the user.
-  info(s: string) : void;
+  info(s: string): void;
   // Show a generic error message to the user.
-  error(s: string) : void;
+  error(s: string): void;
   // Show a message and direct the user to a website.
-  showHelp(message: string, url: string) : void;
+  showHelp(message: string, url: string): void;
 
   // Ask the user to reload the plugin.
-  promptReload(message: string) : void;
+  promptReload(message: string): void;
   // Ask the user to run installLatest() to upgrade clangd.
-  promptUpdate(oldVersion: string, newVersion: string) : void;
+  promptUpdate(oldVersion: string, newVersion: string): void;
   // Ask the user to run installLatest() to install missing clangd.
-  promptInstall(version: string) : void;
+  promptInstall(version: string): void;
   // Ask if we should reuse an existing clangd installation.
-  shouldReuse(path: string): Promise<boolean | undefined>;
+  shouldReuse(path: string): Promise<boolean|undefined>;
 
   // `work` may take a while to resolve, indicate we're doing something.
-  slow<T>(title: string, work: Promise<T>) : Thenable<T>;
+  slow<T>(title: string, work: Promise<T>): Thenable<T>;
   // `work` will take a while to run and can indicate fractional progress.
-  progress<T>(title: string, cancel: AbortController | null,
-              work: (progress: (fraction: number)=>void) => Promise<T>) : Thenable<T>;
+  progress<T>(title: string, cancel: AbortController|null,
+              work: (progress: (fraction: number) => void) => Promise<T>):
+      Thenable<T>;
 }
 
-export async function prepare(ui: UI, checkUpdate: boolean) : Promise<string> {
-  try {
-    await util.promisify(which)(ui.clangdPath);
-  } catch (e) {
-    // Couldn't find clangd - start recovery flow and stop extension loading.
-    recover(ui);
-    return undefined;
-  }
-  // Allow extension to load, asynchronously check for updates.
-  if (checkUpdate)
-    checkUpdates(/*requested=*/false, ui);
-  return ui.clangdPath;
-}
+export async function prepare(ui: UI, checkUpdate: boolean):
+    Promise<string> {
+      try {
+        await util.promisify(which)(ui.clangdPath);
+      } catch (e) {
+        // Couldn't find clangd - start recovery flow and stop extension
+        // loading.
+        recover(ui);
+        return undefined;
+      }
+      // Allow extension to load, asynchronously check for updates.
+      if (checkUpdate)
+        checkUpdates(/*requested=*/ false, ui);
+      return ui.clangdPath;
+    }
 
 // The user has explicitly asked to install the latest clangd.
 // Do so without further prompting, or report an error.
@@ -179,9 +182,7 @@ namespace Install {
 // The `abort` controller is signaled if the user cancels the installation.
 // Returns the absolute path to the installed clangd executable.
 export async function install(release: Github.Release, asset: Github.Asset,
-                              abort: AbortController,
-                              ui: UI):
-    Promise<string> {
+                              abort: AbortController, ui: UI): Promise<string> {
   const dirs = await createDirs(ui);
   const extractRoot = path.join(dirs.install, release.tag_name);
   if (await util.promisify(fs.exists)(extractRoot)) {
@@ -204,7 +205,8 @@ export async function install(release: Github.Release, asset: Github.Asset,
   await download(asset.browser_download_url, zipFile, abort, ui);
   const archive = await unzipper.Open.file(zipFile);
   const executable = findExecutable(archive.files.map(f => f.path));
-  await ui.slow(`Extracting ${asset.name}`, archive.extract({path: extractRoot}));
+  await ui.slow(`Extracting ${asset.name}`,
+                archive.extract({path: extractRoot}));
   const clangdPath = path.join(extractRoot, executable);
   await fs.promises.chmod(clangdPath, 0o755);
   await fs.promises.unlink(zipFile);
@@ -232,23 +234,23 @@ function findExecutable(paths: string[]): string {
 
 // Downloads `url` to a local file `dest` (whose parent should exist).
 // A progress dialog is shown, if it is cancelled then `abort` is signaled.
-async function download(url: string, dest: string,
-                        abort: AbortController, ui: UI): Promise<void> {
+async function download(url: string, dest: string, abort: AbortController,
+                        ui: UI): Promise<void> {
   console.log('Downloading ', url, ' to ', dest);
-  return ui.progress(`Downloading ${path.basename(dest)}`, abort,
-                         async (progress) => {
-    const response = await fetch(url, {signal: abort.signal});
-    if (!response.ok)
-      throw new Error(`Failed to download $url`);
-    const size = Number(response.headers.get('content-length'));
-    let read = 0;
-    response.body.on('data', (chunk: Buffer) => {
-      read += chunk.length;
-      progress(read / size);
-    });
-    const out = fs.createWriteStream(dest);
-    await util.promisify(stream.pipeline)(response.body, out);
-                         });
+  return ui.progress(
+      `Downloading ${path.basename(dest)}`, abort, async (progress) => {
+        const response = await fetch(url, {signal: abort.signal});
+        if (!response.ok)
+          throw new Error(`Failed to download $url`);
+        const size = Number(response.headers.get('content-length'));
+        let read = 0;
+        response.body.on('data', (chunk: Buffer) => {
+          read += chunk.length;
+          progress(read / size);
+        });
+        const out = fs.createWriteStream(dest);
+        await util.promisify(stream.pipeline)(response.body, out);
+      });
 }
 }
 
@@ -264,7 +266,11 @@ namespace Version {
 export async function upgrade(release: Github.Release, clangdPath: string) {
   const releasedVer = released(release);
   const installedVer = await installed(clangdPath);
-  return {old: installedVer.raw, new: releasedVer.raw, upgrade: rangeGreater(releasedVer, installedVer)};
+  return {
+    old: installedVer.raw,
+    new: releasedVer.raw,
+    upgrade: rangeGreater(releasedVer, installedVer)
+  };
 }
 
 // Get the version of an installed clangd binary using `clangd --version`.
