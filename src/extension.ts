@@ -49,15 +49,9 @@ class EnableEditsNearCursorFeature implements vscodelc.StaticFeature {
  *  activated the very first time a command is executed.
  */
 export async function activate(context: vscode.ExtensionContext) {
-  const clangdPath = getConfig<string>('path');
-  try {
-    await util.promisify(which)(clangdPath);
-  } catch (e) {
-    install.recover(context);
+  const clangdPath = await install.activate(context);
+  if (!clangdPath)
     return;
-  }
-  if (getConfig<boolean>('checkUpdates'))
-    install.checkUpdates(clangdPath, false, context);
 
   const clangd: vscodelc.Executable = {
     command: clangdPath,
@@ -126,7 +120,6 @@ export async function activate(context: vscode.ExtensionContext) {
   console.log('Clang Language Server is now active!');
   fileStatus.activate(client, context);
   switchSourceHeader.activate(client, context);
-  install.activate(context);
   // An empty place holder for the activate command, otherwise we'll get an
   // "command is not registered" error.
   context.subscriptions.push(
