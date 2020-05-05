@@ -1,6 +1,8 @@
 import * as vscode from 'vscode';
 import * as vscodelc from 'vscode-languageclient';
+
 import * as fileStatus from './file-status';
+import * as install from './install';
 import * as semanticHighlighting from './semantic-highlighting';
 import * as switchSourceHeader from './switch-source-header';
 
@@ -44,9 +46,13 @@ class EnableEditsNearCursorFeature implements vscodelc.StaticFeature {
  *  This method is called when the extension is activated. The extension is
  *  activated the very first time a command is executed.
  */
-export function activate(context: vscode.ExtensionContext) {
+export async function activate(context: vscode.ExtensionContext) {
+  const clangdPath = await install.activate(context);
+  if (!clangdPath)
+    return;
+
   const clangd: vscodelc.Executable = {
-    command: getConfig<string>('path'),
+    command: clangdPath,
     args: getConfig<string[]>('arguments')
   };
   const traceFile = getConfig<string>('trace');

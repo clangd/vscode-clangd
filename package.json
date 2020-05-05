@@ -27,7 +27,9 @@
         "onLanguage:cuda",
         "onLanguage:objective-c",
         "onLanguage:objective-cpp",
-        "onCommand:clangd.activate"
+        "onCommand:clangd.activate",
+        "onCommand:clangd.install",
+        "onCommand:clangd.update"
     ],
     "main": "./out/src/extension",
     "scripts": {
@@ -40,9 +42,11 @@
         "git-clang-format": "git-clang-format"
     },
     "dependencies": {
+        "abort-controller": "^3.0.0",
         "jsonc-parser": "^2.1.0",
         "vscode-languageclient": "6.1.0",
-        "vscode-languageserver-types": "^3.15.1"
+        "vscode-languageserver-types": "^3.15.1",
+        "@clangd/install": "0.1.1"
     },
     "devDependencies": {
         "@types/glob": "^7.1.1",
@@ -108,8 +112,15 @@
                 "clangd.fallbackFlags": {
                     "type": "array",
                     "default": [],
-                    "items": { "type": "string" },
+                    "items": {
+                        "type": "string"
+                    },
                     "description": "Extra clang flags used to parse files when no compilation database is found."
+                },
+                "clangd.checkUpdates": {
+                    "type": "boolean",
+                    "default": "false",
+                    "description": "Check for language server updates on startup."
                 }
             }
         },
@@ -117,6 +128,14 @@
             {
                 "command": "clangd.switchheadersource",
                 "title": "Switch between Source/Header"
+            },
+            {
+                "command": "clangd.install",
+                "title": "Download clangd language server"
+            },
+            {
+                "command": "clangd.update",
+                "title": "Check for clangd language server update"
             },
             {
                 "command": "clangd.activate",
