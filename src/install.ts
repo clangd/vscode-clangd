@@ -3,7 +3,7 @@
 
 import AbortController from 'abort-controller';
 import * as vscode from 'vscode';
-import * as common from './install-common';
+import * as common from '@clangd/install';
 
 // Returns the clangd path to be used, or null if clangd is not installed.
 export async function activate(context: vscode.ExtensionContext):
@@ -14,7 +14,8 @@ export async function activate(context: vscode.ExtensionContext):
       'clangd.install', async () => common.installLatest(ui)));
   context.subscriptions.push(vscode.commands.registerCommand(
       'clangd.update', async () => common.checkUpdates(true, ui)));
-  return common.prepare(ui, cfg.get<boolean>('checkUpdates'));
+  const status = await common.prepare(ui, cfg.get<boolean>('checkUpdates'));
+  return status.clangdPath;
 }
 
 class UI {
@@ -25,19 +26,22 @@ class UI {
   async choose(prompt: string, options: string[]): Promise<string|undefined> {
     return await vscode.window.showInformationMessage(prompt, ...options);
   }
-  slow<T>(title: string, result: Promise<T>):
-      Thenable<T>{return vscode.window.withProgress(
-          {location: vscode.ProgressLocation.Notification, title: title},
-          () => result)} progress<T>(title: string,
-                                     cancel: AbortController|null,
-                                     body: (progress: (fraction: number) =>
-                                                void) => Promise<T>) {
-    const progressOpts = {
+  slow<T>(title: string, result: Promise<T>) {
+    const opts = {
+      location: vscode.ProgressLocation.Notification,
+      title: title,
+      cancellable: false,
+    };
+    return Promise.resolve(vscode.window.withProgress(opts, () => result));
+  }
+  progress<T>(title: string, cancel: AbortController|null,
+              body: (progress: (fraction: number) => void) => Promise<T>) {
+    const opts = {
       location: vscode.ProgressLocation.Notification,
       title: title,
       cancellable: cancel != null,
     };
-    return vscode.window.withProgress(progressOpts, async (progress, canc) => {
+    const result = vscode.window.withProgress(opts, async (progress, canc) => {
       if (cancel)
         canc.onCancellationRequested((_) => cancel.abort());
       let lastFraction = 0;
@@ -48,6 +52,7 @@ class UI {
         }
       });
     });
+    return Promise.resolve(result); // Thenable to real promise.
   }
   error(s: string) { vscode.window.showErrorMessage(s); }
   info(s: string) { vscode.window.showInformationMessage(s); }
