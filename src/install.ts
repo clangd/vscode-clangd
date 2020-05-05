@@ -1,9 +1,9 @@
 // Automatically install clangd binary releases from GitHub.
-// This wraps `install-common` in the VSCode UI. See install-common.ts for more.
+// This wraps `@clangd/install` in the VSCode UI. See that package for more.
 
+import * as common from '@clangd/install';
 import AbortController from 'abort-controller';
 import * as vscode from 'vscode';
-import * as common from '@clangd/install';
 
 // Returns the clangd path to be used, or null if clangd is not installed.
 export async function activate(context: vscode.ExtensionContext):
@@ -115,10 +115,5 @@ class UI {
   get clangdPath(): string { return this.config.get<string>('path')!; }
   set clangdPath(p: string) {
     this.config.update('path', p, vscode.ConfigurationTarget.Global);
-    (async () => {
-      if (await vscode.window.showInformationMessage(
-              'clangd language server was updated', 'Reload window'))
-        vscode.commands.executeCommand('workbench.action.reloadWindow');
-    })();
   }
 }
