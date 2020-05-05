@@ -1,7 +1,5 @@
-import * as util from 'util';
 import * as vscode from 'vscode';
 import * as vscodelc from 'vscode-languageclient';
-import * as which from 'which';
 
 import * as fileStatus from './file-status';
 import * as install from './install';
