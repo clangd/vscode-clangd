@@ -101,7 +101,8 @@ class UI {
       common.installLatest(this);
     }
     else if (response == dontCheck) {
-      this.config.set('checkUpdates', false);
+      this.config.update('checkUpdates', false,
+                         vscode.ConfigurationTarget.Global);
     }
   }
 
