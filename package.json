@@ -145,6 +145,34 @@
             {
                 "command": "clangd.restart",
                 "title": "Restart the clangd language server"
+            },
+            {
+                "command": "clangd.typeHierarchy",
+                "title": "Open Type Hierarchy"
+            },
+            {
+                "command": "clangd.typeHierarchy.viewParents",
+                "title": "Types: Show Base Classes",
+                "icon": {
+                    "light": "resources/up-light.svg",
+                    "dark": "resources/up-dark.svg"
+                }
+            },
+            {
+                "command": "clangd.typeHierarchy.viewChildren",
+                "title": "Types: Show Derived Classes",
+                "icon": {
+                    "light": "resources/down-light.svg",
+                    "dark": "resources/down-dark.svg"
+                }
+            },
+            {
+                "command": "clangd.typeHierarchy.close",
+                "title": "Close",
+                "icon": {
+                    "light": "resources/close-light.svg",
+                    "dark": "resources/close-dark.svg"
+                }
             }
         ],
         "keybindings": [
@@ -153,7 +181,58 @@
                 "key": "Alt+o",
                 "mac": "Alt+cmd+o",
                 "when": "editorTextFocus"
+            },
+            {
+                "command": "clangd.typeHierarchy",
+                "key": "Shift+Alt+t",
+                "when": "editorTextFocus"
             }
-        ]
+        ],
+        "menus": {
+            "editor/context": [
+                {
+                    "command": "clangd.typeHierarchy",
+                    "when": "resourceLangId == cpp",
+                    "group": "0_navigation@4",
+                    "_comment": "see https://github.com/microsoft/vscode-references-view/blob/f63eaed9934ca5ecc8f3fb3ca096f38c6e5e181f/package.json#L162"
+                }
+            ],
+            "view/title": [
+                {
+                    "command": "clangd.typeHierarchy.viewParents",
+                    "when": "view == clangd.typeHierarchyView",
+                    "group": "navigation"
+                },
+                {
+                    "command": "clangd.typeHierarchy.viewChildren",
+                    "when": "view == clangd.typeHierarchyView",
+                    "group": "navigation"
+                },
+                {
+                    "command": "clangd.typeHierarchy.close",
+                    "when": "view == clangd.typeHierarchyView",
+                    "group": "navigation"
+                }
+            ],
+            "commandPalette": [
+                {
+                    "command": "clangd.typeHierarchy.viewParents",
+                    "when": "resourceLangId == cpp"
+                },
+                {
+                    "command": "clangd.typeHierarchy.viewChildren",
+                    "when": "resourceLangId == cpp"
+                }
+            ]
+        },
+        "views": {
+            "explorer": [
+                {
+                    "id": "clangd.typeHierarchyView",
+                    "name": "Type Hierarchy",
+                    "when": "extension.vscode-clangd.typeHierarchyVisible"
+                }
+            ]
+        }
     }
 }
