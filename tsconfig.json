@@ -11,7 +11,8 @@
             "es2015.iterable",
             "es2015.promise",
             "es2015.symbol",
-            "es2016.array.include"
+            "es2016.array.include",
+            "es2017.object"
         ],
         "sourceMap": true,
         "rootDir": ".",
