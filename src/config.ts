@@ -2,24 +2,29 @@ import * as path from 'path';
 import * as process from 'process';
 import * as vscode from 'vscode';
 
+// Gets the config value `clangd.<key>`. Applies ${variable} substitutions.
 export function get<T>(key: string): T {
   return substitute(vscode.workspace.getConfiguration('clangd').get(key));
 }
 
+// Sets the config value `clangd.<key>`. Does not apply substitutions.
 export function update<T>(key: string, value: T,
                           target?: vscode.ConfigurationTarget) {
   return vscode.workspace.getConfiguration('clangd').update(key, value, target);
 }
 
+// Traverse a JSON value, replacing placeholders in all strings.
 function substitute<T>(val: T): T {
   if (typeof val == 'string') {
     val = val.replace(/\$\{(.*?)\}/g, (match, name) => {
       const rep = replacement(name);
+      // If there's no replacement,available, keep the placeholder.
       return (rep === null) ? match : rep;
     }) as unknown as T;
   } else if (Array.isArray(val))
     val = val.map((x) => substitute(x)) as unknown as T;
   else if (typeof val == 'object') {
+    // Substitute values but not keys, so we don't deal with collisions.
     const result = {} as {[k: string]: any};
     for (let [k, v] of Object.entries(val))
       result[k] = substitute(v);
