@@ -2,7 +2,7 @@
     "name": "vscode-clangd",
     "displayName": "clangd",
     "description": "C and C++ completion, navigation, and insights",
-    "version": "0.1.2",
+    "version": "0.1.3",
     "publisher": "llvm-vs-code-extensions",
     "homepage": "https://clangd.llvm.org/",
     "icon": "icon.png",
@@ -106,7 +106,7 @@
                 },
                 "clangd.semanticHighlighting": {
                     "type": "boolean",
-                    "default": "true",
+                    "default": true,
                     "description": "Enable semantic highlighting in clangd."
                 },
                 "clangd.fallbackFlags": {
@@ -119,7 +119,7 @@
                 },
                 "clangd.checkUpdates": {
                     "type": "boolean",
-                    "default": "false",
+                    "default": false,
                     "description": "Check for language server updates on startup."
                 }
             }
