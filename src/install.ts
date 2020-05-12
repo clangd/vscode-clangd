@@ -3,7 +3,9 @@
 
 import * as common from '@clangd/install';
 import AbortController from 'abort-controller';
+import * as path from 'path';
 import * as vscode from 'vscode';
+
 import * as config from './config';
 
 // Returns the clangd path to be used, or null if clangd is not installed.
@@ -111,7 +113,15 @@ class UI {
       common.installLatest(this);
   }
 
-  get clangdPath(): string { return config.get<string>('path'); }
+  get clangdPath(): string {
+    let p = config.get<string>('path');
+    // Backwards compatibility: if it's a relative path with a slash, interpret
+    // relative to project root.
+    if (!path.isAbsolute(p) && p.indexOf(path.sep) != -1 &&
+        vscode.workspace.rootPath !== undefined)
+      p = path.join(vscode.workspace.rootPath, p);
+    return p;
+  }
   set clangdPath(p: string) {
     config.update('path', p, vscode.ConfigurationTarget.Global);
   }
