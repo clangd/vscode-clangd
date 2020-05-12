@@ -4,23 +4,22 @@
 import * as common from '@clangd/install';
 import AbortController from 'abort-controller';
 import * as vscode from 'vscode';
+import * as config from './config';
 
 // Returns the clangd path to be used, or null if clangd is not installed.
 export async function activate(context: vscode.ExtensionContext):
     Promise<string> {
-  const cfg = vscode.workspace.getConfiguration('clangd');
-  const ui = new UI(context, cfg);
+  const ui = new UI(context);
   context.subscriptions.push(vscode.commands.registerCommand(
       'clangd.install', async () => common.installLatest(ui)));
   context.subscriptions.push(vscode.commands.registerCommand(
       'clangd.update', async () => common.checkUpdates(true, ui)));
-  const status = await common.prepare(ui, cfg.get<boolean>('checkUpdates'));
+  const status = await common.prepare(ui, config.get<boolean>('checkUpdates'));
   return status.clangdPath;
 }
 
 class UI {
-  constructor(private context: vscode.ExtensionContext,
-              private config: vscode.WorkspaceConfiguration) {}
+  constructor(private context: vscode.ExtensionContext) {}
 
   get storagePath(): string { return this.context.globalStoragePath; }
   async choose(prompt: string, options: string[]): Promise<string|undefined> {
@@ -101,8 +100,7 @@ class UI {
       common.installLatest(this);
     }
     else if (response == dontCheck) {
-      this.config.update('checkUpdates', false,
-                         vscode.ConfigurationTarget.Global);
+      config.update('checkUpdates', false, vscode.ConfigurationTarget.Global);
     }
   }
 
@@ -113,8 +111,8 @@ class UI {
       common.installLatest(this);
   }
 
-  get clangdPath(): string { return this.config.get<string>('path')!; }
+  get clangdPath(): string { return config.get<string>('path'); }
   set clangdPath(p: string) {
-    this.config.update('path', p, vscode.ConfigurationTarget.Global);
+    config.update('path', p, vscode.ConfigurationTarget.Global);
   }
 }
