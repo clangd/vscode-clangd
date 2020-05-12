@@ -1,5 +1,4 @@
 import * as path from 'path';
-import * as process from 'process';
 import * as vscode from 'vscode';
 
 // Gets the config value `clangd.<key>`. Applies ${variable} substitutions.
