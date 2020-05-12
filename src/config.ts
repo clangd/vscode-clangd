@@ -18,7 +18,7 @@ function substitute<T>(val: T): T {
   if (typeof val == 'string') {
     val = val.replace(/\$\{(.*?)\}/g, (match, name) => {
       const rep = replacement(name);
-      // If there's no replacement,available, keep the placeholder.
+      // If there's no replacement available, keep the placeholder.
       return (rep === null) ? match : rep;
     }) as unknown as T;
   } else if (Array.isArray(val))
@@ -45,12 +45,13 @@ function replacement(name: string): string|null {
   }
   if (name == 'cwd')
     return process.cwd();
-  if (name == 'execPath')
-    return vscode.env.appRoot;
-  if (name.startsWith('env:'))
-    return process.env[name.substr(4)] || '';
-  if (name.startsWith('config:')) {
-    const config = vscode.workspace.getConfiguration().get(name.substr(7));
+  const envPrefix = 'env:';
+  if (name.startsWith(envPrefix))
+    return process.env[name.substr(envPrefix.length)] || '';
+  const configPrefix = 'config:';
+  if (name.startsWith(configPrefix)) {
+    const config = vscode.workspace.getConfiguration().get(
+        name.substr(configPrefix.length));
     return (typeof config == 'string') ? config : null;
   }
 
