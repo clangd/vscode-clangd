@@ -4,7 +4,6 @@ import * as path from 'path';
 import * as vscode from 'vscode';
 import * as vscodelc from 'vscode-languageclient';
 import * as vscodelct from 'vscode-languageserver-types';
-import * as config from './config';
 
 export function activate(client: vscodelc.LanguageClient,
                          context: vscode.ExtensionContext) {
@@ -91,8 +90,9 @@ export class SemanticHighlightingFeature implements vscodelc.StaticFeature {
   }
 
   async loadCurrentTheme() {
-    const themeRuleMatcher =
-        new ThemeRuleMatcher(await loadTheme(config.get<string>('colorTheme')));
+    const themeRuleMatcher = new ThemeRuleMatcher(
+        await loadTheme(vscode.workspace.getConfiguration('workbench')
+                            .get<string>('colorTheme')));
     this.highlighter.initialize(themeRuleMatcher);
   }
 
