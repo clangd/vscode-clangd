@@ -96,7 +96,20 @@ export async function activate(context: vscode.ExtensionContext) {
               return item;
             })
             return new vscode.CompletionList(items, /*isIncomplete=*/ true);
-          }
+          },
+      // VSCode applies fuzzy match only on the symbol name, thus it throws away
+      // all results if query token is a prefix qualified name.
+      // By adding the containerName to the symbol name, it prevents VSCode from
+      // filtering out any results, e.g. enable workspaceSymbols for qualified
+      // symbols.
+      provideWorkspaceSymbols: async (query, token, next) => {
+        let symbols = await next(query, token);
+        return symbols.map(symbol => {
+          if (symbol.containerName)
+            symbol.name = `${symbol.containerName}::${symbol.name}`;
+          return symbol;
+        })
+      },
     },
   };
 
