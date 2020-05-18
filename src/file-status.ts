@@ -32,8 +32,13 @@ class FileStatus {
   }
 
   updateStatus() {
-    const path = vscode.window.activeTextEditor.document.fileName;
-    const status = this.statuses.get(path);
+    const activeDoc = vscode.window.activeTextEditor.document;
+    // Work around https://github.com/microsoft/vscode/issues/58869
+    // Don't hide the status when activeTextEditor is output panel.
+    // This aligns with the behavior of other panels, e.g. problems.
+    if (activeDoc.uri.scheme == 'output')
+      return;
+    const status = this.statuses.get(activeDoc.fileName);
     if (!status) {
       this.statusBarItem.hide();
       return;
