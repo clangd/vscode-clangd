@@ -1,3 +1,4 @@
+import * as path from 'path';
 import * as vscode from 'vscode';
 import * as vscodelc from 'vscode-languageclient';
 
@@ -136,6 +137,23 @@ export async function activate(context: vscode.ExtensionContext) {
   console.log('Clang Language Server is now active!');
   fileStatus.activate(client, context);
   switchSourceHeader.activate(client, context);
+  async function restarter(uri: vscode.Uri) {
+    if ((await vscode.workspace.fs.readFile(uri)).length) {
+      let relativePath = vscode.workspace.asRelativePath(uri, false);
+      // If it is at the top of the workspace
+      if (relativePath == path.basename(uri.fsPath)) {
+        console.log(
+            'Compilation database has been changed. Restarting Clang Language Server!');
+        await client.stop();
+        context.subscriptions.push(client.start());
+      }
+    }
+  }
+  const databaseWatcher = vscode.workspace.createFileSystemWatcher(
+      '**/{compile_commands.json,compile_flags.txt,.clang-tidy}');
+  databaseWatcher.onDidChange(restarter);
+  databaseWatcher.onDidCreate(restarter);
+  context.subscriptions.push(databaseWatcher);
   // An empty place holder for the activate command, otherwise we'll get an
   // "command is not registered" error.
   context.subscriptions.push(
