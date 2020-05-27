@@ -107,6 +107,8 @@ export async function activate(context: vscode.ExtensionContext) {
         return symbols.map(symbol => {
           if (symbol.containerName)
             symbol.name = `${symbol.containerName}::${symbol.name}`;
+          // Always clean the containerName to avoid displaying it twice.
+          symbol.containerName = '';
           return symbol;
         })
       },
