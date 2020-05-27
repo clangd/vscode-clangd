@@ -140,6 +140,10 @@
             {
                 "command": "clangd.activate",
                 "title": "Manually activate clangd extension"
+            },
+            {
+                "command": "clangd.restart",
+                "title": "Restart the clangd language server"
             }
         ],
         "keybindings": [

@@ -113,4 +113,9 @@ export async function activate(context: vscode.ExtensionContext) {
   // "command is not registered" error.
   context.subscriptions.push(
       vscode.commands.registerCommand('clangd.activate', async () => {}));
+  context.subscriptions.push(
+      vscode.commands.registerCommand('clangd.restart', async () => {
+        await client.stop();
+        context.subscriptions.push(client.start());
+      }));
 }
