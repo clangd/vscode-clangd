@@ -110,7 +110,7 @@ class UI {
     const p = this.clangdPath;
     let message = '';
     if (p.indexOf(path.sep) < 0) {
-      message += 'The ${p} language server was not found on your PATH.\n';
+      message += `The '${p}' language server was not found on your PATH.\n`;
     } else {
       message += `The clangd binary '${p}' was not found.\n`;
     }
