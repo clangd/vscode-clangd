@@ -1,4 +1,4 @@
 contact_links:
-  - name: File a clangd issue
+  - name: clangd issue
     url: https://github.com/clangd/clangd/issues
-    about: Any clangd issues not specific to VSCode (or if unsure).
+    about: clangd bugs and ideas that aren't clearly specific to VSCode
