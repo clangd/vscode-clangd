@@ -22,6 +22,17 @@ class ClangdLanguageClient extends vscodelc.LanguageClient {
     // Call default implementation.
     super.logFailedRequest(rpcReply, error);
   }
+
+  activate() {
+    this.dispose();
+    this.startDisposable = this.start();
+  }
+
+  dispose() {
+    if (this.startDisposable)
+      this.startDisposable.dispose();
+  }
+  private startDisposable: vscodelc.Disposable;
 }
 
 class EnableEditsNearCursorFeature implements vscodelc.StaticFeature {
@@ -102,10 +113,11 @@ export async function activate(context: vscode.ExtensionContext) {
 
   const client = new ClangdLanguageClient('Clang Language Server',
                                           serverOptions, clientOptions);
+  context.subscriptions.push(vscode.Disposable.from(client));
   if (config.get<boolean>('semanticHighlighting'))
     semanticHighlighting.activate(client, context);
   client.registerFeature(new EnableEditsNearCursorFeature);
-  context.subscriptions.push(client.start());
+  client.activate();
   console.log('Clang Language Server is now active!');
   fileStatus.activate(client, context);
   switchSourceHeader.activate(client, context);
@@ -113,4 +125,9 @@ export async function activate(context: vscode.ExtensionContext) {
   // "command is not registered" error.
   context.subscriptions.push(
       vscode.commands.registerCommand('clangd.activate', async () => {}));
+  context.subscriptions.push(
+      vscode.commands.registerCommand('clangd.restart', async () => {
+        await client.stop();
+        client.activate();
+      }));
 }
