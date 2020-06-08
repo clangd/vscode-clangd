@@ -137,22 +137,44 @@ export async function activate(context: vscode.ExtensionContext) {
   console.log('Clang Language Server is now active!');
   fileStatus.activate(client, context);
   switchSourceHeader.activate(client, context);
-  async function restarter(uri: vscode.Uri) {
+  async function handleConfigFilesChanged(uri: vscode.Uri) {
     if ((await vscode.workspace.fs.readFile(uri)).length) {
       let relativePath = vscode.workspace.asRelativePath(uri, false);
       // If it is at the top of the workspace
       if (relativePath == path.basename(uri.fsPath)) {
-        console.log(
-            'Compilation database has been changed. Restarting Clang Language Server!');
-        await client.stop();
-        context.subscriptions.push(client.start());
+        switch (config.get<string>('onConfigChanged')) {
+        case 'restart':
+          vscode.commands.executeCommand('clangd.restart');
+          break;
+        case 'ignore':
+          break;
+        case 'prompt':
+        default:
+          switch (await vscode.window.showInformationMessage(
+              'Clangd configuration files have been changed. Do you want to restart it?',
+              'Yes', 'Yes, always', 'No, never')) {
+          case 'Yes':
+            vscode.commands.executeCommand('clangd.restart');
+            break;
+          case 'Yes, always':
+            vscode.commands.executeCommand('clangd.restart');
+            config.update<string>('onConfigChanged', 'restart');
+            break;
+          case 'No, never':
+            config.update<string>('onConfigChanged', 'ignore');
+            break;
+          default:
+            break;
+          }
+          break;
+        }
       }
     }
   }
   const databaseWatcher = vscode.workspace.createFileSystemWatcher(
       '**/{compile_commands.json,compile_flags.txt,.clang-tidy}');
-  databaseWatcher.onDidChange(restarter);
-  databaseWatcher.onDidCreate(restarter);
+  databaseWatcher.onDidChange(handleConfigFilesChanged);
+  databaseWatcher.onDidCreate(handleConfigFilesChanged);
   context.subscriptions.push(databaseWatcher);
   // An empty place holder for the activate command, otherwise we'll get an
   // "command is not registered" error.
