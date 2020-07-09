@@ -1,5 +1,5 @@
 import * as vscode from 'vscode';
-import * as vscodelc from 'vscode-languageclient';
+import * as vscodelc from 'vscode-languageclient/node';
 
 import * as config from './config';
 import * as fileStatus from './file-status';
@@ -16,12 +16,14 @@ class ClangdLanguageClient extends vscodelc.LanguageClient {
   //
   // For user-interactive operations (e.g. applyFixIt, applyTweaks), we will
   // prompt up the failure to users.
-  logFailedRequest(rpcReply: vscodelc.RPCMessageType, error: any) {
+
+  handleFailedRequest<T>(type: vscodelc.MessageSignature, error: any,
+                         defaultValue: T): T {
     if (error instanceof vscodelc.ResponseError &&
-        rpcReply.method === 'workspace/executeCommand')
+        type.method === 'workspace/executeCommand')
       vscode.window.showErrorMessage(error.message);
-    // Call default implementation.
-    super.logFailedRequest(rpcReply, error);
+
+    return super.handleFailedRequest(type, error, defaultValue);
   }
 
   activate() {

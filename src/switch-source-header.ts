@@ -1,5 +1,5 @@
 import * as vscode from 'vscode';
-import * as vscodelc from 'vscode-languageclient';
+import * as vscodelc from 'vscode-languageclient/node';
 
 export function activate(client: vscodelc.LanguageClient,
                          context: vscode.ExtensionContext) {
