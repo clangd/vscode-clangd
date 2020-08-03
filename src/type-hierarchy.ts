@@ -85,10 +85,9 @@ class TypeHierarchyTreeItem extends vscode.TreeItem {
 class TypeHierarchyProvider implements
     vscode.TreeDataProvider<TypeHierarchyItem> {
 
-  private _onDidChangeTreeData: vscode.EventEmitter<TypeHierarchyItem> =
-      new vscode.EventEmitter();
-  readonly onDidChangeTreeData: vscode.Event<TypeHierarchyItem> =
-      this._onDidChangeTreeData.event;
+  private _onDidChangeTreeData =
+      new vscode.EventEmitter<TypeHierarchyItem | null>();
+  readonly onDidChangeTreeData = this._onDidChangeTreeData.event;
 
   private root?: TypeHierarchyItem;
   private direction: TypeHierarchyDirection;
@@ -139,7 +138,7 @@ class TypeHierarchyProvider implements
 
   public async setDirection(direction: TypeHierarchyDirection) {
     this.direction = direction;
-    this._onDidChangeTreeData.fire();
+    this._onDidChangeTreeData.fire(null);
   }
 
   public getTreeItem(element: TypeHierarchyItem): vscode.TreeItem {
@@ -200,7 +199,7 @@ class TypeHierarchyProvider implements
     });
     if (item) {
       this.root = item;
-      this._onDidChangeTreeData.fire();
+      this._onDidChangeTreeData.fire(null);
 
       // This focuses the "explorer" view container which contains the
       // type hierarchy view.
@@ -220,6 +219,6 @@ class TypeHierarchyProvider implements
         'setContext', 'extension.vscode-clangd.typeHierarchyVisible', false);
 
     this.root = undefined;
-    this._onDidChangeTreeData.fire();
+    this._onDidChangeTreeData.fire(null);
   }
 }

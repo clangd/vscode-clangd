@@ -7,7 +7,7 @@
     "homepage": "https://clangd.llvm.org/",
     "icon": "icon.png",
     "engines": {
-        "vscode": "^1.41.0"
+        "vscode": "^1.46.0"
     },
     "categories": [
         "Programming Languages",
@@ -52,7 +52,7 @@
         "@types/glob": "^7.1.1",
         "@types/mocha": "^7.0.2",
         "@types/node": "^6.0.40",
-        "@types/vscode": "1.41.*",
+        "@types/vscode": "1.46.*",
         "clang-format": "1.4.0",
         "glob": "^7.1.4",
         "mocha": "^7.1.0",
