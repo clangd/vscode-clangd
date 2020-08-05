@@ -82,7 +82,7 @@ class TypeHierarchyTreeItem extends vscode.TreeItem {
   }
 }
 
-export class TypeHierarchyProvider implements
+class TypeHierarchyProvider implements
     vscode.TreeDataProvider<TypeHierarchyItem> {
 
   private _onDidChangeTreeData: vscode.EventEmitter<TypeHierarchyItem> =
@@ -114,6 +114,7 @@ export class TypeHierarchyProvider implements
 
     this.treeView = vscode.window.createTreeView('clangd.typeHierarchyView',
                                                  {treeDataProvider: this});
+    context.subscriptions.push(this.treeView);
     // Show children by default.
     this.direction = TypeHierarchyDirection.Children;
   }
