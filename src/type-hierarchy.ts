@@ -86,7 +86,7 @@ class TypeHierarchyProvider implements
     vscode.TreeDataProvider<TypeHierarchyItem> {
 
   private _onDidChangeTreeData =
-      new vscode.EventEmitter<TypeHierarchyItem | null>();
+      new vscode.EventEmitter<TypeHierarchyItem|null>();
   readonly onDidChangeTreeData = this._onDidChangeTreeData.event;
 
   private root?: TypeHierarchyItem;
