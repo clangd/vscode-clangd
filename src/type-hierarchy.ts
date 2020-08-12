@@ -123,7 +123,7 @@ class TypeHierarchyProvider implements
     const range =
         this.client.protocol2CodeConverter.asRange(item.selectionRange);
     const doc = await vscode.workspace.openTextDocument(uri);
-    let editor: vscode.TextEditor;
+    let editor : vscode.TextEditor | undefined;
     if (doc) {
       editor = await vscode.window.showTextDocument(doc, undefined);
     } else {
@@ -145,7 +145,7 @@ class TypeHierarchyProvider implements
     return new TypeHierarchyTreeItem(element);
   }
 
-  public getParent(element: TypeHierarchyItem): TypeHierarchyItem {
+  public getParent(element: TypeHierarchyItem): TypeHierarchyItem | null {
     // This function is only implemented so that VSCode lets us call
     // this.treeView.reveal(). Since we only ever call reveal() on the root,
     // which has no parent, it's fine to always return null.
