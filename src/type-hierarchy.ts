@@ -203,7 +203,13 @@ class TypeHierarchyProvider implements
     this.root = this.computeRoot();
     this._onDidChangeTreeData.fire(null);
     // Re-focus the starting item, which may not be the root.
-    this.treeView.reveal(this.startingItem, {focus: true});
+    this.treeView.reveal(this.startingItem, {focus: true}).then(() => { 
+    }, (reason) => {
+      // Sometimes TreeView.reveal() fails. It's unclear why, and it does not
+      // appear to have any visible effects, but vscode complains if you don't
+      // handle the rejection promise, so we do so and log a warning.
+      console.log("Warning: TreeView.reveal() failed for reason: " + reason);
+    });
   }
 
   public getTreeItem(element: TypeHierarchyItem): vscode.TreeItem {
@@ -307,7 +313,13 @@ class TypeHierarchyProvider implements
       // This expands and focuses the type hierarchy view.
       // Focus the item on which the operation was invoked, not the
       // root (which could be its ancestor or the dummy node).
-      this.treeView.reveal(this.startingItem, {focus: true});
+      this.treeView.reveal(this.startingItem, {focus: true}).then(() => { 
+      }, (reason) => {
+        // Sometimes TreeView.reveal() fails. It's unclear why, and it does not
+        // appear to have any visible effects, but vscode complains if you don't
+        // handle the rejection promise, so we do so and log a warning.
+        console.log("Warning: TreeView.reveal() failed for reason: " + reason);
+      });
     } else {
       vscode.window.showInformationMessage(
           'No type hierarchy available for selection');
