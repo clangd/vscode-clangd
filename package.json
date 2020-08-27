@@ -118,6 +118,11 @@
                     },
                     "description": "Extra clang flags used to parse files when no compilation database is found."
                 },
+                "clangd.suppressCompletionReranking": {
+                    "type": "boolean",
+                    "default": true,
+                    "description": "Force the completion items to be ranked by clangd, suppressing the VS Code re-ranking at the cost of slight latency increase."
+                },
                 "clangd.checkUpdates": {
                     "type": "boolean",
                     "default": false,

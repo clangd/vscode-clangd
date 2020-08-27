@@ -99,6 +99,8 @@ export async function activate(context: vscode.ExtensionContext) {
       provideCompletionItem:
           async (document, position, context, token, next) => {
             let list = await next(document, position, context, token);
+            if (!config.get<boolean>('suppressCompletionReranking'))
+              return list;
             let items = (Array.isArray(list) ? list : list.items).map(item => {
               // Gets the prefix used by VSCode when doing fuzzymatch.
               let prefix =
