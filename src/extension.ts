@@ -7,6 +7,7 @@ import * as fileStatus from './file-status';
 import * as install from './install';
 import * as semanticHighlighting from './semantic-highlighting';
 import * as switchSourceHeader from './switch-source-header';
+import * as typeHierarchy from './type-hierarchy';
 
 class ClangdLanguageClient extends vscodelc.LanguageClient {
   // Override the default implementation for failed requests. The default
@@ -141,6 +142,7 @@ export async function activate(context: vscode.ExtensionContext) {
   if (config.get<boolean>('semanticHighlighting'))
     semanticHighlighting.activate(client, context);
   client.registerFeature(new EnableEditsNearCursorFeature);
+  typeHierarchy.activate(client, context);
   client.activate();
   console.log('Clang Language Server is now active!');
   fileStatus.activate(client, context);
