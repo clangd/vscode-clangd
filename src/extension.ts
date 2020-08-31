@@ -54,10 +54,18 @@ export async function activate(context: vscode.ExtensionContext) {
   if (!clangdPath)
     return;
 
-  const clangd: vscodelc.Executable = {
-    command: clangdPath,
-    args: config.get<string[]>('arguments')
-  };
+  const args: string[] = config.get<string[]>('arguments');
+
+  let compileCommandsFolder: string|undefined = undefined;
+  for (let arg of args) {
+    if (arg.startsWith('--compile-commands-dir')) {
+      let match = arg.match(/--compile-commands-dir="?([^"]*)"?/);
+      compileCommandsFolder = match[1] || undefined;
+      console.log(compileCommandsFolder);
+    }
+  }
+
+  const clangd: vscodelc.Executable = {command: clangdPath, args: args};
   const traceFile = config.get<string>('trace');
   if (!!traceFile) {
     const trace = {CLANGD_TRACE: traceFile};
@@ -140,8 +148,21 @@ export async function activate(context: vscode.ExtensionContext) {
   async function handleConfigFilesChanged(uri: vscode.Uri) {
     if ((await vscode.workspace.fs.readFile(uri)).length) {
       let relativePath = vscode.workspace.asRelativePath(uri, false);
-      // If it is at the top of the workspace
-      if (relativePath == path.basename(uri.fsPath)) {
+      let baseName = path.basename(uri.fsPath);
+      let restart = false;
+
+      if (baseName == 'compile_commands.json') {
+        if (compileCommandsFolder &&
+            relativePath == path.join(compileCommandsFolder, baseName))
+          restart = true;
+        else if (!compileCommandsFolder && relativePath == baseName)
+          restart = true;
+      } else {
+        if (relativePath == baseName)
+          restart = true;
+      }
+
+      if (restart) {
         switch (config.get<string>('onConfigChanged')) {
         case 'restart':
           vscode.commands.executeCommand('clangd.restart');
