@@ -134,7 +134,6 @@ export async function activate(context: vscode.ExtensionContext) {
   context.subscriptions.push(vscode.Disposable.from(client));
   if (config.get<boolean>('semanticHighlighting'))
     semanticHighlighting.activate(client, context);
-  client.registerProposedFeatures(); // enables LSP 3.16 semantic highlighting
   client.registerFeature(new EnableEditsNearCursorFeature);
   typeHierarchy.activate(client, context);
   client.activate();
