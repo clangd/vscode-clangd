@@ -4,6 +4,7 @@
     "description": "C and C++ completion, navigation, and insights",
     "version": "0.1.6",
     "publisher": "llvm-vs-code-extensions",
+    "license": "MIT",
     "homepage": "https://clangd.llvm.org/",
     "icon": "icon.png",
     "engines": {
