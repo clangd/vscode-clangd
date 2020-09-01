@@ -98,19 +98,19 @@ export async function activate(context: vscode.ExtensionContext) {
     // We also mark the list as incomplete to force retrieving new rankings.
     // See https://github.com/microsoft/language-server-protocol/issues/898
     middleware: {
-      provideCompletionItem:
-          async (document, position, context, token, next) => {
-            let list = await next(document, position, context, token);
-            let items = (Array.isArray(list) ? list : list.items).map(item => {
-              // Gets the prefix used by VSCode when doing fuzzymatch.
-              let prefix = document.getText(new vscode.Range(
-                  (item.range as vscode.Range).start, position))
-              if (prefix)
-              item.filterText = prefix + '_' + item.filterText;
-              return item;
-            })
-            return new vscode.CompletionList(items, /*isIncomplete=*/ true);
-          },
+      provideCompletionItem: async (document, position, context, token,
+                                    next) => {
+        let list = await next(document, position, context, token);
+        let items = (Array.isArray(list) ? list : list.items).map(item => {
+          // Gets the prefix used by VSCode when doing fuzzymatch.
+          let prefix = document.getText(
+              new vscode.Range((item.range as vscode.Range).start, position))
+          if (prefix)
+          item.filterText = prefix + '_' + item.filterText;
+          return item;
+        })
+        return new vscode.CompletionList(items, /*isIncomplete=*/ true);
+      },
       // VSCode applies fuzzy match only on the symbol name, thus it throws away
       // all results if query token is a prefix qualified name.
       // By adding the containerName to the symbol name, it prevents VSCode from
