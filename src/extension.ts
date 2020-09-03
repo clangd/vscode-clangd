@@ -100,6 +100,8 @@ export async function activate(context: vscode.ExtensionContext) {
     middleware: {
       provideCompletionItem: async (document, position, context, token,
                                     next) => {
+        if (!config.get<boolean>('suppressCompletionReranking'))
+          return list;
         let list = await next(document, position, context, token);
         if (!config.get<boolean>('suppressCompletionReranking'))
           return list;
