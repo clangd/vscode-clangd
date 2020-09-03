@@ -2,7 +2,7 @@ import * as fs from 'fs';
 import * as jsonc from 'jsonc-parser';
 import * as path from 'path';
 import * as vscode from 'vscode';
-import * as vscodelc from 'vscode-languageclient';
+import * as vscodelc from 'vscode-languageclient/node';
 import * as vscodelct from 'vscode-languageserver-types';
 
 export function activate(client: vscodelc.LanguageClient,

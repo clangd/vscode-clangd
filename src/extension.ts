@@ -1,5 +1,5 @@
 import * as vscode from 'vscode';
-import * as vscodelc from 'vscode-languageclient';
+import * as vscodelc from 'vscode-languageclient/node';
 
 import * as config from './config';
 import * as fileStatus from './file-status';
@@ -16,12 +16,14 @@ class ClangdLanguageClient extends vscodelc.LanguageClient {
   //
   // For user-interactive operations (e.g. applyFixIt, applyTweaks), we will
   // prompt up the failure to users.
-  logFailedRequest(rpcReply: vscodelc.RPCMessageType, error: any) {
+
+  handleFailedRequest<T>(type: vscodelc.MessageSignature, error: any,
+                         defaultValue: T): T {
     if (error instanceof vscodelc.ResponseError &&
-        rpcReply.method === 'workspace/executeCommand')
+        type.method === 'workspace/executeCommand')
       vscode.window.showErrorMessage(error.message);
-    // Call default implementation.
-    super.logFailedRequest(rpcReply, error);
+
+    return super.handleFailedRequest(type, error, defaultValue);
   }
 
   activate() {
@@ -96,21 +98,21 @@ export async function activate(context: vscode.ExtensionContext) {
     // We also mark the list as incomplete to force retrieving new rankings.
     // See https://github.com/microsoft/language-server-protocol/issues/898
     middleware: {
-      provideCompletionItem:
-          async (document, position, context, token, next) => {
-            let list = await next(document, position, context, token);
-            if (!config.get<boolean>('suppressCompletionReranking'))
-              return list;
-            let items = (Array.isArray(list) ? list : list.items).map(item => {
-              // Gets the prefix used by VSCode when doing fuzzymatch.
-              let prefix =
-                  document.getText(new vscode.Range(item.range.start, position))
-              if (prefix)
-              item.filterText = prefix + '_' + item.filterText;
-              return item;
-            })
-            return new vscode.CompletionList(items, /*isIncomplete=*/ true);
-          },
+      provideCompletionItem: async (document, position, context, token,
+                                    next) => {
+        let list = await next(document, position, context, token);
+        if (!config.get<boolean>('suppressCompletionReranking'))
+          return list;
+        let items = (Array.isArray(list) ? list : list.items).map(item => {
+          // Gets the prefix used by VSCode when doing fuzzymatch.
+          let prefix = document.getText(
+              new vscode.Range((item.range as vscode.Range).start, position))
+          if (prefix)
+          item.filterText = prefix + '_' + item.filterText;
+          return item;
+        })
+        return new vscode.CompletionList(items, /*isIncomplete=*/ true);
+      },
       // VSCode applies fuzzy match only on the symbol name, thus it throws away
       // all results if query token is a prefix qualified name.
       // By adding the containerName to the symbol name, it prevents VSCode from
