@@ -1,8 +1,8 @@
-import * as path from 'path';
 import * as vscode from 'vscode';
 import * as vscodelc from 'vscode-languageclient';
 
 import * as config from './config';
+import * as configFileWatcher from './config-file-watcher';
 import * as fileStatus from './file-status';
 import * as install from './install';
 import * as semanticHighlighting from './semantic-highlighting';
@@ -56,16 +56,6 @@ export async function activate(context: vscode.ExtensionContext) {
     return;
 
   const args: string[] = config.get<string[]>('arguments');
-
-  let compileCommandsFolder: string|undefined = undefined;
-  for (let arg of args) {
-    if (arg.startsWith('--compile-commands-dir')) {
-      let match = arg.match(/--compile-commands-dir="?([^"]*)"?/);
-      compileCommandsFolder = match[1] || undefined;
-      console.log(compileCommandsFolder);
-    }
-  }
-
   const clangd: vscodelc.Executable = {command: clangdPath, args: args};
   const traceFile = config.get<string>('trace');
   if (!!traceFile) {
@@ -147,58 +137,7 @@ export async function activate(context: vscode.ExtensionContext) {
   console.log('Clang Language Server is now active!');
   fileStatus.activate(client, context);
   switchSourceHeader.activate(client, context);
-  async function handleConfigFilesChanged(uri: vscode.Uri) {
-    if ((await vscode.workspace.fs.readFile(uri)).length) {
-      let relativePath = vscode.workspace.asRelativePath(uri, false);
-      let baseName = path.basename(uri.fsPath);
-      let restart = false;
-
-      if (baseName == 'compile_commands.json') {
-        if (compileCommandsFolder &&
-            relativePath == path.join(compileCommandsFolder, baseName))
-          restart = true;
-        else if (!compileCommandsFolder && relativePath == baseName)
-          restart = true;
-      } else {
-        if (relativePath == baseName)
-          restart = true;
-      }
-
-      if (restart) {
-        switch (config.get<string>('onConfigChanged')) {
-        case 'restart':
-          vscode.commands.executeCommand('clangd.restart');
-          break;
-        case 'ignore':
-          break;
-        case 'prompt':
-        default:
-          switch (await vscode.window.showInformationMessage(
-              'Clangd configuration files have been changed. Do you want to restart it?',
-              'Yes', 'Yes, always', 'No, never')) {
-          case 'Yes':
-            vscode.commands.executeCommand('clangd.restart');
-            break;
-          case 'Yes, always':
-            vscode.commands.executeCommand('clangd.restart');
-            config.update<string>('onConfigChanged', 'restart');
-            break;
-          case 'No, never':
-            config.update<string>('onConfigChanged', 'ignore');
-            break;
-          default:
-            break;
-          }
-          break;
-        }
-      }
-    }
-  }
-  const databaseWatcher = vscode.workspace.createFileSystemWatcher(
-      '**/{compile_commands.json,compile_flags.txt,.clang-tidy}');
-  databaseWatcher.onDidChange(handleConfigFilesChanged);
-  databaseWatcher.onDidCreate(handleConfigFilesChanged);
-  context.subscriptions.push(databaseWatcher);
+  configFileWatcher.activate(context, args);
   // An empty place holder for the activate command, otherwise we'll get an
   // "command is not registered" error.
   context.subscriptions.push(
