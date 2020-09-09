@@ -6,7 +6,7 @@
 // symbol under the cursor, which are visualized in a tree view.
 
 import * as vscode from 'vscode';
-import * as vscodelc from 'vscode-languageclient';
+import * as vscodelc from 'vscode-languageclient/node';
 
 export function activate(client: vscodelc.LanguageClient,
                          context: vscode.ExtensionContext) {
@@ -85,10 +85,9 @@ class TypeHierarchyTreeItem extends vscode.TreeItem {
 class TypeHierarchyProvider implements
     vscode.TreeDataProvider<TypeHierarchyItem> {
 
-  private _onDidChangeTreeData: vscode.EventEmitter<TypeHierarchyItem> =
-      new vscode.EventEmitter();
-  readonly onDidChangeTreeData: vscode.Event<TypeHierarchyItem> =
-      this._onDidChangeTreeData.event;
+  private _onDidChangeTreeData =
+      new vscode.EventEmitter<TypeHierarchyItem|null>();
+  readonly onDidChangeTreeData = this._onDidChangeTreeData.event;
 
   private root?: TypeHierarchyItem;
   private direction: TypeHierarchyDirection;
@@ -124,7 +123,7 @@ class TypeHierarchyProvider implements
     const range =
         this.client.protocol2CodeConverter.asRange(item.selectionRange);
     const doc = await vscode.workspace.openTextDocument(uri);
-    let editor: vscode.TextEditor;
+    let editor: vscode.TextEditor|undefined;
     if (doc) {
       editor = await vscode.window.showTextDocument(doc, undefined);
     } else {
@@ -139,14 +138,14 @@ class TypeHierarchyProvider implements
 
   public async setDirection(direction: TypeHierarchyDirection) {
     this.direction = direction;
-    this._onDidChangeTreeData.fire();
+    this._onDidChangeTreeData.fire(null);
   }
 
   public getTreeItem(element: TypeHierarchyItem): vscode.TreeItem {
     return new TypeHierarchyTreeItem(element);
   }
 
-  public getParent(element: TypeHierarchyItem): TypeHierarchyItem {
+  public getParent(element: TypeHierarchyItem): TypeHierarchyItem|null {
     // This function is only implemented so that VSCode lets us call
     // this.treeView.reveal(). Since we only ever call reveal() on the root,
     // which has no parent, it's fine to always return null.
@@ -200,7 +199,7 @@ class TypeHierarchyProvider implements
     });
     if (item) {
       this.root = item;
-      this._onDidChangeTreeData.fire();
+      this._onDidChangeTreeData.fire(null);
 
       // This focuses the "explorer" view container which contains the
       // type hierarchy view.
@@ -220,6 +219,6 @@ class TypeHierarchyProvider implements
         'setContext', 'extension.vscode-clangd.typeHierarchyVisible', false);
 
     this.root = undefined;
-    this._onDidChangeTreeData.fire();
+    this._onDidChangeTreeData.fire(null);
   }
 }
