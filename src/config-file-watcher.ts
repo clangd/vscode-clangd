@@ -1,6 +1,5 @@
 import * as path from 'path';
 import * as vscode from 'vscode';
-import * as vscodelc from 'vscode-languageclient';
 
 import * as config from './config';
 

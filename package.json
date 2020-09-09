@@ -128,7 +128,11 @@
                     "type": "string",
                     "default": "prompt",
                     "description": "What to do when clangd configuration files are changed.",
-                    "enum": ["prompt","restart", "ignore"],
+                    "enum": [
+                        "prompt",
+                        "restart",
+                        "ignore"
+                    ],
                     "enumDescriptions": [
                         "Prompt the user for restarting the server",
                         "Automatically restart the server",
