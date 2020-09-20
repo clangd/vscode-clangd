@@ -192,7 +192,7 @@
             "editor/context": [
                 {
                     "command": "clangd.typeHierarchy",
-                    "when": "resourceLangId == cpp",
+                    "when": "resourceLangId == cpp && extension.vscode-clangd.serverRunning",
                     "group": "0_navigation@4",
                     "_comment": "see https://github.com/microsoft/vscode-references-view/blob/f63eaed9934ca5ecc8f3fb3ca096f38c6e5e181f/package.json#L162"
                 }

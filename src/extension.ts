@@ -129,6 +129,15 @@ export async function activate(context: vscode.ExtensionContext) {
 
   const client = new ClangdLanguageClient('Clang Language Server',
                                           serverOptions, clientOptions);
+  client.onDidChangeState(stateChange => {
+    if (stateChange.newState == vscodelc.State.Running) {
+      vscode.commands.executeCommand(
+          'setContext', 'extension.vscode-clangd.serverRunning', true);
+    } else if (stateChange.newState == vscodelc.State.Stopped) {
+      vscode.commands.executeCommand(
+          'setContext', 'extension.vscode-clangd.serverRunning', false);
+    }
+  });
   context.subscriptions.push(vscode.Disposable.from(client));
   if (config.get<boolean>('semanticHighlighting'))
     semanticHighlighting.activate(client, context);
