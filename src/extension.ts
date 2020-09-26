@@ -139,7 +139,7 @@ export async function activate(context: vscode.ExtensionContext) {
   console.log('Clang Language Server is now active!');
   fileStatus.activate(client, context);
   switchSourceHeader.activate(client, context);
-  configFileWatcher.activate(context, args);
+  configFileWatcher.activate(context);
   // An empty place holder for the activate command, otherwise we'll get an
   // "command is not registered" error.
   context.subscriptions.push(
