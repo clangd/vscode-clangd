@@ -57,8 +57,10 @@ export async function activate(context: vscode.ExtensionContext) {
   if (!clangdPath)
     return;
 
-  const args: string[] = config.get<string[]>('arguments');
-  const clangd: vscodelc.Executable = {command: clangdPath, args: args};
+  const clangd: vscodelc.Executable = {
+    command: clangdPath,
+    args: config.get<string[]>('arguments')
+  };
   const traceFile = config.get<string>('trace');
   if (!!traceFile) {
     const trace = {CLANGD_TRACE: traceFile};
