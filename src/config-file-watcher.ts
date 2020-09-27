@@ -10,15 +10,26 @@ export function activate(context: vscode.ExtensionContext) {
 }
 
 class ConfigFileWatcher {
-  private databaseWatcher = vscode.workspace.createFileSystemWatcher(
-      '**/{compile_commands.json,compile_flags.txt,.clang-tidy}');
+  private databaseWatcher: vscode.FileSystemWatcher = undefined;
 
   constructor(private context: vscode.ExtensionContext) {
-    context.subscriptions.push(this.databaseWatcher.onDidChange(
+    this.createFileSystemWatcher();
+    context.subscriptions.push(vscode.workspace.onDidChangeWorkspaceFolders(
+        () => { this.createFileSystemWatcher(); }));
+  }
+
+  createFileSystemWatcher() {
+    if (this.databaseWatcher)
+      this.databaseWatcher.dispose();
+    this.databaseWatcher = vscode.workspace.createFileSystemWatcher(
+        '{' +
+        vscode.workspace.workspaceFolders.map(f => f.uri.fsPath).join(',') +
+        '}/{build/compile_commands.json,compile_commands.json,compile_flags.txt,.clang-tidy}');
+    this.context.subscriptions.push(this.databaseWatcher.onDidChange(
         this.handleConfigFilesChanged.bind(this)));
-    context.subscriptions.push(this.databaseWatcher.onDidCreate(
+    this.context.subscriptions.push(this.databaseWatcher.onDidCreate(
         this.handleConfigFilesChanged.bind(this)));
-    context.subscriptions.push(this.databaseWatcher);
+    this.context.subscriptions.push(this.databaseWatcher);
   }
 
   async handleConfigFilesChanged(uri: vscode.Uri) {
@@ -27,13 +38,6 @@ class ConfigFileWatcher {
     // one, and after the compilation they write the new content. In this cases
     // the server is not supposed to restart
     if ((await vscode.workspace.fs.stat(uri)).size <= 0)
-      return;
-
-    let relativePath = vscode.workspace.asRelativePath(uri, false);
-    let baseName = path.basename(uri.fsPath);
-
-    if (relativePath != baseName &&
-        relativePath != 'build/compile_commands.json')
       return;
 
     switch (config.get<string>('onConfigChanged')) {
