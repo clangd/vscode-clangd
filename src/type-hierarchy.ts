@@ -10,7 +10,8 @@ import * as vscodelc from 'vscode-languageclient';
 
 export function activate(client: vscodelc.LanguageClient,
                          context: vscode.ExtensionContext) {
-  new TypeHierarchyProvider(context, client);
+  const feature = new TypeHierarchyFeature(client, context);
+  client.registerFeature(feature);
 }
 
 export namespace TypeHierarchyDirection {
@@ -79,6 +80,43 @@ class TypeHierarchyTreeItem extends vscode.TreeItem {
       command: 'clangd.typeHierarchy.gotoItem',
       title: 'Go to'
     };
+  }
+}
+
+class TypeHierarchyFeature implements vscodelc.StaticFeature {
+  private serverSupportsTypeHierarchy = false;
+  private state: vscodelc.State;
+
+  constructor(client: vscodelc.LanguageClient,
+              context: vscode.ExtensionContext) {
+    new TypeHierarchyProvider(context, client);
+    client.onDidChangeState(stateChange => {
+      this.state = stateChange.newState
+      this.recomputeEnableTypeHierarchy();
+    });
+  }
+
+  fillClientCapabilities(capabilities: vscodelc.ClientCapabilities) {}
+
+  initialize(capabilities: vscodelc.ServerCapabilities,
+             documentSelector: vscodelc.DocumentSelector|undefined) {
+    const serverCapabilities: vscodelc.ServerCapabilities&
+        {typeHierarchyProvider?: boolean} = capabilities;
+    if (serverCapabilities.typeHierarchyProvider) {
+      this.serverSupportsTypeHierarchy = true;
+      this.recomputeEnableTypeHierarchy();
+    }
+  }
+
+  private recomputeEnableTypeHierarchy() {
+    if (this.state == vscodelc.State.Running) {
+      vscode.commands.executeCommand(
+          'setContext', 'extension.vscode-clangd.enableTypeHierarchy',
+          this.serverSupportsTypeHierarchy);
+    } else if (this.state == vscodelc.State.Stopped) {
+      vscode.commands.executeCommand(
+          'setContext', 'extension.vscode-clangd.enableTypeHierarchy', false);
+    }
   }
 }
 
