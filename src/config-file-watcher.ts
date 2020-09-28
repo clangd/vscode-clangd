@@ -1,4 +1,3 @@
-import * as path from 'path';
 import * as vscode from 'vscode';
 
 import * as config from './config';
@@ -49,8 +48,8 @@ class ConfigFileWatcher {
     case 'prompt':
     default:
       switch (await vscode.window.showInformationMessage(
-          'Clangd configuration file at \'' + uri.fsPath +
-              '\' has been changed. Do you want to restart it?',
+          `Clangd configuration file at '${
+              uri.fsPath}' has been changed. Do you want to restart it?`,
           'Yes', 'Yes, always', 'No, never')) {
       case 'Yes':
         vscode.commands.executeCommand('clangd.restart');
