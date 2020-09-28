@@ -90,10 +90,10 @@ class TypeHierarchyFeature implements vscodelc.StaticFeature {
   constructor(client: vscodelc.LanguageClient,
               context: vscode.ExtensionContext) {
     new TypeHierarchyProvider(context, client);
-    client.onDidChangeState(stateChange => {
-      this.state = stateChange.newState
+    context.subscriptions.push(client.onDidChangeState(stateChange => {
+      this.state = stateChange.newState;
       this.recomputeEnableTypeHierarchy();
-    });
+    }));
   }
 
   fillClientCapabilities(capabilities: vscodelc.ClientCapabilities) {}
