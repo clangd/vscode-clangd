@@ -1,8 +1,9 @@
 import * as vscode from 'vscode';
 
+import {ClangdContext} from './clangd-context';
 import * as config from './config';
 
-export function activate(context: vscode.ExtensionContext) {
+export function activate(context: ClangdContext) {
   if (config.get<string>('onConfigChanged') != 'ignore') {
     const watcher = new ConfigFileWatcher(context);
   }
@@ -11,7 +12,7 @@ export function activate(context: vscode.ExtensionContext) {
 class ConfigFileWatcher {
   private databaseWatcher: vscode.FileSystemWatcher = undefined;
 
-  constructor(private context: vscode.ExtensionContext) {
+  constructor(private context: ClangdContext) {
     this.createFileSystemWatcher();
     context.subscriptions.push(vscode.workspace.onDidChangeWorkspaceFolders(
         () => { this.createFileSystemWatcher(); }));

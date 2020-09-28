@@ -1,8 +1,10 @@
 import * as vscode from 'vscode';
 import * as vscodelc from 'vscode-languageclient/node';
 
+import {ClangdContext} from './clangd-context';
+
 export function activate(client: vscodelc.LanguageClient,
-                         context: vscode.ExtensionContext) {
+                         context: ClangdContext) {
   context.subscriptions.push(vscode.commands.registerCommand(
       'clangd.switchheadersource', () => switchSourceHeader(client)));
 }

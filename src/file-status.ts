@@ -1,8 +1,10 @@
 import * as vscode from 'vscode';
 import * as vscodelc from 'vscode-languageclient/node';
 
+import {ClangdContext} from './clangd-context';
+
 export function activate(client: vscodelc.LanguageClient,
-                         context: vscode.ExtensionContext) {
+                         context: ClangdContext) {
   const status = new FileStatus();
   context.subscriptions.push(vscode.Disposable.from(status));
   context.subscriptions.push(vscode.window.onDidChangeActiveTextEditor(

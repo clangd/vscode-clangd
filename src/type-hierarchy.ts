@@ -8,8 +8,10 @@
 import * as vscode from 'vscode';
 import * as vscodelc from 'vscode-languageclient/node';
 
+import {ClangdContext} from './clangd-context';
+
 export function activate(client: vscodelc.LanguageClient,
-                         context: vscode.ExtensionContext) {
+                         context: ClangdContext) {
   const feature = new TypeHierarchyFeature(client, context);
   client.registerFeature(feature);
 }
@@ -87,8 +89,7 @@ class TypeHierarchyFeature implements vscodelc.StaticFeature {
   private serverSupportsTypeHierarchy = false;
   private state: vscodelc.State;
 
-  constructor(client: vscodelc.LanguageClient,
-              context: vscode.ExtensionContext) {
+  constructor(client: vscodelc.LanguageClient, context: ClangdContext) {
     new TypeHierarchyProvider(context, client);
     context.subscriptions.push(client.onDidChangeState(stateChange => {
       this.state = stateChange.newState;
@@ -131,8 +132,7 @@ class TypeHierarchyProvider implements
   private direction: TypeHierarchyDirection;
   private treeView: vscode.TreeView<TypeHierarchyItem>;
 
-  constructor(context: vscode.ExtensionContext,
-              private client: vscodelc.LanguageClient) {
+  constructor(context: ClangdContext, private client: vscodelc.LanguageClient) {
     context.subscriptions.push(vscode.window.registerTreeDataProvider(
         'clangd.typeHierarchyView', this));
 
