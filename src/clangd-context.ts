@@ -139,13 +139,13 @@ export class ClangdContext implements vscode.Disposable {
                                            serverOptions, clientOptions);
     this.subscriptions.push(vscode.Disposable.from(this.client));
     if (config.get<boolean>('semanticHighlighting'))
-      semanticHighlighting.activate(this.client, this);
+      semanticHighlighting.activate(this);
     this.client.registerFeature(new EnableEditsNearCursorFeature);
-    typeHierarchy.activate(this.client, this);
+    typeHierarchy.activate(this);
     this.client.activate();
     console.log('Clang Language Server is now active!');
-    fileStatus.activate(this.client, this);
-    switchSourceHeader.activate(this.client, this);
+    fileStatus.activate(this);
+    switchSourceHeader.activate(this);
     configFileWatcher.activate(this);
   }
 

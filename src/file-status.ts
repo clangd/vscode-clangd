@@ -3,16 +3,15 @@ import * as vscodelc from 'vscode-languageclient/node';
 
 import {ClangdContext} from './clangd-context';
 
-export function activate(client: vscodelc.LanguageClient,
-                         context: ClangdContext) {
+export function activate(context: ClangdContext) {
   const status = new FileStatus();
   context.subscriptions.push(vscode.Disposable.from(status));
   context.subscriptions.push(vscode.window.onDidChangeActiveTextEditor(
       () => { status.updateStatus(); }));
-  context.subscriptions.push(client.onDidChangeState(({newState}) => {
+  context.subscriptions.push(context.client.onDidChangeState(({newState}) => {
     if (newState == vscodelc.State.Running) {
       // clangd starts or restarts after crash.
-      client.onNotification(
+      context.client.onNotification(
           'textDocument/clangd.fileStatus',
           (fileStatus) => { status.onFileUpdated(fileStatus); });
     } else if (newState == vscodelc.State.Stopped) {

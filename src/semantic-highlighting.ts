@@ -7,11 +7,10 @@ import * as vscodelct from 'vscode-languageserver-types';
 
 import {ClangdContext} from './clangd-context';
 
-export function activate(client: vscodelc.LanguageClient,
-                         context: ClangdContext) {
-  const feature = new SemanticHighlightingFeature(client, context);
+export function activate(context: ClangdContext) {
+  const feature = new SemanticHighlightingFeature(context);
   context.subscriptions.push(feature);
-  client.registerFeature(feature);
+  context.client.registerFeature(feature);
 }
 
 // Parameters for the semantic highlighting (server-side) push notification.
@@ -67,12 +66,12 @@ export class SemanticHighlightingFeature implements vscodelc.StaticFeature {
   highlighter: Highlighter;
   // Any disposables that should be cleaned up when clangd crashes.
   private subscriptions: vscode.Disposable[] = [];
-  constructor(client: vscodelc.BaseLanguageClient, context: ClangdContext) {
-    context.subscriptions.push(client.onDidChangeState(({newState}) => {
+  constructor(context: ClangdContext) {
+    context.subscriptions.push(context.client.onDidChangeState(({newState}) => {
       if (newState == vscodelc.State.Running) {
         // Register handler for semantic highlighting notification.
-        client.onNotification(NotificationType,
-                              this.handleNotification.bind(this));
+        context.client.onNotification(NotificationType,
+                                      this.handleNotification.bind(this));
       } else if (newState == vscodelc.State.Stopped) {
         // Dispose resources when clangd crashes.
         this.dispose();
