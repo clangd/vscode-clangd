@@ -8,9 +8,11 @@
 import * as vscode from 'vscode';
 import * as vscodelc from 'vscode-languageclient/node';
 
-export function activate(client: vscodelc.LanguageClient,
-                         context: vscode.ExtensionContext) {
-  new TypeHierarchyProvider(context, client);
+import {ClangdContext} from './clangd-context';
+
+export function activate(context: ClangdContext) {
+  const feature = new TypeHierarchyFeature(context);
+  context.client.registerFeature(feature);
 }
 
 export namespace TypeHierarchyDirection {
@@ -82,8 +84,46 @@ class TypeHierarchyTreeItem extends vscode.TreeItem {
   }
 }
 
+class TypeHierarchyFeature implements vscodelc.StaticFeature {
+  private serverSupportsTypeHierarchy = false;
+  private state: vscodelc.State;
+
+  constructor(context: ClangdContext) {
+    new TypeHierarchyProvider(context);
+    context.subscriptions.push(context.client.onDidChangeState(stateChange => {
+      this.state = stateChange.newState;
+      this.recomputeEnableTypeHierarchy();
+    }));
+  }
+
+  fillClientCapabilities(capabilities: vscodelc.ClientCapabilities) {}
+
+  initialize(capabilities: vscodelc.ServerCapabilities,
+             documentSelector: vscodelc.DocumentSelector|undefined) {
+    const serverCapabilities: vscodelc.ServerCapabilities&
+        {typeHierarchyProvider?: boolean} = capabilities;
+    if (serverCapabilities.typeHierarchyProvider) {
+      this.serverSupportsTypeHierarchy = true;
+      this.recomputeEnableTypeHierarchy();
+    }
+  }
+
+  private recomputeEnableTypeHierarchy() {
+    if (this.state == vscodelc.State.Running) {
+      vscode.commands.executeCommand(
+          'setContext', 'extension.vscode-clangd.enableTypeHierarchy',
+          this.serverSupportsTypeHierarchy);
+    } else if (this.state == vscodelc.State.Stopped) {
+      vscode.commands.executeCommand(
+          'setContext', 'extension.vscode-clangd.enableTypeHierarchy', false);
+    }
+  }
+}
+
 class TypeHierarchyProvider implements
     vscode.TreeDataProvider<TypeHierarchyItem> {
+
+  private client: vscodelc.LanguageClient;
 
   private _onDidChangeTreeData =
       new vscode.EventEmitter<TypeHierarchyItem|null>();
@@ -93,8 +133,9 @@ class TypeHierarchyProvider implements
   private direction: TypeHierarchyDirection;
   private treeView: vscode.TreeView<TypeHierarchyItem>;
 
-  constructor(context: vscode.ExtensionContext,
-              private client: vscodelc.LanguageClient) {
+  constructor(context: ClangdContext) {
+    this.client = context.client;
+
     context.subscriptions.push(vscode.window.registerTreeDataProvider(
         'clangd.typeHierarchyView', this));
 

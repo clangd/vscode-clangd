@@ -128,6 +128,21 @@
                     "type": "boolean",
                     "default": false,
                     "description": "Check for language server updates on startup."
+                },
+                "clangd.onConfigChanged": {
+                    "type": "string",
+                    "default": "prompt",
+                    "description": "What to do when clangd configuration files are changed.",
+                    "enum": [
+                        "prompt",
+                        "restart",
+                        "ignore"
+                    ],
+                    "enumDescriptions": [
+                        "Prompt the user for restarting the server",
+                        "Automatically restart the server",
+                        "Do nothing"
+                    ]
                 }
             }
         },
@@ -198,7 +213,7 @@
             "editor/context": [
                 {
                     "command": "clangd.typeHierarchy",
-                    "when": "resourceLangId == cpp",
+                    "when": "resourceLangId == cpp && extension.vscode-clangd.enableTypeHierarchy",
                     "group": "0_navigation@4",
                     "_comment": "see https://github.com/microsoft/vscode-references-view/blob/f63eaed9934ca5ecc8f3fb3ca096f38c6e5e181f/package.json#L162"
                 }
