@@ -6,12 +6,13 @@ import AbortController from 'abort-controller';
 import * as path from 'path';
 import * as vscode from 'vscode';
 
+import {ClangdContext} from './clangd-context';
 import * as config from './config';
 
 // Returns the clangd path to be used, or null if clangd is not installed.
-export async function activate(context: vscode.ExtensionContext):
-    Promise<string> {
-  const ui = new UI(context);
+export async function activate(context: ClangdContext,
+                               globalStoragePath: string): Promise<string> {
+  const ui = new UI(context, globalStoragePath);
   context.subscriptions.push(vscode.commands.registerCommand(
       'clangd.install', async () => common.installLatest(ui)));
   context.subscriptions.push(vscode.commands.registerCommand(
@@ -21,9 +22,10 @@ export async function activate(context: vscode.ExtensionContext):
 }
 
 class UI {
-  constructor(private context: vscode.ExtensionContext) {}
+  constructor(private context: ClangdContext,
+              private globalStoragePath: string) {}
 
-  get storagePath(): string { return this.context.globalStoragePath; }
+  get storagePath(): string { return this.globalStoragePath; }
   async choose(prompt: string, options: string[]): Promise<string|undefined> {
     return await vscode.window.showInformationMessage(prompt, ...options);
   }

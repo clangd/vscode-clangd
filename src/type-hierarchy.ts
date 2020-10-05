@@ -8,10 +8,11 @@
 import * as vscode from 'vscode';
 import * as vscodelc from 'vscode-languageclient/node';
 
-export function activate(client: vscodelc.LanguageClient,
-                         context: vscode.ExtensionContext) {
-  const feature = new TypeHierarchyFeature(client, context);
-  client.registerFeature(feature);
+import {ClangdContext} from './clangd-context';
+
+export function activate(context: ClangdContext) {
+  const feature = new TypeHierarchyFeature(context);
+  context.client.registerFeature(feature);
 }
 
 export namespace TypeHierarchyDirection {
@@ -87,10 +88,9 @@ class TypeHierarchyFeature implements vscodelc.StaticFeature {
   private serverSupportsTypeHierarchy = false;
   private state: vscodelc.State;
 
-  constructor(client: vscodelc.LanguageClient,
-              context: vscode.ExtensionContext) {
-    new TypeHierarchyProvider(context, client);
-    context.subscriptions.push(client.onDidChangeState(stateChange => {
+  constructor(context: ClangdContext) {
+    new TypeHierarchyProvider(context);
+    context.subscriptions.push(context.client.onDidChangeState(stateChange => {
       this.state = stateChange.newState;
       this.recomputeEnableTypeHierarchy();
     }));
@@ -123,6 +123,8 @@ class TypeHierarchyFeature implements vscodelc.StaticFeature {
 class TypeHierarchyProvider implements
     vscode.TreeDataProvider<TypeHierarchyItem> {
 
+  private client: vscodelc.LanguageClient;
+
   private _onDidChangeTreeData =
       new vscode.EventEmitter<TypeHierarchyItem|null>();
   readonly onDidChangeTreeData = this._onDidChangeTreeData.event;
@@ -131,8 +133,9 @@ class TypeHierarchyProvider implements
   private direction: TypeHierarchyDirection;
   private treeView: vscode.TreeView<TypeHierarchyItem>;
 
-  constructor(context: vscode.ExtensionContext,
-              private client: vscodelc.LanguageClient) {
+  constructor(context: ClangdContext) {
+    this.client = context.client;
+
     context.subscriptions.push(vscode.window.registerTreeDataProvider(
         'clangd.typeHierarchyView', this));
 
