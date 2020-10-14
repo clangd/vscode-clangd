@@ -61,6 +61,17 @@ export const type =
         'typeHierarchy/resolve');
 }
 
+// A dummy node used to indicate that a node has multiple parents
+// when we are in Children mode.
+const dummyNode: TypeHierarchyItem = {
+  name: '[multiple parents]',
+  kind: vscodelc.SymbolKind.Null,
+  uri: '',
+  range: {start: {line: 0, character: 0}, end: {line: 0, character: 0}},
+  selectionRange:
+      {start: {line: 0, character: 0}, end: {line: 0, character: 0}},
+};
+
 class TypeHierarchyTreeItem extends vscode.TreeItem {
   constructor(item: TypeHierarchyItem) {
     super(item.name);
@@ -72,6 +83,11 @@ class TypeHierarchyTreeItem extends vscode.TreeItem {
       }
     } else {
       this.collapsibleState = vscode.TreeItemCollapsibleState.Collapsed;
+    }
+
+    // Do not register actions for the dummy node.
+    if (item == dummyNode) {
+      return;
     }
 
     // Make the item respond to a single-click by navigating to the
@@ -133,6 +149,10 @@ class TypeHierarchyProvider implements
   private direction: TypeHierarchyDirection;
   private treeView: vscode.TreeView<TypeHierarchyItem>;
 
+  // The item on which the type hierarchy operation was invoked.
+  // May be different from the root.
+  private startingItem: TypeHierarchyItem;
+
   constructor(context: ClangdContext) {
     this.client = context.client;
 
@@ -179,7 +199,18 @@ class TypeHierarchyProvider implements
 
   public async setDirection(direction: TypeHierarchyDirection) {
     this.direction = direction;
+    // Recompute the root based on the starting item.
+    this.root = this.computeRoot();
     this._onDidChangeTreeData.fire(null);
+    // Re-focus the starting item, which may not be the root.
+    this.treeView.reveal(this.startingItem, {focus: true})
+        .then(() => {}, (reason) => {
+          // Sometimes TreeView.reveal() fails. It's unclear why, and it does
+          // not appear to have any visible effects, but vscode complains if you
+          // don't handle the rejection promise, so we do so and log a warning.
+          console.log('Warning: TreeView.reveal() failed for reason: ' +
+                      reason);
+        });
   }
 
   public getTreeItem(element: TypeHierarchyItem): vscode.TreeItem {
@@ -187,9 +218,15 @@ class TypeHierarchyProvider implements
   }
 
   public getParent(element: TypeHierarchyItem): TypeHierarchyItem|null {
-    // This function is only implemented so that VSCode lets us call
-    // this.treeView.reveal(). Since we only ever call reveal() on the root,
-    // which has no parent, it's fine to always return null.
+    // This function is implemented so that VSCode lets us call
+    // this.treeView.reveal().
+    if (element.parents) {
+      if (element.parents.length == 1) {
+        return element.parents[0];
+      } else if (element.parents.length > 1) {
+        return dummyNode;
+      }
+    }
     return null;
   }
 
@@ -217,6 +254,32 @@ class TypeHierarchyProvider implements
     return element.children;
   }
 
+  private computeRoot(): TypeHierarchyItem {
+    // In Parents mode, the root is always the starting item.
+    if (this.direction == TypeHierarchyDirection.Parents) {
+      return this.startingItem;
+    }
+
+    // In Children mode, we also include base classes of
+    // the starting item as parents. If we encounter a class
+    // with multiple bases, we show a dummy node with the label
+    // "[multiple parents]" instead.
+    let root = this.startingItem;
+    while (root.parents && root.parents.length == 1) {
+      root = root.parents[0];
+    }
+    if (root.parents && root.parents.length > 1) {
+      dummyNode.children = [root];
+      // Do not set "root.parents = [dummyNode]".
+      // This would discard the real parents and we'd have to re-query
+      // them if entering Parents mode.
+      // Instead, we teach getParent() to return the dummy node if
+      // there are multiple parents.
+      root = dummyNode;
+    }
+    return root;
+  }
+
   private async reveal(editor: vscode.TextEditor) {
     // This makes the type hierarchy view visible by causing the condition
     // "when": "extension.vscode-clangd.typeHierarchyVisible" from
@@ -239,7 +302,9 @@ class TypeHierarchyProvider implements
       direction: TypeHierarchyDirection.Both
     });
     if (item) {
-      this.root = item;
+      this.startingItem = item;
+      this.root = this.computeRoot();
+
       this._onDidChangeTreeData.fire(null);
 
       // This focuses the "explorer" view container which contains the
@@ -247,7 +312,17 @@ class TypeHierarchyProvider implements
       vscode.commands.executeCommand('workbench.view.explorer');
 
       // This expands and focuses the type hierarchy view.
-      this.treeView.reveal(this.root, {focus: true});
+      // Focus the item on which the operation was invoked, not the
+      // root (which could be its ancestor or the dummy node).
+      this.treeView.reveal(this.startingItem, {focus: true})
+          .then(() => {}, (reason) => {
+            // Sometimes TreeView.reveal() fails. It's unclear why, and it does
+            // not appear to have any visible effects, but vscode complains if
+            // you don't handle the rejection promise, so we do so and log a
+            // warning.
+            console.log('Warning: TreeView.reveal() failed for reason: ' +
+                        reason);
+          });
     } else {
       vscode.window.showInformationMessage(
           'No type hierarchy available for selection');
