@@ -196,6 +196,16 @@
                 "command": "clangd.memoryUsage.close",
                 "title": "Close",
                 "icon": "$(panel-close)"
+            },
+            {
+                "command": "clangd.ast",
+                "title": "Show AST",
+                "icon": "$(list-tree)"
+            },
+            {
+                "command": "clangd.ast.close",
+                "title": "Close",
+                "icon": "$(panel-close)"
             }
         ],
         "keybindings": [
@@ -218,6 +228,10 @@
                     "when": "resourceLangId == cpp && clangd.enableTypeHierarchy",
                     "group": "0_navigation@4",
                     "_comment": "see https://github.com/microsoft/vscode-references-view/blob/f63eaed9934ca5ecc8f3fb3ca096f38c6e5e181f/package.json#L162"
+                },
+                {
+                    "command": "clangd.ast",
+                    "when": "clangd.ast.supported"
                 }
             ],
             "view/title": [
@@ -244,6 +258,11 @@
                 {
                     "command": "clangd.memoryUsage",
                     "when": "view == clangd.memoryUsage",
+                    "group": "navigation"
+                },
+                {
+                    "command": "clangd.ast.close",
+                    "when": "view == clangd.ast",
                     "group": "navigation"
                 }
             ],
@@ -273,6 +292,11 @@
                     "id": "clangd.memoryUsage",
                     "name": "clangd Memory Usage",
                     "when": "clangd.memoryUsage.hasData"
+                },
+                {
+                    "id": "clangd.ast",
+                    "name": "AST",
+                    "when": "clangd.ast.hasData"
                 }
             ]
         }

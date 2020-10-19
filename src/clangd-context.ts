@@ -1,6 +1,7 @@
 import * as vscode from 'vscode';
 import * as vscodelc from 'vscode-languageclient/node';
 
+import * as ast from './ast';
 import * as config from './config';
 import * as configFileWatcher from './config-file-watcher';
 import * as fileStatus from './file-status';
@@ -140,6 +141,7 @@ export class ClangdContext implements vscode.Disposable {
     this.client.registerFeature(new EnableEditsNearCursorFeature);
     typeHierarchy.activate(this);
     memoryUsage.activate(this);
+    ast.activate(this);
     this.subscriptions.push(this.client.start());
     console.log('Clang Language Server is now active!');
     fileStatus.activate(this);
