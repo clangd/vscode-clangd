@@ -189,6 +189,17 @@
                     "light": "resources/close-light.svg",
                     "dark": "resources/close-dark.svg"
                 }
+            },
+            {
+                "command": "clangd.memoryUsage",
+                "title": "clangd: show memory usage",
+                "enablement": "clangd.memoryUsage.supported",
+                "icon": "$(refresh)"
+            },
+            {
+                "command": "clangd.memoryUsage.close",
+                "title": "Close",
+                "icon": "$(panel-close)"
             }
         ],
         "keybindings": [
@@ -228,6 +239,15 @@
                     "command": "clangd.typeHierarchy.close",
                     "when": "view == clangd.typeHierarchyView",
                     "group": "navigation"
+                },
+                {
+                    "command": "clangd.memoryUsage.close",
+                    "when": "view == clangd.memoryUsage",
+                    "group": "navigation"
+                },
+                {
+                    "command": "clangd.memoryUsage",
+                    "group": "navigation"
                 }
             ],
             "commandPalette": [
@@ -238,6 +258,9 @@
                 {
                     "command": "clangd.typeHierarchy.viewChildren",
                     "when": "resourceLangId == cpp"
+                },
+                {
+                    "command": "clangd.memoryUsage"
                 }
             ]
         },
@@ -247,6 +270,11 @@
                     "id": "clangd.typeHierarchyView",
                     "name": "Type Hierarchy",
                     "when": "extension.vscode-clangd.typeHierarchyVisible"
+                },
+                {
+                    "id": "clangd.memoryUsage",
+                    "name": "clangd Memory Usage",
+                    "when": "clangd.memoryUsage.hasData"
                 }
             ]
         }
