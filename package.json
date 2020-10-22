@@ -180,6 +180,7 @@
                 "command": "clangd.typeHierarchy.close",
                 "title": "Close",
                 "icon": "$(panel-close)"
+            },
             {
                 "command": "clangd.memoryUsage",
                 "title": "clangd: show memory usage",
