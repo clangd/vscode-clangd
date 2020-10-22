@@ -5,6 +5,7 @@ import * as config from './config';
 import * as configFileWatcher from './config-file-watcher';
 import * as fileStatus from './file-status';
 import * as install from './install';
+import * as memoryUsage from './memory-usage';
 import * as semanticHighlighting from './semantic-highlighting';
 import * as switchSourceHeader from './switch-source-header';
 import * as typeHierarchy from './type-hierarchy';
@@ -130,6 +131,7 @@ export class ClangdContext implements vscode.Disposable {
       semanticHighlighting.activate(this);
     this.client.registerFeature(new EnableEditsNearCursorFeature);
     typeHierarchy.activate(this);
+    memoryUsage.activate(this);
     this.subscriptions.push(this.client.start());
     console.log('Clang Language Server is now active!');
     fileStatus.activate(this);
