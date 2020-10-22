@@ -12,7 +12,7 @@ import * as vscodelc from 'vscode-languageclient/node';
 import {ClangdContext} from './clangd-context';
 
 export function activate(context: ClangdContext) {
-  const feature = new ASTFeature(context);
+  const feature = new MemoryUsageFeature(context);
   context.client.registerFeature(feature);
 }
 
@@ -21,9 +21,9 @@ interface NoParams {}
 interface WireTree {
   _self: number;
   _total: number;
-  [child: string]: WireTree|number|string;
+  [child: string]: WireTree|number;
 }
-export const RequestType =
+export const MemoryUsageRequest =
     new vscodelc.RequestType<NoParams, WireTree, void, void>('$/memoryUsage');
 
 // Internal representation that's a bit easier to work with.
@@ -41,15 +41,14 @@ function convert(m: WireTree, title: string): InternalTree {
     isFile: slash >= 0,
     total: m._total,
     self: m._self,
-    children: Object.keys(m)
+    children: Object.keys(m).sort()
                   .filter(x => !x.startsWith('_'))
                   .map(e => convert(m[e] as WireTree, e))
-                  .sort((x, y) => x.total - y.total)
-                  .reverse(),
+                  .sort((x, y) => y.total - x.total),
   };
 }
 
-class ASTFeature implements vscodelc.StaticFeature {
+class MemoryUsageFeature implements vscodelc.StaticFeature {
   constructor(private context: ClangdContext) {
     const adapter = new TreeAdapter();
     adapter.onDidChangeTreeData(
@@ -58,7 +57,7 @@ class ASTFeature implements vscodelc.StaticFeature {
     this.context.subscriptions.push(
         vscode.window.registerTreeDataProvider('clangd.memoryUsage', adapter));
     vscode.commands.registerCommand('clangd.memoryUsage', async () => {
-      const usage = await this.context.client.sendRequest(RequestType, {});
+      const usage = await this.context.client.sendRequest(MemoryUsageRequest, {});
       adapter.root = convert(usage, '<root>');
     });
     vscode.commands.registerCommand('clangd.memoryUsage.close',
@@ -104,6 +103,8 @@ class TreeAdapter implements vscode.TreeDataProvider<InternalTree> {
   }
 
   public async getChildren(t?: InternalTree): Promise<InternalTree[]> {
-    return t ? t.children : this.root ? [this.root] : [];
+    if (!t)
+      return this.root ? [this.root] : [];
+    return t.children;
   }
 }
