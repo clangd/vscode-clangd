@@ -169,27 +169,17 @@
             {
                 "command": "clangd.typeHierarchy.viewParents",
                 "title": "Types: Show Base Classes",
-                "icon": {
-                    "light": "resources/up-light.svg",
-                    "dark": "resources/up-dark.svg"
-                }
+                "icon": "$(triangle-up)"
             },
             {
                 "command": "clangd.typeHierarchy.viewChildren",
                 "title": "Types: Show Derived Classes",
-                "icon": {
-                    "light": "resources/down-light.svg",
-                    "dark": "resources/down-dark.svg"
-                }
+                "icon": "$(triangle-down)"
             },
             {
                 "command": "clangd.typeHierarchy.close",
                 "title": "Close",
-                "icon": {
-                    "light": "resources/close-light.svg",
-                    "dark": "resources/close-dark.svg"
-                }
-            },
+                "icon": "$(panel-close)"
             {
                 "command": "clangd.memoryUsage",
                 "title": "clangd: show memory usage",
