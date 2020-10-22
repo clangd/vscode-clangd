@@ -6,7 +6,7 @@
 // (context: clangd.memoryUsage.hasData)
 
 import * as vscode from 'vscode';
-import { window } from 'vscode';
+import {window} from 'vscode';
 import * as vscodelc from 'vscode-languageclient/node';
 
 import {ClangdContext} from './clangd-context';
@@ -41,7 +41,8 @@ function convert(m: WireTree, title: string): InternalTree {
     isFile: slash >= 0,
     total: m._total,
     self: m._self,
-    children: Object.keys(m).sort()
+    children: Object.keys(m)
+                  .sort()
                   .filter(x => !x.startsWith('_'))
                   .map(e => convert(m[e] as WireTree, e))
                   .sort((x, y) => y.total - x.total),
@@ -57,7 +58,8 @@ class MemoryUsageFeature implements vscodelc.StaticFeature {
     this.context.subscriptions.push(
         vscode.window.registerTreeDataProvider('clangd.memoryUsage', adapter));
     vscode.commands.registerCommand('clangd.memoryUsage', async () => {
-      const usage = await this.context.client.sendRequest(MemoryUsageRequest, {});
+      const usage =
+          await this.context.client.sendRequest(MemoryUsageRequest, {});
       adapter.root = convert(usage, '<root>');
     });
     vscode.commands.registerCommand('clangd.memoryUsage.close',
