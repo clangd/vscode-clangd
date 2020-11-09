@@ -6,7 +6,6 @@
 // (context: clangd.memoryUsage.hasData)
 
 import * as vscode from 'vscode';
-import {window} from 'vscode';
 import * as vscodelc from 'vscode-languageclient/node';
 
 import {ClangdContext} from './clangd-context';

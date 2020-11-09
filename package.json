@@ -251,7 +251,8 @@
                     "when": "resourceLangId == cpp"
                 },
                 {
-                    "command": "clangd.memoryUsage"
+                    "command": "clangd.memoryUsage",
+                    "when": "clangd.memoryUsage.supported"
                 }
             ]
         },
