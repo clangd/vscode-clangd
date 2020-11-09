@@ -57,13 +57,14 @@ class MemoryUsageFeature implements vscodelc.StaticFeature {
             'setContext', 'clangd.memoryUsage.hasData', adapter.root != null));
     this.context.subscriptions.push(
         vscode.window.registerTreeDataProvider('clangd.memoryUsage', adapter));
-    vscode.commands.registerCommand('clangd.memoryUsage', async () => {
-      const usage =
-          await this.context.client.sendRequest(MemoryUsageRequest, {});
-      adapter.root = convert(usage, '<root>');
-    });
-    vscode.commands.registerCommand('clangd.memoryUsage.close',
-                                    () => adapter.root = null);
+    this.context.subscriptions.push(
+        vscode.commands.registerCommand('clangd.memoryUsage', async () => {
+          const usage =
+              await this.context.client.sendRequest(MemoryUsageRequest, {});
+          adapter.root = convert(usage, '<root>');
+        }));
+    this.context.subscriptions.push(vscode.commands.registerCommand(
+        'clangd.memoryUsage.close', () => adapter.root = null));
   }
 
   fillClientCapabilities(capabilities: vscodelc.ClientCapabilities) {}
