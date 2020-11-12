@@ -2,7 +2,7 @@
     "name": "vscode-clangd",
     "displayName": "clangd",
     "description": "C and C++ completion, navigation, and insights",
-    "version": "0.1.7",
+    "version": "0.1.8",
     "publisher": "llvm-vs-code-extensions",
     "license": "MIT",
     "homepage": "https://clangd.llvm.org/",
@@ -45,8 +45,8 @@
     "dependencies": {
         "abort-controller": "^3.0.0",
         "jsonc-parser": "^2.1.0",
-        "vscode-languageclient": "7.0.0-next.9",
-        "vscode-languageserver-types": "3.16.0-next.3",
+        "vscode-languageclient": "7.0.0-next.10",
+        "vscode-languageserver-types": "3.16.0-next.4",
         "@clangd/install": "0.1.3"
     },
     "devDependencies": {
@@ -174,26 +174,28 @@
             {
                 "command": "clangd.typeHierarchy.viewParents",
                 "title": "Types: Show Base Classes",
-                "icon": {
-                    "light": "resources/up-light.svg",
-                    "dark": "resources/up-dark.svg"
-                }
+                "icon": "$(triangle-up)"
             },
             {
                 "command": "clangd.typeHierarchy.viewChildren",
                 "title": "Types: Show Derived Classes",
-                "icon": {
-                    "light": "resources/down-light.svg",
-                    "dark": "resources/down-dark.svg"
-                }
+                "icon": "$(triangle-down)"
             },
             {
                 "command": "clangd.typeHierarchy.close",
                 "title": "Close",
-                "icon": {
-                    "light": "resources/close-light.svg",
-                    "dark": "resources/close-dark.svg"
-                }
+                "icon": "$(panel-close)"
+            },
+            {
+                "command": "clangd.memoryUsage",
+                "title": "clangd: show memory usage",
+                "enablement": "clangd.memoryUsage.supported",
+                "icon": "$(refresh)"
+            },
+            {
+                "command": "clangd.memoryUsage.close",
+                "title": "Close",
+                "icon": "$(panel-close)"
             }
         ],
         "keybindings": [
@@ -233,6 +235,15 @@
                     "command": "clangd.typeHierarchy.close",
                     "when": "view == clangd.typeHierarchyView",
                     "group": "navigation"
+                },
+                {
+                    "command": "clangd.memoryUsage.close",
+                    "when": "view == clangd.memoryUsage",
+                    "group": "navigation"
+                },
+                {
+                    "command": "clangd.memoryUsage",
+                    "group": "navigation"
                 }
             ],
             "commandPalette": [
@@ -243,6 +254,10 @@
                 {
                     "command": "clangd.typeHierarchy.viewChildren",
                     "when": "resourceLangId == cpp"
+                },
+                {
+                    "command": "clangd.memoryUsage",
+                    "when": "clangd.memoryUsage.supported"
                 }
             ]
         },
@@ -252,6 +267,11 @@
                     "id": "clangd.typeHierarchyView",
                     "name": "Type Hierarchy",
                     "when": "extension.vscode-clangd.typeHierarchyVisible"
+                },
+                {
+                    "id": "clangd.memoryUsage",
+                    "name": "clangd Memory Usage",
+                    "when": "clangd.memoryUsage.hasData"
                 }
             ]
         }
