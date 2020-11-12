@@ -238,6 +238,7 @@
                 },
                 {
                     "command": "clangd.memoryUsage",
+                    "when": "view == clangd.memoryUsage",
                     "group": "navigation"
                 }
             ],
