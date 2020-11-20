@@ -7,8 +7,7 @@ import {ClangdContext} from './clangd-context';
  *  activated the very first time a command is executed.
  */
 export async function activate(context: vscode.ExtensionContext) {
-  const outputChannel =
-      vscode.window.createOutputChannel('Clangd Language Server');
+  const outputChannel = vscode.window.createOutputChannel('clangd');
   context.subscriptions.push(outputChannel);
 
   const clangdContext = new ClangdContext;

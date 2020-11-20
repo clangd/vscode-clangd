@@ -126,12 +126,11 @@ class TypeHierarchyFeature implements vscodelc.StaticFeature {
 
   private recomputeEnableTypeHierarchy() {
     if (this.state == vscodelc.State.Running) {
-      vscode.commands.executeCommand(
-          'setContext', 'extension.vscode-clangd.enableTypeHierarchy',
-          this.serverSupportsTypeHierarchy);
+      vscode.commands.executeCommand('setContext', 'clangd.enableTypeHierarchy',
+                                     this.serverSupportsTypeHierarchy);
     } else if (this.state == vscodelc.State.Stopped) {
-      vscode.commands.executeCommand(
-          'setContext', 'extension.vscode-clangd.enableTypeHierarchy', false);
+      vscode.commands.executeCommand('setContext', 'clangd.enableTypeHierarchy',
+                                     false);
     }
   }
 }
@@ -284,8 +283,8 @@ class TypeHierarchyProvider implements
     // This makes the type hierarchy view visible by causing the condition
     // "when": "extension.vscode-clangd.typeHierarchyVisible" from
     // package.json to evaluate to true.
-    vscode.commands.executeCommand(
-        'setContext', 'extension.vscode-clangd.typeHierarchyVisible', true);
+    vscode.commands.executeCommand('setContext', 'clangd.typeHierarchyVisible',
+                                   true);
 
     const item = await this.client.sendRequest(TypeHierarchyRequest.type, {
       ...this.client.code2ProtocolConverter.asTextDocumentPositionParams(
@@ -331,8 +330,8 @@ class TypeHierarchyProvider implements
 
   private close() {
     // Hide the type hierarchy view.
-    vscode.commands.executeCommand(
-        'setContext', 'extension.vscode-clangd.typeHierarchyVisible', false);
+    vscode.commands.executeCommand('setContext', 'clangd.typeHierarchyVisible',
+                                   false);
 
     this.root = undefined;
     this._onDidChangeTreeData.fire(null);
