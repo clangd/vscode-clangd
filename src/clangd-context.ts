@@ -95,7 +95,7 @@ export class ClangdContext implements vscode.Disposable {
         provideCompletionItem: async (document, position, context, token,
                                       next) => {
           let list = await next(document, position, context, token);
-          if (!config.get<boolean>('suppressCompletionReranking'))
+          if (!config.get<boolean>('serverCompletionRanking'))
             return list;
           let items = (Array.isArray(list) ? list : list.items).map(item => {
             // Gets the prefix used by VSCode when doing fuzzymatch.
