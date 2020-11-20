@@ -119,6 +119,11 @@
                     },
                     "description": "Extra clang flags used to parse files when no compilation database is found."
                 },
+                "clangd.serverCompletionRanking": {
+                    "type": "boolean",
+                    "default": true,
+                    "description": "Always rank completion items on the server as you type. This produces more accurate results at the cost of higher latency than client-side filtering."
+                },
                 "clangd.checkUpdates": {
                     "type": "boolean",
                     "default": false,
