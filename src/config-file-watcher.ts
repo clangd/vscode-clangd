@@ -11,6 +11,7 @@ export function activate(context: ClangdContext) {
 
 class ConfigFileWatcher {
   private databaseWatcher: vscode.FileSystemWatcher = undefined;
+  private debounceTimer: NodeJS.Timer = undefined;
 
   constructor(private context: ClangdContext) {
     this.createFileSystemWatcher();
@@ -27,11 +28,22 @@ class ConfigFileWatcher {
           vscode.workspace.workspaceFolders.map(f => f.uri.fsPath).join(',') +
           '}/{build/compile_commands.json,compile_commands.json,compile_flags.txt,.clang-tidy}');
       this.context.subscriptions.push(this.databaseWatcher.onDidChange(
-          this.handleConfigFilesChanged.bind(this)));
+          this.debouncedHandleConfigFilesChanged.bind(this)));
       this.context.subscriptions.push(this.databaseWatcher.onDidCreate(
-          this.handleConfigFilesChanged.bind(this)));
+          this.debouncedHandleConfigFilesChanged.bind(this)));
       this.context.subscriptions.push(this.databaseWatcher);
     }
+  }
+
+  async debouncedHandleConfigFilesChanged(uri: vscode.Uri) {
+    if (this.debounceTimer) {
+      clearTimeout(this.debounceTimer);
+    }
+
+    this.debounceTimer = setTimeout(async () => {
+      await this.handleConfigFilesChanged(uri);
+      this.debounceTimer = undefined;
+    }, 2000);
   }
 
   async handleConfigFilesChanged(uri: vscode.Uri) {
