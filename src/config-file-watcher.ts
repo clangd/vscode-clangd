@@ -3,8 +3,6 @@ import * as vscode from 'vscode';
 import {ClangdContext} from './clangd-context';
 import * as config from './config';
 
-const RESTART_DEBOUNCE = 2000;
-
 export function activate(context: ClangdContext) {
   if (config.get<string>('onConfigChanged') != 'ignore') {
     const watcher = new ConfigFileWatcher(context);
@@ -13,7 +11,7 @@ export function activate(context: ClangdContext) {
 
 class ConfigFileWatcher {
   private databaseWatcher: vscode.FileSystemWatcher = undefined;
-  private pendingRestartTimer: NodeJS.Timer = undefined;
+  private debounceTimer: NodeJS.Timer = undefined;
 
   constructor(private context: ClangdContext) {
     this.createFileSystemWatcher();
@@ -36,14 +34,14 @@ class ConfigFileWatcher {
   }
 
   async debouncedHandleConfigFilesChanged(uri: vscode.Uri) {
-    if (this.pendingRestartTimer) {
-      clearTimeout(this.pendingRestartTimer);
+    if (this.debounceTimer) {
+      clearTimeout(this.debounceTimer);
     }
 
-    this.pendingRestartTimer = setTimeout(async () => {
+    this.debounceTimer = setTimeout(async () => {
       await this.handleConfigFilesChanged(uri);
-      this.pendingRestartTimer = undefined;
-    }, RESTART_DEBOUNCE);
+      this.debounceTimer = undefined;
+    }, 2000);
   }
 
   async handleConfigFilesChanged(uri: vscode.Uri) {
