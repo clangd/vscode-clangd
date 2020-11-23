@@ -22,15 +22,17 @@ class ConfigFileWatcher {
   createFileSystemWatcher() {
     if (this.databaseWatcher)
       this.databaseWatcher.dispose();
-    this.databaseWatcher = vscode.workspace.createFileSystemWatcher(
-        '{' +
-        vscode.workspace.workspaceFolders.map(f => f.uri.fsPath).join(',') +
-        '}/{build/compile_commands.json,compile_commands.json,compile_flags.txt,.clang-tidy}');
-    this.context.subscriptions.push(this.databaseWatcher.onDidChange(
-        this.debouncedHandleConfigFilesChanged.bind(this)));
-    this.context.subscriptions.push(this.databaseWatcher.onDidCreate(
-        this.debouncedHandleConfigFilesChanged.bind(this)));
-    this.context.subscriptions.push(this.databaseWatcher);
+    if (vscode.workspace.workspaceFolders) {
+      this.databaseWatcher = vscode.workspace.createFileSystemWatcher(
+          '{' +
+          vscode.workspace.workspaceFolders.map(f => f.uri.fsPath).join(',') +
+          '}/{build/compile_commands.json,compile_commands.json,compile_flags.txt,.clang-tidy}');
+      this.context.subscriptions.push(this.databaseWatcher.onDidChange(
+          this.debouncedHandleConfigFilesChanged.bind(this)));
+      this.context.subscriptions.push(this.databaseWatcher.onDidCreate(
+          this.debouncedHandleConfigFilesChanged.bind(this)));
+      this.context.subscriptions.push(this.databaseWatcher);
+    }
   }
 
   async debouncedHandleConfigFilesChanged(uri: vscode.Uri) {

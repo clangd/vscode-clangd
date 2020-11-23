@@ -119,6 +119,11 @@
                     },
                     "description": "Extra clang flags used to parse files when no compilation database is found."
                 },
+                "clangd.serverCompletionRanking": {
+                    "type": "boolean",
+                    "default": true,
+                    "description": "Always rank completion items on the server as you type. This produces more accurate results at the cost of higher latency than client-side filtering."
+                },
                 "clangd.checkUpdates": {
                     "type": "boolean",
                     "default": false,
@@ -144,23 +149,23 @@
         "commands": [
             {
                 "command": "clangd.switchheadersource",
-                "title": "Switch between Source/Header"
+                "title": "clangd: Switch between source/header"
             },
             {
                 "command": "clangd.install",
-                "title": "Download clangd language server"
+                "title": "clangd: Download language server"
             },
             {
                 "command": "clangd.update",
-                "title": "Check for clangd language server update"
+                "title": "clangd: Check for language server update"
             },
             {
                 "command": "clangd.activate",
-                "title": "Manually activate clangd extension"
+                "title": "clangd: Manually activate extension"
             },
             {
                 "command": "clangd.restart",
-                "title": "Restart the clangd language server"
+                "title": "clangd: Restart language server"
             },
             {
                 "command": "clangd.typeHierarchy",
@@ -183,7 +188,7 @@
             },
             {
                 "command": "clangd.memoryUsage",
-                "title": "clangd: show memory usage",
+                "title": "clangd: Show memory usage",
                 "enablement": "clangd.memoryUsage.supported",
                 "icon": "$(refresh)"
             },
@@ -210,7 +215,7 @@
             "editor/context": [
                 {
                     "command": "clangd.typeHierarchy",
-                    "when": "resourceLangId == cpp && extension.vscode-clangd.enableTypeHierarchy",
+                    "when": "resourceLangId == cpp && clangd.enableTypeHierarchy",
                     "group": "0_navigation@4",
                     "_comment": "see https://github.com/microsoft/vscode-references-view/blob/f63eaed9934ca5ecc8f3fb3ca096f38c6e5e181f/package.json#L162"
                 }
@@ -262,7 +267,7 @@
                 {
                     "id": "clangd.typeHierarchyView",
                     "name": "Type Hierarchy",
-                    "when": "extension.vscode-clangd.typeHierarchyVisible"
+                    "when": "clangd.typeHierarchyVisible"
                 },
                 {
                     "id": "clangd.memoryUsage",
