@@ -136,6 +136,9 @@ export class ClangdContext implements vscode.Disposable {
 
     this.client = new ClangdLanguageClient('Clang Language Server',
                                            serverOptions, clientOptions);
+    this.client.clientOptions.errorHandler =
+        this.client.createDefaultErrorHandler(
+            config.get<number>('maxRestartCount'));
     if (config.get<boolean>('semanticHighlighting'))
       semanticHighlighting.activate(this);
     this.client.registerFeature(new EnableEditsNearCursorFeature);
