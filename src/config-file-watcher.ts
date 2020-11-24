@@ -26,7 +26,7 @@ class ConfigFileWatcher {
       this.databaseWatcher = vscode.workspace.createFileSystemWatcher(
           '{' +
           vscode.workspace.workspaceFolders.map(f => f.uri.fsPath).join(',') +
-          '}/{build/compile_commands.json,compile_commands.json,compile_flags.txt,.clang-tidy}');
+          '}/{build/compile_commands.json,compile_commands.json,compile_flags.txt}');
       this.context.subscriptions.push(this.databaseWatcher.onDidChange(
           this.debouncedHandleConfigFilesChanged.bind(this)));
       this.context.subscriptions.push(this.databaseWatcher.onDidCreate(
