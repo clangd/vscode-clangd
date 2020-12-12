@@ -5,32 +5,31 @@ import * as config from './config';
 
 async function promtRestart(settingName: string, promptMessage: string) {
   switch (config.get<string>(settingName)) {
-    case 'restart':
+  case 'restart':
+    vscode.commands.executeCommand('clangd.restart');
+    break;
+  case 'ignore':
+    break;
+  case 'prompt':
+  default:
+    switch (await vscode.window.showInformationMessage(
+        promptMessage, 'Yes', 'Yes, always', 'No, never')) {
+    case 'Yes':
       vscode.commands.executeCommand('clangd.restart');
       break;
-    case 'ignore':
+    case 'Yes, always':
+      vscode.commands.executeCommand('clangd.restart');
+      config.update<string>(settingName, 'restart',
+                            vscode.ConfigurationTarget.Global);
       break;
-    case 'prompt':
+    case 'No, never':
+      config.update<string>(settingName, 'ignore',
+                            vscode.ConfigurationTarget.Global);
+      break;
     default:
-      switch (await vscode.window.showInformationMessage(
-        promptMessage,
-        'Yes', 'Yes, always', 'No, never')) {
-        case 'Yes':
-          vscode.commands.executeCommand('clangd.restart');
-          break;
-        case 'Yes, always':
-          vscode.commands.executeCommand('clangd.restart');
-          config.update<string>(settingName, 'restart',
-            vscode.ConfigurationTarget.Global);
-          break;
-        case 'No, never':
-          config.update<string>(settingName, 'ignore',
-            vscode.ConfigurationTarget.Global);
-          break;
-        default:
-          break;
-      }
       break;
+    }
+    break;
   }
 }
 
@@ -42,8 +41,10 @@ export function activate(context: ClangdContext) {
     let Settings: string[] = ['clangd.path', 'clangd.arguments'];
     Settings.forEach(element => {
       if (event.affectsConfiguration(element)) {
-        promtRestart('onSettingsChanged', `setting '${
-                     element}' has changed. Do you want to reload the server?`);
+        promtRestart(
+            'onSettingsChanged',
+            `setting '${
+                element}' has changed. Do you want to reload the server?`);
       }
     });
   });
@@ -88,9 +89,10 @@ class ConfigFileWatcher {
       return;
     }
     this.debounceTimer = setTimeout(async () => {
-      await promtRestart('onConfigChanged', 
-      `Clangd configuration file at '${
-        uri.fsPath}' has been changed. Do you want to restart it?`);
+      await promtRestart(
+          'onConfigChanged',
+          `Clangd configuration file at '${
+              uri.fsPath}' has been changed. Do you want to restart it?`);
       this.debounceTimer = undefined;
     }, 2000);
   }
