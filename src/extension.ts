@@ -1,6 +1,7 @@
 import * as vscode from 'vscode';
 
 import {ClangdContext} from './clangd-context';
+import * as ConfigWatcher from './config-watcher';
 
 /**
  *  This method is called when the extension is activated. The extension is
@@ -12,6 +13,9 @@ export async function activate(context: vscode.ExtensionContext) {
 
   const clangdContext = new ClangdContext;
   context.subscriptions.push(clangdContext);
+
+  // Listen for settings changes
+  ConfigWatcher.activate(context);
 
   // An empty place holder for the activate command, otherwise we'll get an
   // "command is not registered" error.
