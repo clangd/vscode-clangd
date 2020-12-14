@@ -38,15 +38,17 @@ export function activate(context: ClangdContext) {
     const watcher = new ConfigFileWatcher(context);
   }
   vscode.workspace.onDidChangeConfiguration(event => {
-    let Settings: string[] = ['clangd.path', 'clangd.arguments'];
-    Settings.forEach(element => {
-      if (event.affectsConfiguration(element)) {
+    let Settings: string[] = ['path', 'arguments'];
+    for (let Setting of Settings) {
+      let ExpandedSetting = `clangd.${Setting}`
+      if (event.affectsConfiguration(ExpandedSetting)) {
         promtRestart(
             'onSettingsChanged',
             `setting '${
-                element}' has changed. Do you want to reload the server?`);
+                ExpandedSetting}' has changed. Do you want to reload the server?`);
+        break;
       }
-    });
+    }
   });
 }
 
