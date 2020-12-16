@@ -1,6 +1,7 @@
 import * as vscode from 'vscode';
 import * as vscodelc from 'vscode-languageclient/node';
 
+import * as args from './arguments';
 import * as config from './config';
 import * as configFileWatcher from './config-file-watcher';
 import * as fileStatus from './file-status';
@@ -50,7 +51,7 @@ export class ClangdContext implements vscode.Disposable {
 
     const clangd: vscodelc.Executable = {
       command: clangdPath,
-      args: config.get<string[]>('arguments')
+      args: args.getClangdArguments()
     };
     const traceFile = config.get<string>('trace');
     if (!!traceFile) {

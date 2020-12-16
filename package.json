@@ -86,13 +86,13 @@
         ],
         "configuration": {
             "type": "object",
-            "title": "clangd",
+            "title": "Clangd",
             "properties": {
                 "clangd.path": {
                     "type": "string",
                     "default": "clangd",
                     "scope": "machine-overridable",
-                    "description": "The path to clangd executable, e.g.: /usr/bin/clangd."
+                    "markdownDescription": "The path to clangd executable, e.g.: `/usr/bin/clangd`."
                 },
                 "clangd.arguments": {
                     "type": "array",
@@ -100,7 +100,7 @@
                     "items": {
                         "type": "string"
                     },
-                    "description": "Arguments for clangd server."
+                    "description": "Arguments for clangd server. For backwards compatibility it has precedence over other UI specified options."
                 },
                 "clangd.trace": {
                     "type": "string",
@@ -128,6 +128,52 @@
                     "type": "boolean",
                     "default": false,
                     "description": "Check for language server updates on startup."
+                },
+                "clangd.compileCommandsDir": {
+                    "type": "string",
+                    "default": "",
+                    "markdownDescription": "Specify a path to look for `compile_commands.json`. If path is invalid, clangd will look in the current directory and parent paths of each source file. If not specified clangd will look in the parent folders of each opened file."
+                },
+                "clangd.queryDrivers": {
+                    "type": "array",
+                    "default": [],
+                    "items": {
+                        "type": "string"
+                    },
+                    "markdownDescription": "Globs for white-listing gcc-compatible drivers that are safe to execute. Drivers matching any of these globs will be used to extract system includes. For example `/usr/bin/**/clang-*` or `/path/to/repo/**/g++-*`"
+                },
+                "clangd.backgroundIndex": {
+                    "type": "boolean",
+                    "default": true,
+                    "description": "Index project code in the background and persist index on disk."
+                },
+                "clangd.clangTidy": {
+                    "type": "boolean",
+                    "default": false,
+                    "description": "Enable clang-tidy diagnostics."
+                },
+                "clangd.crossFileRename": {
+                    "type": "boolean",
+                    "default": false,
+                    "description": "Enable cross-file rename feature."
+                },
+                "clangd.headerInsertion": {
+                    "type":"string",
+                    "enum": [
+                        "iwyu",
+                        "never"
+                    ],
+                    "default": "iwyu",
+                    "markdownEnumDescriptions": [
+                        "Include what you use. Insert the owning header for top-level symbols, unless the header is already directly included or the symbol is forward-declared",
+                        "Never insert `#include` directives as part of code completion"
+                    ],
+                    "markdownDescription": "Add `#include` directives when accepting code completions."
+                },
+                "clangd.limitResults": {
+                    "type": "integer",
+                    "default": 100,
+                    "description": "Limit the number of results returned by clangd. 0 means no limit."
                 },
                 "clangd.onConfigChanged": {
                     "type": "string",
