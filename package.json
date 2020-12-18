@@ -149,12 +149,12 @@
                 },
                 "clangd.clangTidy": {
                     "type": "boolean",
-                    "default": false,
+                    "default": true,
                     "markdownDescription": "Enable clang-tidy diagnostics. Corresponds to `--clang-tidy` flag. Supported since clangd version 9."
                 },
                 "clangd.crossFileRename": {
                     "type": "boolean",
-                    "default": false,
+                    "default": true,
                     "markdownDescription": "Enable cross-file rename feature. Corresponds to `--cross-file-rename` flag. Supported since clangd version 10."
                 },
                 "clangd.headerInsertion": {
