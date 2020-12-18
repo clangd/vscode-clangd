@@ -1,5 +1,6 @@
 import * as cp from 'child_process';
 import * as util from 'util';
+import * as vscode from 'vscode';
 
 import * as config from './config';
 
@@ -30,6 +31,7 @@ export async function getClangdArguments(clangdPath: string) {
   let args = config.get<string[]>('arguments');
   // Versions before clangd 7 are not checked
   let version = await getClangdMajorVersion(clangdPath);
+  let overridenOptionWarning = false;
 
   let compileCommandsDirFlag = '--compile-commands-dir';
 
@@ -37,6 +39,8 @@ export async function getClangdArguments(clangdPath: string) {
     let compileCommandsDir = config.get<string>('compileCommandsDir');
     if (compileCommandsDir.length > 0)
       args.push(`${compileCommandsDirFlag}=${compileCommandsDir}`);
+  } else {
+    overridenOptionWarning = true;
   }
 
   if (version >= 9) {
@@ -48,6 +52,8 @@ export async function getClangdArguments(clangdPath: string) {
         let drivers = queryDrivers.join(',');
         args.push(`${queryDriversFlag}=${drivers}`);
       }
+    } else {
+      overridenOptionWarning = true;
     }
   }
 
@@ -57,6 +63,8 @@ export async function getClangdArguments(clangdPath: string) {
     if (!argsContainFlag(args, backgroundIndexFlag)) {
       let backgroundIndex = config.get<boolean>('backgroundIndex');
       args.push(`${backgroundIndexFlag}=${backgroundIndex}`);
+    } else {
+      overridenOptionWarning = true;
     }
   }
 
@@ -66,6 +74,8 @@ export async function getClangdArguments(clangdPath: string) {
     if (!argsContainFlag(args, clangTidyFlag)) {
       let clangTidy = config.get<boolean>('clangTidy');
       args.push(`${clangTidyFlag}=${clangTidy}`)
+    } else {
+      overridenOptionWarning = true;
     }
   }
 
@@ -75,6 +85,8 @@ export async function getClangdArguments(clangdPath: string) {
     if (!argsContainFlag(args, crossFileRenameFlag)) {
       let crossFileRename = config.get<boolean>('crossFileRename');
       args.push(`${crossFileRenameFlag}=${crossFileRename}`);
+    } else {
+      overridenOptionWarning = true;
     }
   }
 
@@ -84,6 +96,8 @@ export async function getClangdArguments(clangdPath: string) {
     if (!argsContainFlag(args, headerInsertionFlag)) {
       let headerInsertion = config.get<string>('headerInsertion');
       args.push(`${headerInsertionFlag}=${headerInsertion}`);
+    } else {
+      overridenOptionWarning = true;
     }
   }
 
@@ -92,6 +106,20 @@ export async function getClangdArguments(clangdPath: string) {
   if (!argsContainFlag(args, limitResultsFlag)) {
     let limitResults = config.get<number>('limitResults');
     args.push(`${limitResultsFlag}=${limitResults}`);
+  } else {
+    overridenOptionWarning = true;
+  }
+
+  if (overridenOptionWarning) {
+    let action = await vscode.window.showWarningMessage(
+        'Setting "clangd.arguments" overrides one or more options that can now be set with more specific settings. This does not cause any error, but updating your configuration is advised.',
+        'Open settings');
+
+    if (action == 'Open settings') {
+      vscode.commands.executeCommand(
+          'workbench.action.openSettings',
+          '@ext:llvm-vs-code-extensions.vscode-clangd')
+    }
   }
 
   return args;
