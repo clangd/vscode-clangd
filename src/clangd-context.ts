@@ -51,7 +51,7 @@ export class ClangdContext implements vscode.Disposable {
 
     const clangd: vscodelc.Executable = {
       command: clangdPath,
-      args: args.getClangdArguments()
+      args: await args.getClangdArguments(clangdPath)
     };
     const traceFile = config.get<string>('trace');
     if (!!traceFile) {

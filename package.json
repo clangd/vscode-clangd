@@ -52,7 +52,7 @@
     "devDependencies": {
         "@types/glob": "^7.1.1",
         "@types/mocha": "^7.0.2",
-        "@types/node": "^6.0.40",
+        "@types/node": "^8.10.66",
         "@types/vscode": "1.46.*",
         "clang-format": "1.4.0",
         "glob": "^7.1.4",
@@ -132,7 +132,7 @@
                 "clangd.compileCommandsDir": {
                     "type": "string",
                     "default": "",
-                    "markdownDescription": "Specify a path to look for `compile_commands.json`. If path is invalid, clangd will look in the current directory and parent paths of each source file. If not specified clangd will look in the parent folders of each opened file."
+                    "markdownDescription": "Specify a path to look for `compile_commands.json`. If path is invalid, clangd will look in the current directory and parent paths of each source file. If not specified clangd will look in the parent folders of each opened file. Corresponds to `--compile-commands-dir` flag."
                 },
                 "clangd.queryDrivers": {
                     "type": "array",
@@ -140,25 +140,25 @@
                     "items": {
                         "type": "string"
                     },
-                    "markdownDescription": "Globs for white-listing gcc-compatible drivers that are safe to execute. Drivers matching any of these globs will be used to extract system includes. For example `/usr/bin/**/clang-*` or `/path/to/repo/**/g++-*`"
+                    "markdownDescription": "Globs for white-listing gcc-compatible drivers that are safe to execute. Drivers matching any of these globs will be used to extract system includes. For example `/usr/bin/**/clang-*` or `/path/to/repo/**/g++-*`. Corresponds to `--query-driver` flag. Supported since clangd version 9."
                 },
                 "clangd.backgroundIndex": {
                     "type": "boolean",
                     "default": true,
-                    "description": "Index project code in the background and persist index on disk."
+                    "markdownDescription": "Index project code in the background and persist index on disk. Corresponds to `--background-index` flag.  Supported since clangd version 8."
                 },
                 "clangd.clangTidy": {
                     "type": "boolean",
                     "default": false,
-                    "description": "Enable clang-tidy diagnostics."
+                    "markdownDescription": "Enable clang-tidy diagnostics. Corresponds to `--clang-tidy` flag. Supported since clangd version 9."
                 },
                 "clangd.crossFileRename": {
                     "type": "boolean",
                     "default": false,
-                    "description": "Enable cross-file rename feature."
+                    "markdownDescription": "Enable cross-file rename feature. Corresponds to `--cross-file-rename` flag. Supported since clangd version 10."
                 },
                 "clangd.headerInsertion": {
-                    "type":"string",
+                    "type": "string",
                     "enum": [
                         "iwyu",
                         "never"
@@ -168,12 +168,12 @@
                         "Include what you use. Insert the owning header for top-level symbols, unless the header is already directly included or the symbol is forward-declared",
                         "Never insert `#include` directives as part of code completion"
                     ],
-                    "markdownDescription": "Add `#include` directives when accepting code completions."
+                    "markdownDescription": "Add `#include` directives when accepting code completions. Corresponds to `--header-insertion` flag. Supported since clangd version 9."
                 },
                 "clangd.limitResults": {
                     "type": "integer",
                     "default": 100,
-                    "description": "Limit the number of results returned by clangd. 0 means no limit."
+                    "markdownDescription": "Limit the number of results returned by clangd. 0 means no limit. Corresponds to `--limit-results` flag."
                 },
                 "clangd.onConfigChanged": {
                     "type": "string",
