@@ -44,7 +44,7 @@ interface TypeHierarchyItem {
 namespace TypeHierarchyRequest {
 export const type =
     new vscodelc
-        .RequestType<TypeHierarchyParams, TypeHierarchyItem|null, void, void>(
+        .RequestType<TypeHierarchyParams, TypeHierarchyItem|null, void>(
             'textDocument/typeHierarchy');
 }
 
@@ -57,7 +57,7 @@ interface ResolveTypeHierarchyItemParams {
 export namespace ResolveTypeHierarchyRequest {
 export const type =
     new vscodelc.RequestType<ResolveTypeHierarchyItemParams,
-                             TypeHierarchyItem|null, void, void>(
+                             TypeHierarchyItem|null, void>(
         'typeHierarchy/resolve');
 }
 
@@ -111,6 +111,8 @@ class TypeHierarchyFeature implements vscodelc.StaticFeature {
       this.recomputeEnableTypeHierarchy();
     }));
   }
+  fillInitializeParams?: (params: vscodelc.InitializeParams) => void;
+  dispose() {}
 
   fillClientCapabilities(capabilities: vscodelc.ClientCapabilities) {}
 

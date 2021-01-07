@@ -11,7 +11,7 @@ export function activate(context: ClangdContext) {
 namespace SwitchSourceHeaderRequest {
 export const type =
     new vscodelc.RequestType<vscodelc.TextDocumentIdentifier, string|undefined,
-                             void, void>('textDocument/switchSourceHeader');
+                             void>('textDocument/switchSourceHeader');
 }
 
 async function switchSourceHeader(client: vscodelc.LanguageClient):

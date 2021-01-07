@@ -23,7 +23,7 @@ interface WireTree {
   [child: string]: WireTree|number;
 }
 export const MemoryUsageRequest =
-    new vscodelc.RequestType<NoParams, WireTree, void, void>('$/memoryUsage');
+    new vscodelc.RequestType<NoParams, WireTree, void>('$/memoryUsage');
 
 // Internal representation that's a bit easier to work with.
 interface InternalTree {
@@ -65,6 +65,8 @@ class MemoryUsageFeature implements vscodelc.StaticFeature {
     this.context.subscriptions.push(vscode.commands.registerCommand(
         'clangd.memoryUsage.close', () => adapter.root = null));
   }
+  fillInitializeParams?: (params: vscodelc.InitializeParams) => void;
+  dispose() {}
 
   fillClientCapabilities(capabilities: vscodelc.ClientCapabilities) {}
 
