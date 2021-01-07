@@ -43,9 +43,8 @@ interface TypeHierarchyItem {
 
 namespace TypeHierarchyRequest {
 export const type =
-    new vscodelc
-        .RequestType<TypeHierarchyParams, TypeHierarchyItem|null, void>(
-            'textDocument/typeHierarchy');
+    new vscodelc.RequestType<TypeHierarchyParams, TypeHierarchyItem|null, void>(
+        'textDocument/typeHierarchy');
 }
 
 interface ResolveTypeHierarchyItemParams {
@@ -55,10 +54,9 @@ interface ResolveTypeHierarchyItemParams {
 }
 
 export namespace ResolveTypeHierarchyRequest {
-export const type =
-    new vscodelc.RequestType<ResolveTypeHierarchyItemParams,
-                             TypeHierarchyItem|null, void>(
-        'typeHierarchy/resolve');
+export const type = new vscodelc.RequestType<ResolveTypeHierarchyItemParams,
+                                             TypeHierarchyItem|null, void>(
+    'typeHierarchy/resolve');
 }
 
 // A dummy node used to indicate that a node has multiple parents
