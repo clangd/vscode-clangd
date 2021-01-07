@@ -12,9 +12,7 @@ export function activate(context: ClangdContext) {
 
 // Clangd extension capabilities.
 interface ClangdClientCapabilities {
-  compilationDatabase?: {
-    automaticReload?: boolean;
-  },
+  compilationDatabase?: {automaticReload?: boolean;},
 }
 
 class ConfigFileWatcherFeature implements vscodelc.StaticFeature {
