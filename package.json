@@ -147,7 +147,7 @@
                 "clangd.onSettingsChanged": {
                     "type": "string",
                     "default": "prompt",
-                    "description": "What to do if clangd.path or clangd.arguments is changed.",
+                    "description": "What to do if any setting is changed that requires a server restart to take effect.",
                     "enum": [
                         "prompt",
                         "restart",

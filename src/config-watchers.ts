@@ -39,7 +39,8 @@ export function activate(context: ClangdContext) {
     context.client.registerFeature(new ConfigFileWatcherFeature(context));
   }
   vscode.workspace.onDidChangeConfiguration(event => {
-    let Settings: string[] = ['path', 'arguments'];
+    let Settings: string[] =
+        ['path', 'arguments', 'trace', 'semanticHighlighting', 'fallbackFlags'];
     for (let Setting of Settings) {
       let ExpandedSetting = `clangd.${Setting}`
       if (event.affectsConfiguration(ExpandedSetting)) {
