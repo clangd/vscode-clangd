@@ -8,7 +8,7 @@
     "homepage": "https://clangd.llvm.org/",
     "icon": "icon.png",
     "engines": {
-        "vscode": "^1.46.0"
+        "vscode": "^1.52.0"
     },
     "categories": [
         "Programming Languages",
@@ -45,15 +45,15 @@
     "dependencies": {
         "abort-controller": "^3.0.0",
         "jsonc-parser": "^2.1.0",
-        "vscode-languageclient": "7.0.0-next.10",
-        "vscode-languageserver-types": "3.16.0-next.4",
+        "vscode-languageclient": "7.0.0",
+        "vscode-languageserver-types": "3.16.0",
         "@clangd/install": "0.1.3"
     },
     "devDependencies": {
         "@types/glob": "^7.1.1",
         "@types/mocha": "^7.0.2",
         "@types/node": "^6.0.40",
-        "@types/vscode": "1.46.*",
+        "@types/vscode": "1.52.*",
         "clang-format": "1.4.0",
         "glob": "^7.1.4",
         "mocha": "^7.1.0",
