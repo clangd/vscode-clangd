@@ -109,10 +109,9 @@ class TypeHierarchyFeature implements vscodelc.StaticFeature {
       this.recomputeEnableTypeHierarchy();
     }));
   }
-  fillInitializeParams?: (params: vscodelc.InitializeParams) => void;
-  dispose() {}
 
   fillClientCapabilities(capabilities: vscodelc.ClientCapabilities) {}
+  fillInitializeParams(_params: vscodelc.InitializeParams) {}
 
   initialize(capabilities: vscodelc.ServerCapabilities,
              documentSelector: vscodelc.DocumentSelector|undefined) {
@@ -123,6 +122,7 @@ class TypeHierarchyFeature implements vscodelc.StaticFeature {
       this.recomputeEnableTypeHierarchy();
     }
   }
+  dispose() {}
 
   private recomputeEnableTypeHierarchy() {
     if (this.state == vscodelc.State.Running) {

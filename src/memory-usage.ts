@@ -65,16 +65,16 @@ class MemoryUsageFeature implements vscodelc.StaticFeature {
     this.context.subscriptions.push(vscode.commands.registerCommand(
         'clangd.memoryUsage.close', () => adapter.root = null));
   }
-  fillInitializeParams?: (params: vscodelc.InitializeParams) => void;
-  dispose() {}
 
   fillClientCapabilities(capabilities: vscodelc.ClientCapabilities) {}
+  fillInitializeParams(_params: vscodelc.InitializeParams) {}
 
   initialize(capabilities: vscodelc.ServerCapabilities,
              _documentSelector: vscodelc.DocumentSelector|undefined) {
     vscode.commands.executeCommand('setContext', 'clangd.memoryUsage.supported',
                                    'memoryUsageProvider' in capabilities);
   }
+  dispose() {}
 }
 
 class TreeAdapter implements vscode.TreeDataProvider<InternalTree> {
