@@ -1,17 +1,43 @@
 import * as vscode from 'vscode';
+import * as vscodelc from 'vscode-languageclient/node';
 
 import {ClangdContext} from './clangd-context';
 import * as config from './config';
 
 export function activate(context: ClangdContext) {
   if (config.get<string>('onConfigChanged') != 'ignore') {
-    const watcher = new ConfigFileWatcher(context);
+    context.client.registerFeature(new ConfigFileWatcherFeature(context));
   }
 }
 
-class ConfigFileWatcher {
+// Clangd extension capabilities.
+interface ClangdClientCapabilities {
+  compilationDatabase?: {
+    automaticReload?: boolean;
+  },
+}
+
+class ConfigFileWatcherFeature implements vscodelc.StaticFeature {
+  constructor(private context: ClangdContext) {}
+  fillClientCapabilities(capabilities: vscodelc.ClientCapabilities) {}
+
+  initialize(capabilities: vscodelc.ServerCapabilities,
+             _documentSelector: vscodelc.DocumentSelector|undefined) {
+    if ((capabilities as ClangdClientCapabilities)
+            .compilationDatabase?.automaticReload)
+      return;
+    this.context.subscriptions.push(new ConfigFileWatcher(this.context));
+  }
+}
+
+class ConfigFileWatcher implements vscode.Disposable {
   private databaseWatcher: vscode.FileSystemWatcher = undefined;
   private debounceTimer: NodeJS.Timer = undefined;
+
+  dispose() {
+    if (this.databaseWatcher)
+      this.databaseWatcher.dispose();
+  }
 
   constructor(private context: ClangdContext) {
     this.createFileSystemWatcher();
