@@ -109,19 +109,24 @@ export class ClangdContext implements vscode.Disposable {
           return new vscode.CompletionList(items, /*isIncomplete=*/ true);
         },
         // VSCode applies fuzzy match only on the symbol name, thus it throws
-        // away
-        // all results if query token is a prefix qualified name.
+        // away all results if query token is a prefix qualified name.
         // By adding the containerName to the symbol name, it prevents VSCode
-        // from
-        // filtering out any results, e.g. enable workspaceSymbols for qualified
-        // symbols.
+        // from filtering out any results, e.g. enable workspaceSymbols for
+        // qualified symbols.
         provideWorkspaceSymbols: async (query, token, next) => {
           let symbols = await next(query, token);
           return symbols.map(symbol => {
-            if (symbol.containerName)
-              symbol.name = `${symbol.containerName}::${symbol.name}`;
-            // Always clean the containerName to avoid displaying it twice.
-            symbol.containerName = '';
+            // Only make this adjustment if the query is in fact qualified.
+            // Otherwise, we get a suboptimal ordering of results because
+            // including the name's qualifier (if it has one) in symbol.name
+            // means vscode can no longer tell apart exact matches from
+            // partial matches.
+            if (query.includes('::')) {
+              if (symbol.containerName)
+                symbol.name = `${symbol.containerName}::${symbol.name}`;
+              // Clean the containerName to avoid displaying it twice.
+              symbol.containerName = '';
+            }
             return symbol;
           })
         },
