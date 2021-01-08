@@ -11,17 +11,10 @@ export function activate(context: ClangdContext) {
 }
 
 // The wire format: we send a position, and get back a tree of ASTNode.
-namespace ASTRequest {
-export const type =
-    new vscodelc.RequestType<ASTParams, ASTNode|null, void, void>(
-        'textDocument/ast');
-}
-
 interface ASTParams {
   textDocument: vscodelc.TextDocumentIdentifier;
   range: vscodelc.Range;
 }
-
 interface ASTNode {
   role: string;    // e.g. expression
   kind: string;    // e.g. BinaryOperator
@@ -30,36 +23,50 @@ interface ASTNode {
   children?: Array<ASTNode>;
   range?: vscodelc.Range;
 }
+const ASTRequestType =
+    new vscodelc.RequestType<ASTParams, ASTNode|null, void>('textDocument/ast');
 
 class ASTFeature implements vscodelc.StaticFeature {
   constructor(private context: ClangdContext) {
     // The adapter holds the currently inspected node.
     const adapter = new TreeAdapter();
-    // Ensure the AST view is visible exactly when the adapter has a node.
-    // clangd.ast.hasData controls the view visibility (package.json).
-    adapter
-        .onDidChangeTreeData(
-            (e) => vscode.commands.executeCommand(
-                'setContext', 'clangd.ast.hasData', adapter.hasRoot()))
-        // Create the AST view, showing data from the adapter.
-        this.context.subscriptions.push(
-            vscode.window.registerTreeDataProvider('clangd.ast', adapter));
-    // Create the "Show AST" command for the context menu.
-    // It's only shown if the feature is dynamicaly available (package.json)
-    vscode.commands.registerTextEditorCommand(
-        'clangd.ast', async (editor, _edit) => {
-          const converter = this.context.client.code2ProtocolConverter;
-          const item = await this.context.client.sendRequest(ASTRequest.type, {
-            textDocument: converter.asTextDocumentIdentifier(editor.document),
-            range: converter.asRange(editor.selection),
-          });
-          if (!item)
-            vscode.window.showInformationMessage('No AST node at selection');
-          adapter.setRoot(item, editor.document.uri);
-        });
-    // Clicking "close" will empty the adapter, which in turn hides the view.
-    vscode.commands.registerCommand('clangd.ast.close',
-                                    () => adapter.setRoot(null, null));
+    // Create the AST view, showing data from the adapter.
+    const tree =
+        vscode.window.createTreeView('clangd.ast', {treeDataProvider: adapter});
+    context.subscriptions.push(
+        tree,
+        // Ensure the AST view is visible exactly when the adapter has a node.
+        // clangd.ast.hasData controls the view visibility (package.json).
+        adapter.onDidChangeTreeData((_) => {
+          vscode.commands.executeCommand('setContext', 'clangd.ast.hasData',
+                                         adapter.hasRoot())
+          // Show the AST tree even if it's beet collapsed or closed.
+          // reveal(root) fails here: "Data tree node not found".
+          if (adapter.hasRoot())
+          tree.reveal(null);
+        }),
+        vscode.window.registerTreeDataProvider('clangd.ast', adapter),
+        // Create the "Show AST" command for the context menu.
+        // It's only shown if the feature is dynamicaly available (package.json)
+        vscode.commands.registerTextEditorCommand(
+            'clangd.ast',
+            async (editor, _edit) => {
+              const converter = this.context.client.code2ProtocolConverter;
+              const item =
+                  await this.context.client.sendRequest(ASTRequestType, {
+                    textDocument:
+                        converter.asTextDocumentIdentifier(editor.document),
+                    range: converter.asRange(editor.selection),
+                  });
+              if (!item)
+                vscode.window.showInformationMessage(
+                    'No AST node at selection');
+              adapter.setRoot(item, editor.document.uri);
+            }),
+        // Clicking "close" will empty the adapter, which in turn hides the
+        // view.
+        vscode.commands.registerCommand('clangd.ast.close',
+                                        () => adapter.setRoot(null, null)));
   }
 
   fillClientCapabilities(capabilities: vscodelc.ClientCapabilities) {}
@@ -70,10 +77,15 @@ class ASTFeature implements vscodelc.StaticFeature {
     vscode.commands.executeCommand('setContext', 'clangd.ast.supported',
                                    'astProvider' in capabilities);
   }
+  dispose() {}
 }
 
 // Icons used for nodes of particular roles and kinds. (Kind takes precedence).
 // IDs from https://code.visualstudio.com/api/references/icons-in-labels
+// We're uncomfortably coupled to the concrete roles and kinds from clangd:
+// https://github.com/llvm/llvm-project/blob/main/clang-tools-extra/clangd/DumpAST.cpp
+
+// There are only a few roles, corresponding to base AST node types.
 const RoleIcons: {[role: string]: string} = {
   'type': 'symbol-misc',
   'declaration': 'symbol-function',
@@ -82,6 +94,8 @@ const RoleIcons: {[role: string]: string} = {
   'statement': 'symbol-event',
   'template argument': 'symbol-type-parameter',
 };
+// Kinds match Stmt::StmtClass etc, corresponding to AST node subtypes.
+// In principle these could overlap, but in practice they don't.
 const KindIcons: {[type: string]: string} = {
   'Compound': 'json',
   'Recovery': 'error',
@@ -128,7 +142,7 @@ class TreeAdapter implements vscode.TreeDataProvider<ASTNode> {
       item.iconPath = new vscode.ThemeIcon(icon);
 
     // Clicking on the node should highlight it in the source.
-    if (node.range && this.doc)
+    if (node.range && this.doc) {
       item.command = {
         title: 'Jump to',
         command: 'vscode.open',
@@ -139,12 +153,27 @@ class TreeAdapter implements vscode.TreeDataProvider<ASTNode> {
           } as vscode.TextDocumentShowOptions
         ],
       };
+    }
     return item;
   }
 
-  public async getChildren(element?: ASTNode): Promise<ASTNode[]> {
+  public getChildren(element?: ASTNode): ASTNode[] {
     if (!element)
       return this.root ? [this.root] : [];
     return element.children || [];
+  }
+
+  public getParent(node: ASTNode): ASTNode {
+    if (node == this.root)
+      return null;
+    function findUnder(parent: ASTNode): ASTNode|null {
+      for (const child of parent.children || []) {
+        const result = (node == child) ? parent : findUnder(child);
+        if (result)
+          return result;
+      }
+      return null;
+    }
+    return findUnder(this.root);
   }
 }
