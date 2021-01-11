@@ -138,7 +138,8 @@ export class ClangdContext implements vscode.Disposable {
                                            serverOptions, clientOptions);
     this.client.clientOptions.errorHandler =
         this.client.createDefaultErrorHandler(
-            config.get<number>('maxRestartCount'));
+            // max restart count
+            config.get<boolean>('restartAfterCrash') ? /*default*/4 : 0);
     if (config.get<boolean>('semanticHighlighting'))
       semanticHighlighting.activate(this);
     this.client.registerFeature(new EnableEditsNearCursorFeature);
