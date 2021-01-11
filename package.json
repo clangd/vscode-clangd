@@ -124,6 +124,11 @@
                     "default": true,
                     "description": "Always rank completion items on the server as you type. This produces more accurate results at the cost of higher latency than client-side filtering."
                 },
+                "clangd.restartAfterCrash": {
+                    "type": "boolean",
+                    "default": true,
+                    "description": "Auto restart clangd (up to 4 times) if it crashes."
+                },
                 "clangd.checkUpdates": {
                     "type": "boolean",
                     "default": false,
