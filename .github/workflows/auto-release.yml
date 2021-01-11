@@ -22,7 +22,7 @@ jobs:
       run: npm test
     - name: publish
       if: steps.check.outputs.changed == 'true'
-      # The token will be expired in on 12/31/2020. Regenerate it at
+      # The token will be expired in on 01/10/2022. Regenerate it at
       # https://llvm-vs-code-extensions.visualstudio.com/_usersSettings/tokens.
       run: npm run publish -- -p "${{ secrets.VSCODE_MARKETPLACE_TOKEN }}"
 

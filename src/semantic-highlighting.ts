@@ -53,7 +53,7 @@ export interface SemanticHighlightingLine {
 // Language server push notification providing the semantic highlighting
 // information for a text document.
 const NotificationType =
-    new vscodelc.NotificationType<SemanticHighlightingParams, void>(
+    new vscodelc.NotificationType<SemanticHighlightingParams>(
         'textDocument/semanticHighlighting');
 
 // The feature that should be registered in the vscode lsp for enabling

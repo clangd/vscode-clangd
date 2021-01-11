@@ -43,9 +43,8 @@ interface TypeHierarchyItem {
 
 namespace TypeHierarchyRequest {
 export const type =
-    new vscodelc
-        .RequestType<TypeHierarchyParams, TypeHierarchyItem|null, void, void>(
-            'textDocument/typeHierarchy');
+    new vscodelc.RequestType<TypeHierarchyParams, TypeHierarchyItem|null, void>(
+        'textDocument/typeHierarchy');
 }
 
 interface ResolveTypeHierarchyItemParams {
@@ -55,10 +54,9 @@ interface ResolveTypeHierarchyItemParams {
 }
 
 export namespace ResolveTypeHierarchyRequest {
-export const type =
-    new vscodelc.RequestType<ResolveTypeHierarchyItemParams,
-                             TypeHierarchyItem|null, void, void>(
-        'typeHierarchy/resolve');
+export const type = new vscodelc.RequestType<ResolveTypeHierarchyItemParams,
+                                             TypeHierarchyItem|null, void>(
+    'typeHierarchy/resolve');
 }
 
 // A dummy node used to indicate that a node has multiple parents
@@ -113,6 +111,7 @@ class TypeHierarchyFeature implements vscodelc.StaticFeature {
   }
 
   fillClientCapabilities(capabilities: vscodelc.ClientCapabilities) {}
+  fillInitializeParams(_params: vscodelc.InitializeParams) {}
 
   initialize(capabilities: vscodelc.ServerCapabilities,
              documentSelector: vscodelc.DocumentSelector|undefined) {
@@ -123,6 +122,7 @@ class TypeHierarchyFeature implements vscodelc.StaticFeature {
       this.recomputeEnableTypeHierarchy();
     }
   }
+  dispose() {}
 
   private recomputeEnableTypeHierarchy() {
     if (this.state == vscodelc.State.Running) {
