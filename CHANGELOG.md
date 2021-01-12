@@ -1,5 +1,15 @@
 # Change Log
 
+## Version 0.1.9: January 12, 2021
+
+* Add "show AST" feature (clangd 12 or later), [#104](https://github.com/clangd/vscode-clangd/pull/104)
+* Add "restartAfterCrash" option, [#108](https://github.com/clangd/vscode-clangd/pull/108)
+* Add "serverCompletionRanking" option, [#63](https://github.com/clangd/vscode-clangd/pull/63)
+* Client side will not watch config files for clangd 12 or later, as clangd natively supports it [#128](https://github.com/clangd/vscode-clangd/pull/128)
+* Fix: improve workspace-symbol ranking for unqualified name, [#81](https://github.com/clangd/vscode-clangd/issues/81)
+* Fix: error on restarting clangd when using onConfigChanged, [#98](https://github.com/clangd/vscode-clangd/issues/98)
+* Fix: Resrict "show memory usage" button on its own view, [#97](https://github.com/clangd/vscode-clangd/pull/97)
+
 ## Version 0.1.8: November 10, 2020
 
 * file watcher support for `compile_commands.json`, [#33](https://github.com/clangd/vscode-clangd/pull/33)
