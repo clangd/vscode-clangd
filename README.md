@@ -14,7 +14,7 @@ Provides C/C++ language IDE features for VS Code using [clangd](https://clangd.l
 ### `clangd` server
 
 The extension requires the `clangd` language server.
-You will be prompted to download it if's not found on your PATH.
+You will be prompted to download it if it's not found on your PATH.
 (Automatic installation is possible on x86-64 Linux, Windows, and Mac).
 
 If you have an old version of clangd installed on your system already, you can
