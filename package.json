@@ -82,6 +82,14 @@
                     ".cu",
                     ".cuh"
                 ]
+            },
+            {
+                "id": "yaml",
+                "filenames": [
+                    ".clangd",
+                    ".clang-tidy",
+                    ".clang-format"
+                ]
             }
         ],
         "configuration": {
@@ -305,6 +313,12 @@
                     "when": "clangd.ast.hasData"
                 }
             ]
-        }
+        },
+        "yamlValidation": [
+            {
+                "fileMatch": ".clangd",
+                "url": "./schemas/clangd.json"
+            }
+        ]
     }
 }

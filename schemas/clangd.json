@@ -1,0 +1,126 @@
+{
+	"$schema": "http://json-schema.org/draft-07/schema",
+	"type": "object",
+	"additionalProperties": false,
+	"properties": {
+		"If": {
+			"type": "object",
+			"description": "Conditions in the If block restrict when a fragment applies.",
+			"additionalProperties": false,
+			"properties": {
+				"PathMatch": {
+					"type": [
+						"array",
+						"string"
+					],
+					"description": "The file being processed must fully match at least one of these regular expressions."
+				},
+				"PathExclude": {
+					"type": [
+						"array",
+						"string"
+					],
+					"description": "The file being processed must not fully match all of these regular expressions."
+				}
+			}
+		},
+		"CompileFlags": {
+			"type": "object",
+			"description": "Affects how a source file is parsed.",
+			"additionalProperties": false,
+			"properties": {
+				"Add": {
+					"type": [
+						"array",
+						"string"
+					],
+					"description": "List of flags to append to the compile command."
+				},
+				"Remove": {
+					"type": [
+						"array",
+						"string"
+					],
+					"description": "List of flags to remove from the compile command."
+				}
+			}
+		},
+		"Index": {
+			"type": "object",
+			"description": "Controls how clangd understands code outside the current file.",
+			"additionalProperties": false,
+			"properties": {
+				"Background": {
+					"type": "string",
+					"description": "Whether files are built in the background to produce a project index. This is checked for translation units only, not headers they include.",
+					"default": "Build",
+					"oneOf": [
+						{
+							"enum": [
+								"Skip",
+								"Build"
+							]
+						}
+					]
+				},
+				"External": {
+					"type": "object",
+					"description": "Used to define an external index source.",
+					"anyOf": [
+						{
+							"required": [
+								"File"
+							]
+						},
+						{
+							"required": [
+								"Server"
+							]
+						}
+					],
+					"additionalProperties": false,
+					"properties": {
+						"File": {
+							"type": "string",
+							"description": "Path of the external index."
+						},
+						"Server": {
+							"type": "string",
+							"description": "Url of the external index."
+						},
+						"MountPoint": {
+							"type": "string",
+							"description": "Can be used to specify source root for the index. This is necessary to handle relative path conversions. Defaults to location of the config fragment if not provided, must be absolute in global config and relative in local config."
+						}
+					}
+				}
+			}
+		},
+		"ClangTidy": {
+			"type": "object",
+			"description": "Configure how clang-tidy runs over your files. The settings are merged with any settings found in .clang-tidy configuration files with the ones from clangd configs taking precedence.",
+			"additionalProperties": false,
+			"properties": {
+				"Add": {
+					"type": [
+						"array",
+						"string"
+					],
+					"description": "List of checks to enable, can be globs."
+				},
+				"Remove": {
+					"type": [
+						"array",
+						"string"
+					],
+					"description": "List of checks to disable, can be globs. Takes precedence over Add."
+				},
+				"CheckOptions": {
+					"type": "object",
+					"description": "Key-value pairs of options for clang-tidy checks.",
+					"additionalProperties": true
+				}
+			}
+		}
+	}
+}
