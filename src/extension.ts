@@ -15,7 +15,7 @@ export async function activate(context: vscode.ExtensionContext) {
 
   if (vscode.extensions.getExtension('ms-vscode.cpptools') !== undefined) {
     vscode.window.showWarningMessage(
-        'You have Microsoft C++ (ms-vscode.cpptools) extensions enabled, it is ' +
+        'You have Microsoft C++ (ms-vscode.cpptools) extension enabled, it is ' +
             'known to conflict with vscode-clangd. We recommend disabling it.',
         'Got it');
   }
