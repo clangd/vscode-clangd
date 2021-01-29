@@ -13,6 +13,13 @@ export async function activate(context: vscode.ExtensionContext) {
   const clangdContext = new ClangdContext;
   context.subscriptions.push(clangdContext);
 
+  if (vscode.extensions.getExtension('ms-vscode.cpptools') !== undefined) {
+    vscode.window.showWarningMessage(
+      "You have Microsoft C++ (ms-vscode.cpptools) extensions enabled, it is " +
+      "known to conflict with vscode-clangd. We recommend disabling it.",
+      "Got it");
+  }
+
   // An empty place holder for the activate command, otherwise we'll get an
   // "command is not registered" error.
   context.subscriptions.push(
