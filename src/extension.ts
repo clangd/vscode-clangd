@@ -38,7 +38,6 @@ export async function activate(context: vscode.ExtensionContext) {
                     'known to conflict with vscode-clangd. We recommend disabling it.',
                 DisableIt, 'Got it')
             .then(selection => {
-              console.log('selection');
               if (selection === DisableIt) {
                 vscode.workspace.getConfiguration('C_Cpp').update(
                     'intelliSenseEngine', false,
