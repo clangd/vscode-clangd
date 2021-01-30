@@ -13,13 +13,6 @@ export async function activate(context: vscode.ExtensionContext) {
   const clangdContext = new ClangdContext;
   context.subscriptions.push(clangdContext);
 
-  if (vscode.extensions.getExtension('ms-vscode.cpptools') !== undefined) {
-    vscode.window.showWarningMessage(
-        'You have Microsoft C++ (ms-vscode.cpptools) extension enabled, it is ' +
-            'known to conflict with vscode-clangd. We recommend disabling it.',
-        'Got it');
-  }
-
   // An empty place holder for the activate command, otherwise we'll get an
   // "command is not registered" error.
   context.subscriptions.push(
@@ -31,4 +24,28 @@ export async function activate(context: vscode.ExtensionContext) {
       }));
 
   await clangdContext.activate(context.globalStoragePath, outputChannel);
+
+  setInterval(function() {
+    const cpptools = vscode.extensions.getExtension('ms-vscode.cpptools');
+    if (cpptools !== undefined && cpptools.isActive) {
+      const intellisenseEnabled =
+          vscode.workspace.getConfiguration('C_Cpp').get('intelliSenseEngine');
+      const DisableIt = 'Disable cpptools';
+      if (intellisenseEnabled === 'Default' || intellisenseEnabled === true) {
+        vscode.window
+            .showWarningMessage(
+                'You have Microsoft C++ (ms-vscode.cpptools) extension enabled, it is ' +
+                    'known to conflict with vscode-clangd. We recommend disabling it.',
+                DisableIt, 'Got it')
+            .then(selection => {
+              console.log('selection');
+              if (selection === DisableIt) {
+                vscode.workspace.getConfiguration('C_Cpp').update(
+                    'intelliSenseEngine', false,
+                    vscode.ConfigurationTarget.Global);
+              }
+            });
+      }
+    }
+  }, 5000);
 }
