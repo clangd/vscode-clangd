@@ -28,8 +28,7 @@ export async function activate(context: vscode.ExtensionContext) {
   setInterval(function() {
     const cpptools = vscode.extensions.getExtension('ms-vscode.cpptools');
     if (cpptools !== undefined && cpptools.isActive) {
-      const cpptoolsConfiguration =
-        vscode.workspace.getConfiguration('C_Cpp');
+      const cpptoolsConfiguration = vscode.workspace.getConfiguration('C_Cpp');
       const cpptoolsEnabled = cpptoolsConfiguration.get('intelliSenseEngine');
       if (cpptoolsEnabled !== 'Disabled') {
         const DisableIt = 'Disable cpptools';
@@ -40,9 +39,8 @@ export async function activate(context: vscode.ExtensionContext) {
                 DisableIt, 'Got it')
             .then(selection => {
               if (selection === DisableIt) {
-                cpptoolsConfiguration.update(
-                    'intelliSenseEngine', 'Disabled',
-                    vscode.ConfigurationTarget.Global);
+                cpptoolsConfiguration.update('intelliSenseEngine', 'Disabled',
+                                             vscode.ConfigurationTarget.Global);
               }
             });
       }
