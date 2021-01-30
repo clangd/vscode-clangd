@@ -28,10 +28,11 @@ export async function activate(context: vscode.ExtensionContext) {
   setInterval(function() {
     const cpptools = vscode.extensions.getExtension('ms-vscode.cpptools');
     if (cpptools !== undefined && cpptools.isActive) {
-      const intellisenseEnabled =
-          vscode.workspace.getConfiguration('C_Cpp').get('intelliSenseEngine');
-      const DisableIt = 'Disable cpptools';
-      if (intellisenseEnabled === 'Default' || intellisenseEnabled === true) {
+      const cpptoolsConfiguration =
+        vscode.workspace.getConfiguration('C_Cpp');
+      const cpptoolsEnabled = cpptoolsConfiguration.get('intelliSenseEngine');
+      if (cpptoolsEnabled !== 'Disabled') {
+        const DisableIt = 'Disable cpptools';
         vscode.window
             .showWarningMessage(
                 'You have Microsoft C++ (ms-vscode.cpptools) extension enabled, it is ' +
@@ -39,8 +40,8 @@ export async function activate(context: vscode.ExtensionContext) {
                 DisableIt, 'Got it')
             .then(selection => {
               if (selection === DisableIt) {
-                vscode.workspace.getConfiguration('C_Cpp').update(
-                    'intelliSenseEngine', false,
+                cpptoolsConfiguration.update(
+                    'intelliSenseEngine', 'Disabled',
                     vscode.ConfigurationTarget.Global);
               }
             });
