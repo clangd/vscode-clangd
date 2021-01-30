@@ -31,18 +31,15 @@ export async function activate(context: vscode.ExtensionContext) {
       const cpptoolsConfiguration = vscode.workspace.getConfiguration('C_Cpp');
       const cpptoolsEnabled = cpptoolsConfiguration.get('intelliSenseEngine');
       if (cpptoolsEnabled !== 'Disabled') {
-        const DisableIt = 'Disable cpptools';
         vscode.window
             .showWarningMessage(
                 'You have Microsoft C++ (ms-vscode.cpptools) extension ' +
                     'enabled, it is known to conflict with vscode-clangd. We ' +
                     'recommend disabling it.',
-                DisableIt, 'Got it')
-            .then(selection => {
-              if (selection === DisableIt) {
-                cpptoolsConfiguration.update('intelliSenseEngine', 'Disabled',
-                                             vscode.ConfigurationTarget.Global);
-              }
+                'Disable cpptools')
+            .then(_ => {
+              cpptoolsConfiguration.update('intelliSenseEngine', 'Disabled',
+                                           vscode.ConfigurationTarget.Global);
             });
       }
     }
