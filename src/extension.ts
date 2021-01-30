@@ -34,8 +34,9 @@ export async function activate(context: vscode.ExtensionContext) {
         const DisableIt = 'Disable cpptools';
         vscode.window
             .showWarningMessage(
-                'You have Microsoft C++ (ms-vscode.cpptools) extension enabled, it is ' +
-                    'known to conflict with vscode-clangd. We recommend disabling it.',
+                'You have Microsoft C++ (ms-vscode.cpptools) extension ' +
+                    'enabled, it is known to conflict with vscode-clangd. We ' +
+                    'recommend disabling it.',
                 DisableIt, 'Got it')
             .then(selection => {
               if (selection === DisableIt) {
