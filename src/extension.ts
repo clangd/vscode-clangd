@@ -26,19 +26,19 @@ export async function activate(context: vscode.ExtensionContext) {
   await clangdContext.activate(context.globalStoragePath, outputChannel);
 
   setInterval(function() {
-    const cpptools = vscode.extensions.getExtension('ms-vscode.cpptools');
-    if (cpptools !== undefined && cpptools.isActive) {
-      const cpptoolsConfiguration = vscode.workspace.getConfiguration('C_Cpp');
-      const cpptoolsEnabled = cpptoolsConfiguration.get('intelliSenseEngine');
-      if (cpptoolsEnabled !== 'Disabled') {
+    const cppTools = vscode.extensions.getExtension('ms-vscode.cpptools');
+    if (cppTools && cppTools.isActive) {
+      const cppToolsConfiguration = vscode.workspace.getConfiguration('C_Cpp');
+      const cppToolsEnabled = cppToolsConfiguration.get('intelliSenseEngine');
+      if (cppToolsEnabled !== 'Disabled') {
         vscode.window
             .showWarningMessage(
-                'You have Microsoft C++ (ms-vscode.cpptools) extension ' +
-                    'enabled, it is known to conflict with vscode-clangd. We ' +
-                    'recommend disabling it.',
-                'Disable cpptools')
+                'You have both the Microsoft C++ (cpptools) extension and ' +
+                    'clangd extension enabled. The Microsoft IntelliSense features ' +
+                    'conflict with clangd\'s code completion, diagnostics etc.',
+                'Disable IntelliSense')
             .then(_ => {
-              cpptoolsConfiguration.update('intelliSenseEngine', 'Disabled',
+              cppToolsConfiguration.update('intelliSenseEngine', 'Disabled',
                                            vscode.ConfigurationTarget.Global);
             });
       }
