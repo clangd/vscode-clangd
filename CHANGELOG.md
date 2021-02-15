@@ -1,5 +1,9 @@
 # Change Log
 
+## Version 0.1.10: February 15, 2021
+
+* Warn about conflict with ms-vscode.cpptools, [#141](https://github.com/clangd/vscode-clangd/pull/141)
+
 ## Version 0.1.9: January 12, 2021
 
 * Add "show AST" feature (clangd 12 or later), [#104](https://github.com/clangd/vscode-clangd/pull/104)
