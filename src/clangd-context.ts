@@ -53,9 +53,7 @@ export class ClangdContext implements vscode.Disposable {
     const rootPath: string = vscode.workspace.rootPath;
     const targetCwd: string =
         (rootPath !== undefined) ? rootPath : process.cwd();
-    const clangdExecOptions: vscodelc.ExecutableOptions = {
-      cwd: targetCwd
-    };
+    const clangdExecOptions: vscodelc.ExecutableOptions = {cwd: targetCwd};
     const clangd: vscodelc.Executable = {
       command: clangdPath,
       args: config.get<string[]>('arguments'),
