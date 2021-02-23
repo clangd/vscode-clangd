@@ -21,12 +21,13 @@ class ClangdLanguageClient extends vscodelc.LanguageClient {
   // prompt up the failure to users.
 
   handleFailedRequest<T>(type: vscodelc.MessageSignature, error: any,
+                         token: vscode.CancellationToken|undefined,
                          defaultValue: T): T {
     if (error instanceof vscodelc.ResponseError &&
         type.method === 'workspace/executeCommand')
       vscode.window.showErrorMessage(error.message);
 
-    return super.handleFailedRequest(type, error, defaultValue);
+    return super.handleFailedRequest(type, token, error, defaultValue);
   }
 }
 

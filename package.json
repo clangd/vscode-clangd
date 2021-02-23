@@ -43,11 +43,11 @@
         "git-clang-format": "git-clang-format"
     },
     "dependencies": {
+        "@clangd/install": "0.1.3",
         "abort-controller": "^3.0.0",
         "jsonc-parser": "^2.1.0",
-        "vscode-languageclient": "7.0.0",
-        "vscode-languageserver-types": "3.16.0",
-        "@clangd/install": "0.1.3"
+        "vscode-languageclient": "7.1.0-next.1",
+        "vscode-languageserver-types": "3.16.0"
     },
     "devDependencies": {
         "@types/glob": "^7.1.1",
