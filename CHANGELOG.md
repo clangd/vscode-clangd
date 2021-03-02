@@ -1,5 +1,11 @@
 # Change Log
 
+## Version 0.1.11: March 2, 2021
+
+* Prompt when workspace overrides clangd.path and clangd.arguments, [#160](https://github.com/clangd/vscode-clangd/pull/160)
+* Fix semanticTokens flickering issue, [#150](https://github.com/clangd/vscode-clangd/pull/150)
+* clangd.path takes vscode.workspace.rootPath into account if available. [#153](https://github.com/clangd/vscode-clangd/pull/153)
+
 ## Version 0.1.10: February 15, 2021
 
 * Warn about conflict with ms-vscode.cpptools, [#141](https://github.com/clangd/vscode-clangd/pull/141)
