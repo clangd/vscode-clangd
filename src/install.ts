@@ -10,9 +10,13 @@ import {ClangdContext} from './clangd-context';
 import * as config from './config';
 
 // Returns the clangd path to be used, or null if clangd is not installed.
-export async function activate(context: ClangdContext,
-                               globalStoragePath: string): Promise<string> {
-  const ui = new UI(context, globalStoragePath);
+export async function activate(
+    context: ClangdContext, globalStoragePath: string,
+    workspaceState: vscode.Memento): Promise<string> {
+  // If the workspace overrides clangd.path, give the user a chance to bless it.
+  await config.getSecureOrPrompt<string>('path', workspaceState);
+
+  const ui = new UI(context, globalStoragePath, workspaceState);
   context.subscriptions.push(vscode.commands.registerCommand(
       'clangd.install', async () => common.installLatest(ui)));
   context.subscriptions.push(vscode.commands.registerCommand(
@@ -22,8 +26,8 @@ export async function activate(context: ClangdContext,
 }
 
 class UI {
-  constructor(private context: ClangdContext,
-              private globalStoragePath: string) {}
+  constructor(private context: ClangdContext, private globalStoragePath: string,
+              private workspaceState: vscode.Memento) {}
 
   get storagePath(): string { return this.globalStoragePath; }
   async choose(prompt: string, options: string[]): Promise<string|undefined> {
@@ -122,7 +126,7 @@ class UI {
   }
 
   get clangdPath(): string {
-    let p = config.get<string>('path');
+    let p = config.getSecure<string>('path', this.workspaceState);
     // Backwards compatibility: if it's a relative path with a slash, interpret
     // relative to project root.
     if (!path.isAbsolute(p) && p.indexOf(path.sep) != -1 &&
