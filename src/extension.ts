@@ -20,10 +20,12 @@ export async function activate(context: vscode.ExtensionContext) {
   context.subscriptions.push(
       vscode.commands.registerCommand('clangd.restart', async () => {
         await clangdContext.dispose();
-        await clangdContext.activate(context.globalStoragePath, outputChannel);
+        await clangdContext.activate(context.globalStoragePath, outputChannel,
+                                     context.workspaceState);
       }));
 
-  await clangdContext.activate(context.globalStoragePath, outputChannel);
+  await clangdContext.activate(context.globalStoragePath, outputChannel,
+                               context.workspaceState);
 
   setInterval(function() {
     const cppTools = vscode.extensions.getExtension('ms-vscode.cpptools');

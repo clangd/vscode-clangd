@@ -45,15 +45,17 @@ export class ClangdContext implements vscode.Disposable {
   subscriptions: vscode.Disposable[] = [];
   client: ClangdLanguageClient;
 
-  async activate(globalStoragePath: string,
-                 outputChannel: vscode.OutputChannel) {
-    const clangdPath = await install.activate(this, globalStoragePath);
+  async activate(globalStoragePath: string, outputChannel: vscode.OutputChannel,
+                 workspaceState: vscode.Memento) {
+    const clangdPath =
+        await install.activate(this, globalStoragePath, workspaceState);
     if (!clangdPath)
       return;
 
     const clangd: vscodelc.Executable = {
       command: clangdPath,
-      args: config.get<string[]>('arguments'),
+      args:
+          await config.getSecureOrPrompt<string[]>('arguments', workspaceState),
       options: {cwd: vscode.workspace.rootPath || process.cwd()}
     };
     const traceFile = config.get<string>('trace');
