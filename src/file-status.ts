@@ -4,7 +4,9 @@ import * as vscodelc from 'vscode-languageclient/node';
 import {ClangdContext} from './clangd-context';
 
 export function activate(context: ClangdContext) {
-  const status = new FileStatus();
+  context.subscriptions.push(vscode.commands.registerCommand(
+      'clangd.openOutputPanel', () => context.client.outputChannel.show()));
+  const status = new FileStatus('clangd.openOutputPanel');
   context.subscriptions.push(vscode.Disposable.from(status));
   context.subscriptions.push(vscode.window.onDidChangeActiveTextEditor(
       () => { status.updateStatus(); }));
@@ -25,6 +27,10 @@ class FileStatus {
   private statuses = new Map<string, any>();
   private readonly statusBarItem =
       vscode.window.createStatusBarItem(vscode.StatusBarAlignment.Left, 10);
+
+  constructor(onClickCommand: string) {
+    this.statusBarItem.command = onClickCommand;
+  }
 
   onFileUpdated(fileStatus: any) {
     const filePath = vscode.Uri.parse(fileStatus.uri);
