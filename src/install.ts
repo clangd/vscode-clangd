@@ -21,8 +21,9 @@ export async function activate(
       'clangd.install', async () => common.installLatest(ui)));
   context.subscriptions.push(vscode.commands.registerCommand(
       'clangd.update', async () => common.checkUpdates(true, ui)));
-  const status = await common.prepare(ui, config.get<boolean>('checkUpdates'));
-  return status.clangdPath;
+  const status =
+      await common.prepare(ui, config.get<boolean>('checkUpdates', false));
+  return status.clangdPath ?? '';
 }
 
 class UI {
@@ -68,7 +69,7 @@ class UI {
         vscode.commands.registerCommand(name, body));
   }
 
-  async shouldReuse(release: string): Promise<boolean> {
+  async shouldReuse(release: string): Promise<boolean|undefined> {
     const message = `clangd ${release} is already installed!`;
     const use = 'Use the installed version';
     const reinstall = 'Delete it and reinstall';
@@ -126,7 +127,7 @@ class UI {
   }
 
   get clangdPath(): string {
-    let p = config.getSecure<string>('path', this.workspaceState);
+    let p = config.getSecure<string>('path', this.workspaceState)!;
     // Backwards compatibility: if it's a relative path with a slash, interpret
     // relative to project root.
     if (!path.isAbsolute(p) && p.indexOf(path.sep) != -1 &&

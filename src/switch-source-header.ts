@@ -17,9 +17,9 @@ export const type =
 
 async function switchSourceHeader(client: vscodelc.LanguageClient):
     Promise<void> {
-  const uri = vscode.Uri.file(vscode.window.activeTextEditor.document.fileName);
-  if (!uri)
+  if (!vscode.window.activeTextEditor)
     return;
+  const uri = vscode.Uri.file(vscode.window.activeTextEditor.document.fileName);
 
   const docIdentifier = vscodelc.TextDocumentIdentifier.create(uri.toString());
   const sourceUri =

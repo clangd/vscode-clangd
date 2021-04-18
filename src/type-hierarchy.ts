@@ -100,7 +100,7 @@ class TypeHierarchyTreeItem extends vscode.TreeItem {
 
 class TypeHierarchyFeature implements vscodelc.StaticFeature {
   private serverSupportsTypeHierarchy = false;
-  private state: vscodelc.State;
+  private state!: vscodelc.State;
 
   constructor(context: ClangdContext) {
     new TypeHierarchyProvider(context);
@@ -150,7 +150,7 @@ class TypeHierarchyProvider implements
 
   // The item on which the type hierarchy operation was invoked.
   // May be different from the root.
-  private startingItem: TypeHierarchyItem;
+  private startingItem!: TypeHierarchyItem;
 
   constructor(context: ClangdContext) {
     this.client = context.client;
@@ -237,7 +237,7 @@ class TypeHierarchyProvider implements
       return [this.root];
     if (this.direction == TypeHierarchyDirection.Parents) {
       // Clangd always resolves parents eagerly, so just return them.
-      return element.parents;
+      return element.parents ?? [];
     }
     // Otherwise, this.direction == Children.
     if (!element.children) {
@@ -248,9 +248,9 @@ class TypeHierarchyProvider implements
             direction: TypeHierarchyDirection.Children,
             resolve: 1
           });
-      element.children = resolved.children;
+      element.children = resolved?.children;
     }
-    return element.children;
+    return element.children ?? [];
   }
 
   private computeRoot(): TypeHierarchyItem {

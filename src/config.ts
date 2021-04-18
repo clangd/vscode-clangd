@@ -2,8 +2,9 @@ import * as path from 'path';
 import * as vscode from 'vscode';
 
 // Gets the config value `clangd.<key>`. Applies ${variable} substitutions.
-export function get<T>(key: string): T {
-  return substitute(vscode.workspace.getConfiguration('clangd').get(key));
+export function get<T>(key: string, defaultValue: T): T {
+  return substitute(
+      vscode.workspace.getConfiguration('clangd').get(key, defaultValue));
 }
 
 // Like get(), but won't load settings from workspace config unless the user has
@@ -17,7 +18,7 @@ export function getSecure<T>(key: string, workspaceState: vscode.Memento): T|
 // Like get(), but won't implicitly load settings from workspace config.
 // If there is workspace config, prompts the user and caches the decision.
 export async function getSecureOrPrompt<T>(
-    key: string, workspaceState: vscode.Memento): Promise<T> {
+    key: string, workspaceState: vscode.Memento): Promise<T|undefined> {
   const prop = new SecureProperty<T>(key, workspaceState);
   // Common case: value not overridden in workspace.
   if (!prop.mismatched)
@@ -114,7 +115,7 @@ class SecureProperty<T> {
 
   constructor(key: string, private workspaceState: vscode.Memento) {
     const cfg = vscode.workspace.getConfiguration('clangd');
-    const inspect = cfg.inspect<T>(key);
+    const inspect = cfg.inspect<T>(key)!;
     this.secure = inspect.globalValue ?? inspect.defaultValue;
     this.insecure = cfg.get<T>(key);
     this.secureJSON = JSON.stringify(this.secure);

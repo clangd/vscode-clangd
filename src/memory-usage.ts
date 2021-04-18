@@ -63,7 +63,7 @@ class MemoryUsageFeature implements vscodelc.StaticFeature {
           adapter.root = convert(usage, '<root>');
         }));
     this.context.subscriptions.push(vscode.commands.registerCommand(
-        'clangd.memoryUsage.close', () => adapter.root = null));
+        'clangd.memoryUsage.close', () => adapter.root = undefined));
   }
 
   fillClientCapabilities(capabilities: vscodelc.ClientCapabilities) {}
@@ -80,8 +80,8 @@ class MemoryUsageFeature implements vscodelc.StaticFeature {
 class TreeAdapter implements vscode.TreeDataProvider<InternalTree> {
   private root_?: InternalTree;
 
-  get root(): InternalTree|null { return this.root_; }
-  set root(n: InternalTree|null) {
+  get root(): InternalTree|undefined { return this.root_; }
+  set root(n: InternalTree|undefined) {
     this.root_ = n;
     this._onDidChangeTreeData.fire(/*root changed*/ null);
   }

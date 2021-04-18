@@ -35,7 +35,7 @@ class EnableEditsNearCursorFeature implements vscodelc.StaticFeature {
   initialize() {}
   fillClientCapabilities(capabilities: vscodelc.ClientCapabilities): void {
     const extendedCompletionCapabilities: any =
-        capabilities.textDocument.completion;
+        capabilities.textDocument?.completion;
     extendedCompletionCapabilities.editsNearCursor = true;
   }
   dispose() {}
@@ -43,7 +43,7 @@ class EnableEditsNearCursorFeature implements vscodelc.StaticFeature {
 
 export class ClangdContext implements vscode.Disposable {
   subscriptions: vscode.Disposable[] = [];
-  client: ClangdLanguageClient;
+  client!: ClangdLanguageClient;
 
   async activate(globalStoragePath: string, outputChannel: vscode.OutputChannel,
                  workspaceState: vscode.Memento) {
@@ -58,7 +58,7 @@ export class ClangdContext implements vscode.Disposable {
           await config.getSecureOrPrompt<string[]>('arguments', workspaceState),
       options: {cwd: vscode.workspace.rootPath || process.cwd()}
     };
-    const traceFile = config.get<string>('trace');
+    const traceFile = config.get<string>('trace', '');
     if (!!traceFile) {
       const trace = {CLANGD_TRACE: traceFile};
       clangd.options = {env: {...process.env, ...trace}};
@@ -77,7 +77,7 @@ export class ClangdContext implements vscode.Disposable {
       ],
       initializationOptions: {
         clangdFileStatus: true,
-        fallbackFlags: config.get<string[]>('fallbackFlags')
+        fallbackFlags: config.get<string[]>('fallbackFlags', [])
       },
       outputChannel: outputChannel,
       // Do not switch to output window when clangd returns output.
@@ -101,9 +101,9 @@ export class ClangdContext implements vscode.Disposable {
         provideCompletionItem: async (document, position, context, token,
                                       next) => {
           let list = await next(document, position, context, token);
-          if (!config.get<boolean>('serverCompletionRanking'))
+          if (!config.get<boolean>('serverCompletionRanking', true))
             return list;
-          let items = (Array.isArray(list) ? list : list.items).map(item => {
+          let items = (Array.isArray(list) ? list : list!.items).map(item => {
             // Gets the prefix used by VSCode when doing fuzzymatch.
             let prefix = document.getText(
                 new vscode.Range((item.range as vscode.Range).start, position))
@@ -120,7 +120,7 @@ export class ClangdContext implements vscode.Disposable {
         // qualified symbols.
         provideWorkspaceSymbols: async (query, token, next) => {
           let symbols = await next(query, token);
-          return symbols.map(symbol => {
+          return symbols?.map(symbol => {
             // Only make this adjustment if the query is in fact qualified.
             // Otherwise, we get a suboptimal ordering of results because
             // including the name's qualifier (if it has one) in symbol.name
@@ -143,8 +143,8 @@ export class ClangdContext implements vscode.Disposable {
     this.client.clientOptions.errorHandler =
         this.client.createDefaultErrorHandler(
             // max restart count
-            config.get<boolean>('restartAfterCrash') ? /*default*/ 4 : 0);
-    if (config.get<boolean>('semanticHighlighting'))
+            config.get<boolean>('restartAfterCrash', true) ? /*default*/ 4 : 0);
+    if (config.get<boolean>('semanticHighlighting', true))
       semanticHighlighting.activate(this);
     this.client.registerFeature(new EnableEditsNearCursorFeature);
     typeHierarchy.activate(this);

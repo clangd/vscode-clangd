@@ -16,7 +16,7 @@
         ],
         "sourceMap": true,
         "rootDir": ".",
-        "alwaysStrict": true,
+        "strict": true,
         "noEmitOnError": true,
         "noFallthroughCasesInSwitch": true,
         "noImplicitAny": true,

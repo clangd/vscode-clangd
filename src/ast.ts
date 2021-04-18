@@ -24,7 +24,8 @@ interface ASTNode {
   range?: vscodelc.Range;
 }
 const ASTRequestType =
-    new vscodelc.RequestType<ASTParams, ASTNode|null, void>('textDocument/ast');
+    new vscodelc.RequestType<ASTParams, ASTNode|undefined, void>(
+        'textDocument/ast');
 
 class ASTFeature implements vscodelc.StaticFeature {
   constructor(private context: ClangdContext) {
@@ -39,11 +40,11 @@ class ASTFeature implements vscodelc.StaticFeature {
         // clangd.ast.hasData controls the view visibility (package.json).
         adapter.onDidChangeTreeData((_) => {
           vscode.commands.executeCommand('setContext', 'clangd.ast.hasData',
-                                         adapter.hasRoot())
-          // Show the AST tree even if it's beet collapsed or closed.
+                                         adapter.hasRoot());
+          // Show the AST tree even if it's been collapsed or closed.
           // reveal(root) fails here: "Data tree node not found".
           if (adapter.hasRoot())
-          tree.reveal(null);
+            tree.reveal(null!);
         }),
         vscode.window.registerTreeDataProvider('clangd.ast', adapter),
         // Create the "Show AST" command for the context menu.
@@ -65,8 +66,8 @@ class ASTFeature implements vscodelc.StaticFeature {
             }),
         // Clicking "close" will empty the adapter, which in turn hides the
         // view.
-        vscode.commands.registerCommand('clangd.ast.close',
-                                        () => adapter.setRoot(null, null)));
+        vscode.commands.registerCommand(
+            'clangd.ast.close', () => adapter.setRoot(undefined, undefined)));
   }
 
   fillClientCapabilities(capabilities: vscodelc.ClientCapabilities) {}
@@ -122,7 +123,7 @@ class TreeAdapter implements vscode.TreeDataProvider<ASTNode> {
 
   hasRoot(): boolean { return this.root != null; }
 
-  setRoot(newRoot: ASTNode|null, newDoc: vscode.Uri|null) {
+  setRoot(newRoot: ASTNode|undefined, newDoc: vscode.Uri|undefined) {
     this.root = newRoot;
     this.doc = newDoc;
     this._onDidChangeTreeData.fire(/*root changed*/ null);
@@ -163,16 +164,16 @@ class TreeAdapter implements vscode.TreeDataProvider<ASTNode> {
     return element.children || [];
   }
 
-  public getParent(node: ASTNode): ASTNode {
+  public getParent(node: ASTNode): ASTNode|undefined {
     if (node == this.root)
-      return null;
-    function findUnder(parent: ASTNode): ASTNode|null {
-      for (const child of parent.children || []) {
+      return undefined;
+    function findUnder(parent: ASTNode|undefined): ASTNode|undefined {
+      for (const child of parent?.children || []) {
         const result = (node == child) ? parent : findUnder(child);
         if (result)
           return result;
       }
-      return null;
+      return undefined;
     }
     return findUnder(this.root);
   }
