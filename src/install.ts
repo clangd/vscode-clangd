@@ -12,7 +12,7 @@ import * as config from './config';
 // Returns the clangd path to be used, or null if clangd is not installed.
 export async function activate(
     context: ClangdContext, globalStoragePath: string,
-    workspaceState: vscode.Memento): Promise<string> {
+    workspaceState: vscode.Memento): Promise<string|null> {
   // If the workspace overrides clangd.path, give the user a chance to bless it.
   await config.getSecureOrPrompt<string>('path', workspaceState);
 
@@ -21,9 +21,8 @@ export async function activate(
       'clangd.install', async () => common.installLatest(ui)));
   context.subscriptions.push(vscode.commands.registerCommand(
       'clangd.update', async () => common.checkUpdates(true, ui)));
-  const status =
-      await common.prepare(ui, config.get<boolean>('checkUpdates', false));
-  return status.clangdPath ?? '';
+  const status = await common.prepare(ui, config.get<boolean>('checkUpdates'));
+  return status.clangdPath;
 }
 
 class UI {
@@ -47,7 +46,7 @@ class UI {
     const opts = {
       location: vscode.ProgressLocation.Notification,
       title: title,
-      cancellable: cancel != null,
+      cancellable: cancel !== null,
     };
     const result = vscode.window.withProgress(opts, async (progress, canc) => {
       if (cancel)
@@ -75,10 +74,10 @@ class UI {
     const reinstall = 'Delete it and reinstall';
     const response =
         await vscode.window.showInformationMessage(message, use, reinstall);
-    if (response == use) {
+    if (response === use) {
       // Find clangd within the existing directory.
       return true;
-    } else if (response == reinstall) {
+    } else if (response === reinstall) {
       // Remove the existing installation.
       return false;
     } else {
@@ -104,11 +103,10 @@ class UI {
     const update = `Install clangd ${newVersion}`;
     const dontCheck = 'Don\'t ask again';
     const response =
-        await vscode.window.showInformationMessage(message, update, dontCheck)
-    if (response == update) {
+        await vscode.window.showInformationMessage(message, update, dontCheck);
+    if (response === update) {
       common.installLatest(this);
-    }
-    else if (response == dontCheck) {
+    } else if (response === dontCheck) {
       config.update('checkUpdates', false, vscode.ConfigurationTarget.Global);
     }
   }
@@ -130,7 +128,7 @@ class UI {
     let p = config.getSecure<string>('path', this.workspaceState)!;
     // Backwards compatibility: if it's a relative path with a slash, interpret
     // relative to project root.
-    if (!path.isAbsolute(p) && p.indexOf(path.sep) != -1 &&
+    if (!path.isAbsolute(p) && p.includes(path.sep) &&
         vscode.workspace.rootPath !== undefined)
       p = path.join(vscode.workspace.rootPath, p);
     return p;

@@ -11,12 +11,12 @@ export function activate(context: ClangdContext) {
   context.subscriptions.push(vscode.window.onDidChangeActiveTextEditor(
       () => { status.updateStatus(); }));
   context.subscriptions.push(context.client.onDidChangeState(({newState}) => {
-    if (newState == vscodelc.State.Running) {
+    if (newState === vscodelc.State.Running) {
       // clangd starts or restarts after crash.
       context.client.onNotification(
           'textDocument/clangd.fileStatus',
           (fileStatus) => { status.onFileUpdated(fileStatus); });
-    } else if (newState == vscodelc.State.Stopped) {
+    } else if (newState === vscodelc.State.Stopped) {
       // Clear all cached statuses when clangd crashes.
       status.clear();
     }
@@ -43,7 +43,7 @@ class FileStatus {
     // Work around https://github.com/microsoft/vscode/issues/58869
     // Don't hide the status when activeTextEditor is output panel.
     // This aligns with the behavior of other panels, e.g. problems.
-    if (!activeDoc || activeDoc.uri.scheme == 'output')
+    if (!activeDoc || activeDoc.uri.scheme === 'output')
       return;
     const status = this.statuses.get(activeDoc.fileName);
     if (!status) {

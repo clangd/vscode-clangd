@@ -51,9 +51,9 @@ function convert(m: WireTree, title: string): InternalTree {
 class MemoryUsageFeature implements vscodelc.StaticFeature {
   constructor(private context: ClangdContext) {
     const adapter = new TreeAdapter();
-    adapter.onDidChangeTreeData(
-        (e) => vscode.commands.executeCommand(
-            'setContext', 'clangd.memoryUsage.hasData', adapter.root != null));
+    adapter.onDidChangeTreeData((e) => vscode.commands.executeCommand(
+                                    'setContext', 'clangd.memoryUsage.hasData',
+                                    adapter.root !== undefined));
     this.context.subscriptions.push(
         vscode.window.registerTreeDataProvider('clangd.memoryUsage', adapter));
     this.context.subscriptions.push(

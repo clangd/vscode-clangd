@@ -5,7 +5,7 @@ import {ClangdContext} from './clangd-context';
 import * as config from './config';
 
 export function activate(context: ClangdContext) {
-  if (config.get<string>('onConfigChanged', 'prompt') != 'ignore') {
+  if (config.get<string>('onConfigChanged') !== 'ignore') {
     context.client.registerFeature(new ConfigFileWatcherFeature(context));
   }
 }
@@ -79,7 +79,7 @@ class ConfigFileWatcher implements vscode.Disposable {
     if ((await vscode.workspace.fs.stat(uri)).size <= 0)
       return;
 
-    switch (config.get<string>('onConfigChanged', 'prompt')) {
+    switch (config.get<string>('onConfigChanged')) {
     case 'restart':
       vscode.commands.executeCommand('clangd.restart');
       break;

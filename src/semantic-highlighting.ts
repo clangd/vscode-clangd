@@ -68,11 +68,11 @@ export class SemanticHighlightingFeature implements vscodelc.StaticFeature {
   private subscriptions: vscode.Disposable[] = [];
   constructor(context: ClangdContext) {
     context.subscriptions.push(context.client.onDidChangeState(({newState}) => {
-      if (newState == vscodelc.State.Running) {
+      if (newState === vscodelc.State.Running) {
         // Register handler for semantic highlighting notification.
         context.client.onNotification(NotificationType,
                                       this.handleNotification.bind(this));
-      } else if (newState == vscodelc.State.Stopped) {
+      } else if (newState === vscodelc.State.Stopped) {
         // Dispose resources when clangd crashes.
         this.dispose();
       }

@@ -24,8 +24,7 @@ interface ASTNode {
   range?: vscodelc.Range;
 }
 const ASTRequestType =
-    new vscodelc.RequestType<ASTParams, ASTNode|undefined, void>(
-        'textDocument/ast');
+    new vscodelc.RequestType<ASTParams, ASTNode|null, void>('textDocument/ast');
 
 class ASTFeature implements vscodelc.StaticFeature {
   constructor(private context: ClangdContext) {
@@ -41,10 +40,12 @@ class ASTFeature implements vscodelc.StaticFeature {
         adapter.onDidChangeTreeData((_) => {
           vscode.commands.executeCommand('setContext', 'clangd.ast.hasData',
                                          adapter.hasRoot());
+          // Work around https://github.com/microsoft/vscode/issues/90005
           // Show the AST tree even if it's been collapsed or closed.
           // reveal(root) fails here: "Data tree node not found".
           if (adapter.hasRoot())
-            tree.reveal(null!);
+            // @ts-ignore
+            tree.reveal(null);
         }),
         vscode.window.registerTreeDataProvider('clangd.ast', adapter),
         // Create the "Show AST" command for the context menu.
@@ -62,7 +63,7 @@ class ASTFeature implements vscodelc.StaticFeature {
               if (!item)
                 vscode.window.showInformationMessage(
                     'No AST node at selection');
-              adapter.setRoot(item, editor.document.uri);
+              adapter.setRoot(item ?? undefined, editor.document.uri);
             }),
         // Clicking "close" will empty the adapter, which in turn hides the
         // view.
@@ -110,8 +111,8 @@ const KindIcons: {[type: string]: string} = {
 function describe(role: string, kind: string): string {
   // For common roles where the kind is fairly self-explanatory, we don't
   // include it. e.g. "Call" rather than "Call expression".
-  if (role == 'expression' || role == 'statement' || role == 'declaration' ||
-      role == 'template name')
+  if (role === 'expression' || role === 'statement' || role === 'declaration' ||
+      role === 'template name')
     return kind;
   return kind + ' ' + role;
 }
@@ -121,7 +122,7 @@ class TreeAdapter implements vscode.TreeDataProvider<ASTNode> {
   private root?: ASTNode;
   private doc?: vscode.Uri;
 
-  hasRoot(): boolean { return this.root != null; }
+  hasRoot(): boolean { return this.root !== undefined; }
 
   setRoot(newRoot: ASTNode|undefined, newDoc: vscode.Uri|undefined) {
     this.root = newRoot;
@@ -165,11 +166,11 @@ class TreeAdapter implements vscode.TreeDataProvider<ASTNode> {
   }
 
   public getParent(node: ASTNode): ASTNode|undefined {
-    if (node == this.root)
+    if (node === this.root)
       return undefined;
     function findUnder(parent: ASTNode|undefined): ASTNode|undefined {
-      for (const child of parent?.children || []) {
-        const result = (node == child) ? parent : findUnder(child);
+      for (const child of parent?.children ?? []) {
+        const result = (node === child) ? parent : findUnder(child);
         if (result)
           return result;
       }
