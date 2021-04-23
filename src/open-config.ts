@@ -2,6 +2,8 @@ import * as os from 'os'
 import * as path from 'path'
 import * as vscode from 'vscode';
 
+import {ClangdContext} from './clangd-context';
+
 /**
  * @returns The path that corresponds to llvm::sys::path::user_config_directory.
  */
@@ -46,7 +48,7 @@ async function openConfigFile(path: vscode.Uri) {
   }));
 }
 
-export function activate(context: vscode.ExtensionContext) {
+export function activate(context: ClangdContext) {
   // Create a command to open the project root .clangd configuration file.
   context.subscriptions.push(
       vscode.commands.registerCommand('clangd.projectConfig', () => {

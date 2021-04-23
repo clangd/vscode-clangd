@@ -1,7 +1,6 @@
 import * as vscode from 'vscode';
 
 import {ClangdContext} from './clangd-context';
-import * as OpenConfig from './open-config';
 
 /**
  *  This method is called when the extension is activated. The extension is
@@ -24,8 +23,6 @@ export async function activate(context: vscode.ExtensionContext) {
         await clangdContext.activate(context.globalStoragePath, outputChannel,
                                      context.workspaceState);
       }));
-
-  OpenConfig.activate(context);
 
   await clangdContext.activate(context.globalStoragePath, outputChannel,
                                context.workspaceState);
