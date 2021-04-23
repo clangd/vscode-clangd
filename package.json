@@ -212,6 +212,16 @@
                 "command": "clangd.ast.close",
                 "title": "Close",
                 "icon": "$(panel-close)"
+            },
+            {
+                "command": "clangd.projectConfig",
+                "title": "clangd: Open project configuration file",
+                "icon": "$(gear)"
+            },
+            {
+                "command": "clangd.userConfig",
+                "title": "clangd: Open user configuration file",
+                "icon": "$(gear)"
             }
         ],
         "keybindings": [

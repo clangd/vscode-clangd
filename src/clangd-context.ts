@@ -7,6 +7,7 @@ import * as configFileWatcher from './config-file-watcher';
 import * as fileStatus from './file-status';
 import * as install from './install';
 import * as memoryUsage from './memory-usage';
+import * as openConfig from './open-config';
 import * as semanticHighlighting from './semantic-highlighting';
 import * as switchSourceHeader from './switch-source-header';
 import * as typeHierarchy from './type-hierarchy';
@@ -150,6 +151,7 @@ export class ClangdContext implements vscode.Disposable {
     typeHierarchy.activate(this);
     memoryUsage.activate(this);
     ast.activate(this);
+    openConfig.activate(this);
     this.subscriptions.push(this.client.start());
     console.log('Clang Language Server is now active!');
     fileStatus.activate(this);
