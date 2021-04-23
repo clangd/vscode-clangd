@@ -148,6 +148,21 @@
                         "Automatically restart the server",
                         "Do nothing"
                     ]
+                },
+                "clangd.onSettingsChanged": {
+                    "type": "string",
+                    "default": "prompt",
+                    "description": "What to do if any setting is changed that requires a server restart to take effect.",
+                    "enum": [
+                        "prompt",
+                        "restart",
+                        "ignore"
+                    ],
+                    "enumDescriptions": [
+                        "Prompt the user for restarting the server",
+                        "Automatically restart the server",
+                        "Do nothing"
+                    ]
                 }
             }
         },

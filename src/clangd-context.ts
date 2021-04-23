@@ -3,7 +3,7 @@ import * as vscodelc from 'vscode-languageclient/node';
 
 import * as ast from './ast';
 import * as config from './config';
-import * as configFileWatcher from './config-file-watcher';
+import * as configWatchers from './config-watchers';
 import * as fileStatus from './file-status';
 import * as install from './install';
 import * as memoryUsage from './memory-usage';
@@ -156,7 +156,7 @@ export class ClangdContext implements vscode.Disposable {
     console.log('Clang Language Server is now active!');
     fileStatus.activate(this);
     switchSourceHeader.activate(this);
-    configFileWatcher.activate(this);
+    configWatchers.activate(this);
   }
 
   dispose() {
