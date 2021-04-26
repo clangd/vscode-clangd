@@ -7,7 +7,7 @@ import {ClangdContext} from './clangd-context';
 /**
  * @returns The path that corresponds to llvm::sys::path::user_config_directory.
  */
-function getUserConfigDirectory(): string {
+function getUserConfigDirectory(): string|undefined {
   switch (os.platform()) {
   case 'win32':
     if (process.env.LocalAppData)
@@ -24,13 +24,13 @@ function getUserConfigDirectory(): string {
       return path.join(process.env.HOME, '.config');
     break;
   }
-  return null;
+  return undefined;
 }
 
-function getUserConfigFile(): string {
+function getUserConfigFile(): string|undefined {
   const dir = getUserConfigDirectory();
   if (!dir)
-    return null;
+    return undefined;
   return path.join(dir, 'clangd', 'config.yaml');
 }
 
@@ -52,7 +52,7 @@ export function activate(context: ClangdContext) {
   // Create a command to open the project root .clangd configuration file.
   context.subscriptions.push(
       vscode.commands.registerCommand('clangd.projectConfig', () => {
-        if (vscode.workspace.workspaceFolders.length > 0) {
+        if (vscode.workspace.workspaceFolders?.length) {
           const folder = vscode.workspace.workspaceFolders[0];
           openConfigFile(vscode.Uri.joinPath(folder.uri, '.clangd'))
         } else {

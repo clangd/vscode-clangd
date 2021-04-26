@@ -3,7 +3,7 @@ import * as vscode from 'vscode';
 
 // Gets the config value `clangd.<key>`. Applies ${variable} substitutions.
 export function get<T>(key: string): T {
-  return substitute(vscode.workspace.getConfiguration('clangd').get(key));
+  return substitute(vscode.workspace.getConfiguration('clangd').get<T>(key)!);
 }
 
 // Like get(), but won't load settings from workspace config unless the user has
@@ -21,11 +21,11 @@ export async function getSecureOrPrompt<T>(
   const prop = new SecureProperty<T>(key, workspaceState);
   // Common case: value not overridden in workspace.
   if (!prop.mismatched)
-    return prop.get(false);
+    return prop.get(false)!;
   // Check whether user has blessed or blocked this value.
   const blessed = prop.blessed;
-  if (blessed !== null)
-    return prop.get(blessed);
+  if (blessed !== undefined)
+    return prop.get(blessed)!;
   // No cached decision for this value, ask the user.
   const Yes = 'Yes, use this setting', No = 'No, use my default',
         Info = 'More Info'
@@ -40,11 +40,11 @@ export async function getSecureOrPrompt<T>(
     break;
   case Yes:
     await prop.bless(true);
-    return prop.get(true);
+    return prop.get(true)!;
   case No:
     await prop.bless(false);
   }
-  return prop.get(false);
+  return prop.get(false)!;
 }
 
 // Sets the config value `clangd.<key>`. Does not apply substitutions.
@@ -55,15 +55,14 @@ export function update<T>(key: string, value: T,
 
 // Traverse a JSON value, replacing placeholders in all strings.
 function substitute<T>(val: T): T {
-  if (typeof val == 'string') {
+  if (typeof val === 'string') {
     val = val.replace(/\$\{(.*?)\}/g, (match, name) => {
-      const rep = replacement(name);
       // If there's no replacement available, keep the placeholder.
-      return (rep === null) ? match : rep;
+      return replacement(name) ?? match;
     }) as unknown as T;
   } else if (Array.isArray(val))
     val = val.map((x) => substitute(x)) as unknown as T;
-  else if (typeof val == 'object') {
+  else if (typeof val === 'object') {
     // Substitute values but not keys, so we don't deal with collisions.
     const result = {} as {[k: string]: any};
     for (let [k, v] of Object.entries(val))
@@ -75,8 +74,9 @@ function substitute<T>(val: T): T {
 
 // Subset of substitution variables that are most likely to be useful.
 // https://code.visualstudio.com/docs/editor/variables-reference
-function replacement(name: string): string|null {
-  if (name == 'workspaceRoot' || name == 'workspaceFolder' || name == 'cwd') {
+function replacement(name: string): string|undefined {
+  if (name === 'workspaceRoot' || name === 'workspaceFolder' ||
+      name === 'cwd') {
     if (vscode.workspace.rootPath !== undefined)
       return vscode.workspace.rootPath;
     if (vscode.window.activeTextEditor !== undefined)
@@ -85,15 +85,15 @@ function replacement(name: string): string|null {
   }
   const envPrefix = 'env:';
   if (name.startsWith(envPrefix))
-    return process.env[name.substr(envPrefix.length)] || '';
+    return process.env[name.substr(envPrefix.length)] ?? '';
   const configPrefix = 'config:';
   if (name.startsWith(configPrefix)) {
     const config = vscode.workspace.getConfiguration().get(
         name.substr(configPrefix.length));
-    return (typeof config == 'string') ? config : null;
+    return (typeof config === 'string') ? config : undefined;
   }
 
-  return null;
+  return undefined;
 }
 
 // Caches a user's decision about whether to respect a workspace override of a
@@ -106,15 +106,15 @@ interface BlessCache {
 
 // Common logic between getSecure and getSecureOrPrompt.
 class SecureProperty<T> {
-  secure: T|undefined;
-  insecure: T|undefined;
+  secure?: T;
+  insecure?: T;
   public secureJSON: string;
   public insecureJSON: string;
   blessKey: string;
 
   constructor(key: string, private workspaceState: vscode.Memento) {
     const cfg = vscode.workspace.getConfiguration('clangd');
-    const inspect = cfg.inspect<T>(key);
+    const inspect = cfg.inspect<T>(key)!;
     this.secure = inspect.globalValue ?? inspect.defaultValue;
     this.insecure = cfg.get<T>(key);
     this.secureJSON = JSON.stringify(this.secure);
@@ -122,16 +122,16 @@ class SecureProperty<T> {
     this.blessKey = 'bless.' + key;
   }
 
-  get mismatched(): boolean { return this.secureJSON != this.insecureJSON; }
+  get mismatched(): boolean { return this.secureJSON !== this.insecureJSON; }
 
   get(trusted: boolean): T|undefined {
     return substitute(trusted ? this.insecure : this.secure);
   }
 
-  get blessed(): boolean|null {
+  get blessed(): boolean|undefined {
     let cache = this.workspaceState.get<BlessCache>(this.blessKey);
-    if (!cache || cache.json != this.insecureJSON)
-      return null;
+    if (!cache || cache.json !== this.insecureJSON)
+      return undefined;
     return cache.allowed;
   }
 

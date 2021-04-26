@@ -51,9 +51,9 @@ function convert(m: WireTree, title: string): InternalTree {
 class MemoryUsageFeature implements vscodelc.StaticFeature {
   constructor(private context: ClangdContext) {
     const adapter = new TreeAdapter();
-    adapter.onDidChangeTreeData(
-        (e) => vscode.commands.executeCommand(
-            'setContext', 'clangd.memoryUsage.hasData', adapter.root != null));
+    adapter.onDidChangeTreeData((e) => vscode.commands.executeCommand(
+                                    'setContext', 'clangd.memoryUsage.hasData',
+                                    adapter.root !== undefined));
     this.context.subscriptions.push(
         vscode.window.registerTreeDataProvider('clangd.memoryUsage', adapter));
     this.context.subscriptions.push(
@@ -63,7 +63,7 @@ class MemoryUsageFeature implements vscodelc.StaticFeature {
           adapter.root = convert(usage, '<root>');
         }));
     this.context.subscriptions.push(vscode.commands.registerCommand(
-        'clangd.memoryUsage.close', () => adapter.root = null));
+        'clangd.memoryUsage.close', () => adapter.root = undefined));
   }
 
   fillClientCapabilities(capabilities: vscodelc.ClientCapabilities) {}
@@ -80,8 +80,8 @@ class MemoryUsageFeature implements vscodelc.StaticFeature {
 class TreeAdapter implements vscode.TreeDataProvider<InternalTree> {
   private root_?: InternalTree;
 
-  get root(): InternalTree|null { return this.root_; }
-  set root(n: InternalTree|null) {
+  get root(): InternalTree|undefined { return this.root_; }
+  set root(n: InternalTree|undefined) {
     this.root_ = n;
     this._onDidChangeTreeData.fire(/*root changed*/ null);
   }

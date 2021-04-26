@@ -5,7 +5,7 @@ import {ClangdContext} from './clangd-context';
 import * as config from './config';
 
 export function activate(context: ClangdContext) {
-  if (config.get<string>('onConfigChanged') != 'ignore') {
+  if (config.get<string>('onConfigChanged') !== 'ignore') {
     context.client.registerFeature(new ConfigFileWatcherFeature(context));
   }
 }
@@ -30,8 +30,8 @@ class ConfigFileWatcherFeature implements vscodelc.StaticFeature {
 }
 
 class ConfigFileWatcher implements vscode.Disposable {
-  private databaseWatcher: vscode.FileSystemWatcher = undefined;
-  private debounceTimer: NodeJS.Timer = undefined;
+  private databaseWatcher?: vscode.FileSystemWatcher;
+  private debounceTimer?: NodeJS.Timer;
 
   dispose() {
     if (this.databaseWatcher)

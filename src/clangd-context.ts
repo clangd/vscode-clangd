@@ -36,7 +36,7 @@ class EnableEditsNearCursorFeature implements vscodelc.StaticFeature {
   initialize() {}
   fillClientCapabilities(capabilities: vscodelc.ClientCapabilities): void {
     const extendedCompletionCapabilities: any =
-        capabilities.textDocument.completion;
+        capabilities.textDocument?.completion;
     extendedCompletionCapabilities.editsNearCursor = true;
   }
   dispose() {}
@@ -44,7 +44,7 @@ class EnableEditsNearCursorFeature implements vscodelc.StaticFeature {
 
 export class ClangdContext implements vscode.Disposable {
   subscriptions: vscode.Disposable[] = [];
-  client: ClangdLanguageClient;
+  client!: ClangdLanguageClient;
 
   async activate(globalStoragePath: string, outputChannel: vscode.OutputChannel,
                  workspaceState: vscode.Memento) {
@@ -104,7 +104,7 @@ export class ClangdContext implements vscode.Disposable {
           let list = await next(document, position, context, token);
           if (!config.get<boolean>('serverCompletionRanking'))
             return list;
-          let items = (Array.isArray(list) ? list : list.items).map(item => {
+          let items = (Array.isArray(list) ? list : list!.items).map(item => {
             // Gets the prefix used by VSCode when doing fuzzymatch.
             let prefix = document.getText(
                 new vscode.Range((item.range as vscode.Range).start, position))
@@ -121,7 +121,7 @@ export class ClangdContext implements vscode.Disposable {
         // qualified symbols.
         provideWorkspaceSymbols: async (query, token, next) => {
           let symbols = await next(query, token);
-          return symbols.map(symbol => {
+          return symbols?.map(symbol => {
             // Only make this adjustment if the query is in fact qualified.
             // Otherwise, we get a suboptimal ordering of results because
             // including the name's qualifier (if it has one) in symbol.name

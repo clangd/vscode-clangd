@@ -61,18 +61,18 @@ const NotificationType =
 export class SemanticHighlightingFeature implements vscodelc.StaticFeature {
   // The TextMate scope lookup table. A token with scope index i has the scopes
   // on index i in the lookup table.
-  scopeLookupTable: string[][];
+  scopeLookupTable!: string[][];
   // The object that applies the highlightings clangd sends.
-  highlighter: Highlighter;
+  highlighter!: Highlighter;
   // Any disposables that should be cleaned up when clangd crashes.
   private subscriptions: vscode.Disposable[] = [];
   constructor(context: ClangdContext) {
     context.subscriptions.push(context.client.onDidChangeState(({newState}) => {
-      if (newState == vscodelc.State.Running) {
+      if (newState === vscodelc.State.Running) {
         // Register handler for semantic highlighting notification.
         context.client.onNotification(NotificationType,
                                       this.handleNotification.bind(this));
-      } else if (newState == vscodelc.State.Stopped) {
+      } else if (newState === vscodelc.State.Stopped) {
         // Dispose resources when clangd crashes.
         this.dispose();
       }
@@ -83,7 +83,7 @@ export class SemanticHighlightingFeature implements vscodelc.StaticFeature {
     // capability to the object.
     const textDocumentCapabilities: vscodelc.TextDocumentClientCapabilities&
         {semanticHighlightingCapabilities?: {semanticHighlighting: boolean}} =
-        capabilities.textDocument;
+        capabilities.textDocument!;
     textDocumentCapabilities.semanticHighlightingCapabilities = {
       semanticHighlighting: true,
     };
@@ -92,7 +92,7 @@ export class SemanticHighlightingFeature implements vscodelc.StaticFeature {
   async loadCurrentTheme() {
     const themeRuleMatcher = new ThemeRuleMatcher(
         await loadTheme(vscode.workspace.getConfiguration('workbench')
-                            .get<string>('colorTheme')));
+                            .get<string>('colorTheme', '')));
     this.highlighter.initialize(themeRuleMatcher);
   }
 
@@ -129,7 +129,7 @@ export class SemanticHighlightingFeature implements vscodelc.StaticFeature {
 
   handleNotification(params: SemanticHighlightingParams) {
     const lines: SemanticHighlightingLine[] = params.lines.map(
-        (line) => ({line: line.line, tokens: decodeTokens(line.tokens)}));
+        (line) => ({line: line.line, tokens: decodeTokens(line.tokens ?? '')}));
     this.highlighter.highlight(vscode.Uri.parse(params.textDocument.uri),
                                lines);
   }
@@ -212,7 +212,7 @@ export class Highlighter {
     if (!this.files.has(fileUriStr)) {
       this.files.set(fileUriStr, new Map());
     }
-    const fileHighlightings = this.files.get(fileUriStr);
+    const fileHighlightings = this.files.get(fileUriStr)!;
     highlightingLines.forEach((line) => fileHighlightings.set(line.line, line));
     this.applyHighlights(fileUri);
   }
@@ -261,7 +261,7 @@ export class Highlighter {
       // useful for tests.
       return [];
     const lines: SemanticHighlightingLine[] =
-        Array.from(this.files.get(fileUriStr).values());
+        Array.from(this.files.get(fileUriStr)!.values());
     const decorations: vscode.Range[][] = this.decorationTypes.map(() => []);
     lines.forEach((line) => {
       line.tokens.forEach((token) => {
@@ -292,7 +292,7 @@ export class ThemeRuleMatcher {
   // Returns the best rule for a scope.
   getBestThemeRule(scope: string): TokenColorRule {
     if (this.bestRuleCache.has(scope))
-      return this.bestRuleCache.get(scope);
+      return this.bestRuleCache.get(scope)!;
     let bestRule: TokenColorRule = {scope: '', foreground: ''};
     this.themeRules.forEach((rule) => {
       // The best rule for a scope is the rule that is the longest prefix of the
@@ -344,10 +344,9 @@ function loadTheme(themeName: string): Promise<TokenColorRule[]> {
  * @param seenScopes A set containing the name of the scopes that have already
  *     been set.
  */
-export async function parseThemeFile(
-    fullPath: string, seenScopes?: Set<string>): Promise<TokenColorRule[]> {
-  if (!seenScopes)
-    seenScopes = new Set();
+export async function parseThemeFile(fullPath: string,
+                                     seenScopes: Set<string> =
+                                         new Set()): Promise<TokenColorRule[]> {
   // FIXME: Add support for themes written as .tmTheme.
   if (path.extname(fullPath) === '.tmTheme')
     return [];

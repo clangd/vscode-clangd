@@ -39,11 +39,13 @@ class ASTFeature implements vscodelc.StaticFeature {
         // clangd.ast.hasData controls the view visibility (package.json).
         adapter.onDidChangeTreeData((_) => {
           vscode.commands.executeCommand('setContext', 'clangd.ast.hasData',
-                                         adapter.hasRoot())
-          // Show the AST tree even if it's beet collapsed or closed.
+                                         adapter.hasRoot());
+          // Work around https://github.com/microsoft/vscode/issues/90005
+          // Show the AST tree even if it's been collapsed or closed.
           // reveal(root) fails here: "Data tree node not found".
           if (adapter.hasRoot())
-          tree.reveal(null);
+            // @ts-ignore
+            tree.reveal(null);
         }),
         vscode.window.registerTreeDataProvider('clangd.ast', adapter),
         // Create the "Show AST" command for the context menu.
@@ -61,12 +63,12 @@ class ASTFeature implements vscodelc.StaticFeature {
               if (!item)
                 vscode.window.showInformationMessage(
                     'No AST node at selection');
-              adapter.setRoot(item, editor.document.uri);
+              adapter.setRoot(item ?? undefined, editor.document.uri);
             }),
         // Clicking "close" will empty the adapter, which in turn hides the
         // view.
-        vscode.commands.registerCommand('clangd.ast.close',
-                                        () => adapter.setRoot(null, null)));
+        vscode.commands.registerCommand(
+            'clangd.ast.close', () => adapter.setRoot(undefined, undefined)));
   }
 
   fillClientCapabilities(capabilities: vscodelc.ClientCapabilities) {}
@@ -109,8 +111,8 @@ const KindIcons: {[type: string]: string} = {
 function describe(role: string, kind: string): string {
   // For common roles where the kind is fairly self-explanatory, we don't
   // include it. e.g. "Call" rather than "Call expression".
-  if (role == 'expression' || role == 'statement' || role == 'declaration' ||
-      role == 'template name')
+  if (role === 'expression' || role === 'statement' || role === 'declaration' ||
+      role === 'template name')
     return kind;
   return kind + ' ' + role;
 }
@@ -120,9 +122,9 @@ class TreeAdapter implements vscode.TreeDataProvider<ASTNode> {
   private root?: ASTNode;
   private doc?: vscode.Uri;
 
-  hasRoot(): boolean { return this.root != null; }
+  hasRoot(): boolean { return this.root !== undefined; }
 
-  setRoot(newRoot: ASTNode|null, newDoc: vscode.Uri|null) {
+  setRoot(newRoot: ASTNode|undefined, newDoc: vscode.Uri|undefined) {
     this.root = newRoot;
     this.doc = newDoc;
     this._onDidChangeTreeData.fire(/*root changed*/ null);
@@ -163,16 +165,16 @@ class TreeAdapter implements vscode.TreeDataProvider<ASTNode> {
     return element.children || [];
   }
 
-  public getParent(node: ASTNode): ASTNode {
-    if (node == this.root)
-      return null;
-    function findUnder(parent: ASTNode): ASTNode|null {
-      for (const child of parent.children || []) {
-        const result = (node == child) ? parent : findUnder(child);
+  public getParent(node: ASTNode): ASTNode|undefined {
+    if (node === this.root)
+      return undefined;
+    function findUnder(parent: ASTNode|undefined): ASTNode|undefined {
+      for (const child of parent?.children ?? []) {
+        const result = (node === child) ? parent : findUnder(child);
         if (result)
           return result;
       }
-      return null;
+      return undefined;
     }
     return findUnder(this.root);
   }

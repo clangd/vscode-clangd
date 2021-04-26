@@ -74,7 +74,7 @@ class TypeHierarchyTreeItem extends vscode.TreeItem {
   constructor(item: TypeHierarchyItem) {
     super(item.name);
     if (item.children) {
-      if (item.children.length == 0) {
+      if (item.children.length === 0) {
         this.collapsibleState = vscode.TreeItemCollapsibleState.None;
       } else {
         this.collapsibleState = vscode.TreeItemCollapsibleState.Expanded;
@@ -84,7 +84,7 @@ class TypeHierarchyTreeItem extends vscode.TreeItem {
     }
 
     // Do not register actions for the dummy node.
-    if (item == dummyNode) {
+    if (item === dummyNode) {
       return;
     }
 
@@ -100,7 +100,7 @@ class TypeHierarchyTreeItem extends vscode.TreeItem {
 
 class TypeHierarchyFeature implements vscodelc.StaticFeature {
   private serverSupportsTypeHierarchy = false;
-  private state: vscodelc.State;
+  private state!: vscodelc.State;
 
   constructor(context: ClangdContext) {
     new TypeHierarchyProvider(context);
@@ -125,10 +125,10 @@ class TypeHierarchyFeature implements vscodelc.StaticFeature {
   dispose() {}
 
   private recomputeEnableTypeHierarchy() {
-    if (this.state == vscodelc.State.Running) {
+    if (this.state === vscodelc.State.Running) {
       vscode.commands.executeCommand('setContext', 'clangd.enableTypeHierarchy',
                                      this.serverSupportsTypeHierarchy);
-    } else if (this.state == vscodelc.State.Stopped) {
+    } else if (this.state === vscodelc.State.Stopped) {
       vscode.commands.executeCommand('setContext', 'clangd.enableTypeHierarchy',
                                      false);
     }
@@ -150,7 +150,7 @@ class TypeHierarchyProvider implements
 
   // The item on which the type hierarchy operation was invoked.
   // May be different from the root.
-  private startingItem: TypeHierarchyItem;
+  private startingItem!: TypeHierarchyItem;
 
   constructor(context: ClangdContext) {
     this.client = context.client;
@@ -220,7 +220,7 @@ class TypeHierarchyProvider implements
     // This function is implemented so that VSCode lets us call
     // this.treeView.reveal().
     if (element.parents) {
-      if (element.parents.length == 1) {
+      if (element.parents.length === 1) {
         return element.parents[0];
       } else if (element.parents.length > 1) {
         return dummyNode;
@@ -235,11 +235,11 @@ class TypeHierarchyProvider implements
       return [];
     if (!element)
       return [this.root];
-    if (this.direction == TypeHierarchyDirection.Parents) {
+    if (this.direction === TypeHierarchyDirection.Parents) {
       // Clangd always resolves parents eagerly, so just return them.
-      return element.parents;
+      return element.parents ?? [];
     }
-    // Otherwise, this.direction == Children.
+    // Otherwise, this.direction === Children.
     if (!element.children) {
       // Children are not resolved yet, resolve them now.
       const resolved =
@@ -248,14 +248,14 @@ class TypeHierarchyProvider implements
             direction: TypeHierarchyDirection.Children,
             resolve: 1
           });
-      element.children = resolved.children;
+      element.children = resolved?.children;
     }
-    return element.children;
+    return element.children ?? [];
   }
 
   private computeRoot(): TypeHierarchyItem {
     // In Parents mode, the root is always the starting item.
-    if (this.direction == TypeHierarchyDirection.Parents) {
+    if (this.direction === TypeHierarchyDirection.Parents) {
       return this.startingItem;
     }
 
@@ -264,7 +264,7 @@ class TypeHierarchyProvider implements
     // with multiple bases, we show a dummy node with the label
     // "[multiple parents]" instead.
     let root = this.startingItem;
-    while (root.parents && root.parents.length == 1) {
+    while (root.parents && root.parents.length === 1) {
       root = root.parents[0];
     }
     if (root.parents && root.parents.length > 1) {
