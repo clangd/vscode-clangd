@@ -5,12 +5,26 @@ import * as ast from './ast';
 import * as config from './config';
 import * as configFileWatcher from './config-file-watcher';
 import * as fileStatus from './file-status';
+import * as inlayHints from './inlay-hints';
 import * as install from './install';
 import * as memoryUsage from './memory-usage';
 import * as openConfig from './open-config';
 import * as semanticHighlighting from './semantic-highlighting';
 import * as switchSourceHeader from './switch-source-header';
 import * as typeHierarchy from './type-hierarchy';
+
+const clangdDocumentSelector = [
+  {scheme: 'file', language: 'c'},
+  {scheme: 'file', language: 'cpp'},
+  // CUDA is not supported by vscode, but our extension does supports it.
+  {scheme: 'file', language: 'cuda'},
+  {scheme: 'file', language: 'objective-c'},
+  {scheme: 'file', language: 'objective-cpp'},
+];
+
+export function isClangdDocument(document: vscode.TextDocument) {
+  return vscode.languages.match(clangdDocumentSelector, document);
+}
 
 class ClangdLanguageClient extends vscodelc.LanguageClient {
   // Override the default implementation for failed requests. The default
@@ -68,14 +82,7 @@ export class ClangdContext implements vscode.Disposable {
 
     const clientOptions: vscodelc.LanguageClientOptions = {
       // Register the server for c-family and cuda files.
-      documentSelector: [
-        {scheme: 'file', language: 'c'},
-        {scheme: 'file', language: 'cpp'},
-        // CUDA is not supported by vscode, but our extension does supports it.
-        {scheme: 'file', language: 'cuda'},
-        {scheme: 'file', language: 'objective-c'},
-        {scheme: 'file', language: 'objective-cpp'},
-      ],
+      documentSelector: clangdDocumentSelector,
       initializationOptions: {
         clangdFileStatus: true,
         fallbackFlags: config.get<string[]>('fallbackFlags')
@@ -149,6 +156,7 @@ export class ClangdContext implements vscode.Disposable {
       semanticHighlighting.activate(this);
     this.client.registerFeature(new EnableEditsNearCursorFeature);
     typeHierarchy.activate(this);
+    inlayHints.activate(this);
     memoryUsage.activate(this);
     ast.activate(this);
     openConfig.activate(this);
@@ -157,6 +165,11 @@ export class ClangdContext implements vscode.Disposable {
     fileStatus.activate(this);
     switchSourceHeader.activate(this);
     configFileWatcher.activate(this);
+  }
+
+  get visibleClangdEditors(): vscode.TextEditor[] {
+    return vscode.window.visibleTextEditors.filter(
+        (e) => isClangdDocument(e.document));
   }
 
   dispose() {

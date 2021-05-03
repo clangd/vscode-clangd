@@ -315,6 +315,26 @@
                     "when": "clangd.ast.hasData"
                 }
             ]
-        }
+        },
+        "colors": [
+          {
+            "id": "clangd.inlayHints.foreground",
+            "description": "Foreground color of inlay hints",
+            "defaults": {
+              "dark": "#A0A0A0F0",
+              "light": "#747474",
+              "highContrast": "#BEBEBE"
+            }
+          },
+          {
+            "id": "clangd.inlayHints.background",
+            "description": "Background color of inlay hints",
+            "defaults": {
+              "dark": "#11223300",
+              "light": "#11223300",
+              "highContrast": "#11223300"
+            }
+          }
+        ]
     }
 }
