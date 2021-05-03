@@ -93,13 +93,9 @@ interface FileEntry {
 class InlayHintsFeature implements vscodelc.StaticFeature {
   private enabled = false;
   private sourceFiles = new Map<string, FileEntry>(); // keys are URIs
+  private readonly disposables: vscode.Disposable[] = [];
 
-  constructor(private readonly context: ClangdContext) {
-    vscode.window.onDidChangeVisibleTextEditors(
-        this.onDidChangeVisibleTextEditors, this, context.subscriptions);
-    vscode.workspace.onDidChangeTextDocument(this.onDidChangeTextDocument, this,
-                                             context.subscriptions);
-  }
+  constructor(private readonly context: ClangdContext) {}
 
   fillClientCapabilities(_capabilities: vscodelc.ClientCapabilities) {}
   fillInitializeParams(_params: vscodelc.InitializeParams) {}
@@ -163,6 +159,11 @@ class InlayHintsFeature implements vscodelc.StaticFeature {
   dispose() { this.stopShowingHints(); }
 
   private startShowingHints() {
+    vscode.window.onDidChangeVisibleTextEditors(
+        this.onDidChangeVisibleTextEditors, this, this.disposables);
+    vscode.workspace.onDidChangeTextDocument(this.onDidChangeTextDocument, this,
+                                             this.disposables);
+
     // Set up initial cache shape
     this.context.visibleClangdEditors.forEach(
         editor => this.sourceFiles.set(editor.document.uri.toString(), {
@@ -178,6 +179,7 @@ class InlayHintsFeature implements vscodelc.StaticFeature {
     this.sourceFiles.forEach(file => file.inlaysRequest?.cancel());
     this.context.visibleClangdEditors.forEach(
         editor => this.renderDecorations(editor, {parameterHints: []}));
+    this.disposables.forEach(d => d.dispose());
   }
 
   private renderDecorations(editor: vscode.TextEditor,
