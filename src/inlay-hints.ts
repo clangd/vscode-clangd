@@ -19,7 +19,8 @@ export function activate(context: ClangdContext) {
 // Currently, only one hint kind (parameter hints) are supported,
 // but others (e.g. type hints) may be added in the future.
 enum InlayHintKind {
-  Parameter = 'parameter'
+  Parameter = 'parameter',
+  Type = 'type'
 }
 
 interface InlayHint {
@@ -46,6 +47,7 @@ interface InlayDecorations {
   // With such an API, we could group hints based on unique presentation styles
   // instead.
   parameterHints: vscode.DecorationOptions[];
+  typeHints: vscode.DecorationOptions[];
 }
 
 interface HintStyle {
@@ -56,6 +58,7 @@ interface HintStyle {
 }
 
 const parameterHintStyle = createHintStyle('before');
+const typeHintStyle = createHintStyle('after');
 
 function createHintStyle(position: 'before'|'after'): HintStyle {
   const fg = new vscode.ThemeColor('clangd.inlayHints.foreground');
@@ -178,7 +181,8 @@ class InlayHintsFeature implements vscodelc.StaticFeature {
   private stopShowingHints() {
     this.sourceFiles.forEach(file => file.inlaysRequest?.cancel());
     this.context.visibleClangdEditors.forEach(
-        editor => this.renderDecorations(editor, {parameterHints: []}));
+        editor => this.renderDecorations(editor,
+                                         {parameterHints: [], typeHints: []}));
     this.disposables.forEach(d => d.dispose());
   }
 
@@ -186,6 +190,7 @@ class InlayHintsFeature implements vscodelc.StaticFeature {
                             decorations: InlayDecorations) {
     editor.setDecorations(parameterHintStyle.decorationType,
                           decorations.parameterHints);
+    editor.setDecorations(typeHintStyle.decorationType, decorations.typeHints);
   }
 
   private syncCacheAndRenderHints() {
@@ -205,13 +210,17 @@ class InlayHintsFeature implements vscodelc.StaticFeature {
   }
 
   private hintsToDecorations(hints: InlayHint[]): InlayDecorations {
-    const decorations: InlayDecorations = {parameterHints: []};
+    const decorations: InlayDecorations = {parameterHints: [], typeHints: []};
     const conv = this.context.client.protocol2CodeConverter;
     for (const hint of hints) {
       switch (hint.kind) {
       case InlayHintKind.Parameter: {
         decorations.parameterHints.push(
             parameterHintStyle.toDecoration(hint, conv));
+        continue;
+      }
+      case InlayHintKind.Type: {
+        decorations.typeHints.push(typeHintStyle.toDecoration(hint, conv));
         continue;
       }
         // Don't handle unknown hint kinds because we don't know how to style
