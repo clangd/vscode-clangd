@@ -1,5 +1,18 @@
 # Change Log
 
+## Version 0.1.12: July 19, 2021
+
+* Clicking on status bar opens output panel,
+  [#177](https://github.com/clangd/vscode-clangd/pull/177)
+* Commands to open user and project clangd confguration files
+  [#181](https://github.com/clangd/vscode-clangd/pull/181)
+* Inlay hints support for parameters
+  [#168](https://github.com/clangd/vscode-clangd/pull/168) and types
+  [#188](https://github.com/clangd/vscode-clangd/pull/188). Requires a clangd
+  built after
+  [llvm/llvm-project@cea736e5b](https://github.com/llvm/llvm-project/commit/cea736e5b8a48065007a591d71699b53c04d95b3)
+  and `-inlay-hints` flag.
+
 ## Version 0.1.11: March 2, 2021
 
 * Prompt when workspace overrides clangd.path and clangd.arguments, [#160](https://github.com/clangd/vscode-clangd/pull/160)
