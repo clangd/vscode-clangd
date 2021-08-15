@@ -148,6 +148,11 @@
                         "Automatically restart the server",
                         "Do nothing"
                     ]
+                },
+                "clangd.detectAndDisableExtensionConflicts": {
+                    "type": "boolean",
+                    "default": true,
+                    "description": "Whether to look for extension conflicts and disable any conflicting settings."
                 }
             }
         },
@@ -317,24 +322,24 @@
             ]
         },
         "colors": [
-          {
-            "id": "clangd.inlayHints.foreground",
-            "description": "Foreground color of inlay hints",
-            "defaults": {
-              "dark": "#A0A0A0F0",
-              "light": "#747474",
-              "highContrast": "#BEBEBE"
+            {
+                "id": "clangd.inlayHints.foreground",
+                "description": "Foreground color of inlay hints",
+                "defaults": {
+                    "dark": "#A0A0A0F0",
+                    "light": "#747474",
+                    "highContrast": "#BEBEBE"
+                }
+            },
+            {
+                "id": "clangd.inlayHints.background",
+                "description": "Background color of inlay hints",
+                "defaults": {
+                    "dark": "#11223300",
+                    "light": "#11223300",
+                    "highContrast": "#11223300"
+                }
             }
-          },
-          {
-            "id": "clangd.inlayHints.background",
-            "description": "Background color of inlay hints",
-            "defaults": {
-              "dark": "#11223300",
-              "light": "#11223300",
-              "highContrast": "#11223300"
-            }
-          }
         ]
     }
 }
