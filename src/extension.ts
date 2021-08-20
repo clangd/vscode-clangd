@@ -27,14 +27,14 @@ export async function activate(context: vscode.ExtensionContext) {
   await clangdContext.activate(context.globalStoragePath, outputChannel,
                                context.workspaceState);
 
-  const shouldCheck = vscode.workspace
-    .getConfiguration("clangd")
-    .get("detectAndDisableExtensionConflicts");
+  const shouldCheck = vscode.workspace.getConfiguration('clangd').get(
+      'detectExtensionConflicts');
   if (shouldCheck) {
-    setInterval(function() {
+    const interval = setInterval(function() {
       const cppTools = vscode.extensions.getExtension('ms-vscode.cpptools');
       if (cppTools && cppTools.isActive) {
-        const cppToolsConfiguration = vscode.workspace.getConfiguration('C_Cpp');
+        const cppToolsConfiguration =
+            vscode.workspace.getConfiguration('C_Cpp');
         const cppToolsEnabled = cppToolsConfiguration.get('intelliSenseEngine');
         if (cppToolsEnabled !== 'Disabled') {
           vscode.window
@@ -42,10 +42,18 @@ export async function activate(context: vscode.ExtensionContext) {
                   'You have both the Microsoft C++ (cpptools) extension and ' +
                       'clangd extension enabled. The Microsoft IntelliSense features ' +
                       'conflict with clangd\'s code completion, diagnostics etc.',
-                  'Disable IntelliSense')
-              .then(_ => {
-                cppToolsConfiguration.update('intelliSenseEngine', 'Disabled',
-                                            vscode.ConfigurationTarget.Global);
+                  'Disable IntelliSense', 'Never show this warning')
+              .then(selection => {
+                if (selection == 'Disable IntelliSense') {
+                  cppToolsConfiguration.update(
+                      'intelliSenseEngine', 'Disabled',
+                      vscode.ConfigurationTarget.Global);
+                } else if (selection == 'Never show this warning') {
+                  vscode.workspace.getConfiguration('clangd').update(
+                      'detectExtensionConflicts', false,
+                      vscode.ConfigurationTarget.Global);
+                  clearInterval(interval);
+                }
               });
         }
       }

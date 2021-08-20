@@ -149,10 +149,10 @@
                         "Do nothing"
                     ]
                 },
-                "clangd.detectAndDisableExtensionConflicts": {
+                "clangd.detectExtensionConflicts": {
                     "type": "boolean",
                     "default": true,
-                    "description": "Whether to look for extension conflicts and disable any conflicting settings."
+                    "description": "Warn about conflicting extensions and suggest disabling them."
                 }
             }
         },
