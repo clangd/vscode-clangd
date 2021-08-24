@@ -148,6 +148,11 @@
                         "Automatically restart the server",
                         "Do nothing"
                     ]
+                },
+                "clangd.detectExtensionConflicts": {
+                    "type": "boolean",
+                    "default": true,
+                    "description": "Warn about conflicting extensions and suggest disabling them."
                 }
             }
         },
