@@ -1,5 +1,10 @@
 # Change Log
 
+## Version 0.1.13: August 24, 2021
+
+* Add option to suppress warning about the Microsoft C/C++ extension
+  incompatibility [#221](https://github.com/clangd/vscode-clangd/pull/221)
+
 ## Version 0.1.12: July 19, 2021
 
 * Clicking on status bar opens output panel,
