@@ -10,6 +10,7 @@ import * as vscode from 'vscode';
 import * as vscodelc from 'vscode-languageclient/node';
 
 import {ClangdContext, isClangdDocument} from './clangd-context';
+import * as config from './config';
 
 export function activate(context: ClangdContext) {
   const feature = new InlayHintsFeature(context);
@@ -212,15 +213,21 @@ class InlayHintsFeature implements vscodelc.StaticFeature {
   private hintsToDecorations(hints: InlayHint[]): InlayDecorations {
     const decorations: InlayDecorations = {parameterHints: [], typeHints: []};
     const conv = this.context.client.protocol2CodeConverter;
+    const showParameterHints = config.get<boolean>('inlayHints.parameterHints');
+    const showTypeHints = config.get<boolean>('inlayHints.typeHints');
     for (const hint of hints) {
       switch (hint.kind) {
       case InlayHintKind.Parameter: {
-        decorations.parameterHints.push(
-            parameterHintStyle.toDecoration(hint, conv));
+        if (showParameterHints) {
+          decorations.parameterHints.push(
+              parameterHintStyle.toDecoration(hint, conv));
+        }
         continue;
       }
       case InlayHintKind.Type: {
-        decorations.typeHints.push(typeHintStyle.toDecoration(hint, conv));
+        if (showTypeHints) {
+          decorations.typeHints.push(typeHintStyle.toDecoration(hint, conv));
+        }
         continue;
       }
         // Don't handle unknown hint kinds because we don't know how to style

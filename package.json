@@ -153,6 +153,16 @@
                     "type": "boolean",
                     "default": true,
                     "description": "Warn about conflicting extensions and suggest disabling them."
+                },
+                "clangd.inlayHints.parameterHints": {
+                    "type": "boolean",
+                    "default": true,
+                    "description": "Show inlay parameter hints"
+                },
+                "clangd.inlayHints.typeHints": {
+                    "type": "boolean",
+                    "default": true,
+                    "description": "Show inlay type hints"
                 }
             }
         },
