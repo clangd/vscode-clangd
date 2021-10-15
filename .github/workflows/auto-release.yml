@@ -2,6 +2,7 @@ name: Publish to VSCode marketplace
 on:
   push:
     branches: [ master ]
+    paths: [ 'package.json' ]
 jobs:
   publish:
     runs-on: ubuntu-latest
