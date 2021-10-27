@@ -33,6 +33,11 @@ jobs:
         token: ${{ secrets.GITHUB_TOKEN }}
     - name: publish to VSCode Marketplace
       if: steps.check.outputs.changed == 'true'
-      # The token will be expired in on 01/10/2022. Regenerate it at
+      # The token will expire. Regenerate it at:
       # https://llvm-vs-code-extensions.visualstudio.com/_usersSettings/tokens.
       run: npm run publish -- -p "${{ secrets.VSCODE_MARKETPLACE_TOKEN }}"
+    - name: publish to OpenVSX
+      if: steps.check.outputs.changed == 'true'
+      # The token will expire. Regenerate it at:
+      # https://open-vsx.org/user-settings/tokens
+      run: npm run publish-openvsx -- -p "${{ secrets.OPENVSX_TOKEN }}"
