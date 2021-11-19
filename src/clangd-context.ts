@@ -27,6 +27,25 @@ export function isClangdDocument(document: vscode.TextDocument) {
 }
 
 class ClangdLanguageClient extends vscodelc.LanguageClient {
+
+  // Due to problems like https://github.com/microsoft/TypeScript/issues/30071
+  // and because there's mutiple sendRequest declarations with three params,
+  // we use 'any' types for these three params.
+  async sendRequest(type: any, params: any, token?: any): Promise<any> {
+    const result = await super.sendRequest(type, params, token);
+    // prepareCallHierarchy will always return at least 1 result if it's called
+    // on a valid function/method (because the first entry is the function on
+    // which you called it). If it's called on a non-function we intercept here
+    // to give the user a better error message.
+    if (type?.method === 'textDocument/prepareCallHierarchy') {
+      if (Array.isArray(result) && result.length == 0) {
+        vscode.window.showInformationMessage(
+            'No function found at cursor location.');
+      }
+    }
+    return result;
+  }
+
   // Override the default implementation for failed requests. The default
   // behavior is just to log failures in the output panel, however output panel
   // is designed for extension debugging purpose, normal users will not open it,
@@ -34,7 +53,6 @@ class ClangdLanguageClient extends vscodelc.LanguageClient {
   //
   // For user-interactive operations (e.g. applyFixIt, applyTweaks), we will
   // prompt up the failure to users.
-
   handleFailedRequest<T>(type: vscodelc.MessageSignature, error: any,
                          token: vscode.CancellationToken|undefined,
                          defaultValue: T): T {
