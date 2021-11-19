@@ -269,7 +269,7 @@
                 },
                 {
                     "command": "clangd.switchheadersource",
-                    "group": "navigation@5"
+                    "group": "0_navigation@5"
                 },
                 {
                     "command": "clangd.ast",
