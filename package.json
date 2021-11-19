@@ -254,7 +254,6 @@
                 },
                 {
                     "command": "clangd.switchheadersource",
-                    "when": "resourceLangId == cpp",
                     "group": "0_navigation@5"
                 },
                 {
