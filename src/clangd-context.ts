@@ -28,15 +28,16 @@ export function isClangdDocument(document: vscode.TextDocument) {
 
 class ClangdLanguageClient extends vscodelc.LanguageClient {
 
-  // Due to problems like https://github.com/microsoft/TypeScript/issues/30071
-  // and because there's mutiple sendRequest declarations with three params,
-  // we use 'any' types for these three params.
-  async sendRequest(type: any, params: any, token?: any): Promise<any> {
-    const result = await super.sendRequest(type, params, token);
-    // prepareCallHierarchy will always return at least 1 result if it's called
-    // on a valid function/method (because the first entry is the function on
-    // which you called it). If it's called on a non-function we intercept here
-    // to give the user a better error message.
+  // prepareCallHierarchy will always return at least 1 result if it's called
+  // on a valid function/method (because the first entry is the function on
+  // which you called it). If it's called on a non-function we intercept here
+  // to give the user a better error message.
+  //
+  // Due to problems with https://github.com/microsoft/TypeScript/issues/30071
+  // and because there's mutiple sendRequest declarations with matching param
+  // counts, we use 'any' types and a rest param.
+  async sendRequest(type: any, ...params: any[]): Promise<any> {
+    const result = await super.sendRequest(type, ...params);
     if (type?.method === 'textDocument/prepareCallHierarchy') {
       if (Array.isArray(result) && result.length == 0) {
         vscode.window.showInformationMessage(
