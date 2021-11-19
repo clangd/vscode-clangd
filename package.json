@@ -161,73 +161,88 @@
         "commands": [
             {
                 "command": "clangd.switchheadersource",
-                "title": "clangd: Switch between source/header"
+                "category": "clangd",
+                "title": "Switch Source/Header"
             },
             {
                 "command": "clangd.install",
-                "title": "clangd: Download language server"
+                "category": "clangd",
+                "title": "Download language server"
             },
             {
                 "command": "clangd.update",
-                "title": "clangd: Check for language server update"
+                "category": "clangd",
+                "title": "Check for language server update"
             },
             {
                 "command": "clangd.activate",
-                "title": "clangd: Manually activate extension"
+                "category": "clangd",
+                "title": "Manually activate extension"
             },
             {
                 "command": "clangd.restart",
-                "title": "clangd: Restart language server"
+                "category": "clangd",
+                "title": "Restart language server"
             },
             {
                 "command": "clangd.typeHierarchy",
+                "category": "clangd",
                 "title": "Open Type Hierarchy"
             },
             {
                 "command": "clangd.typeHierarchy.viewParents",
+                "category": "clangd",
                 "title": "Types: Show Base Classes",
                 "icon": "$(triangle-up)"
             },
             {
                 "command": "clangd.typeHierarchy.viewChildren",
+                "category": "clangd",
                 "title": "Types: Show Derived Classes",
                 "icon": "$(triangle-down)"
             },
             {
                 "command": "clangd.typeHierarchy.close",
+                "category": "clangd",
                 "title": "Close",
                 "icon": "$(panel-close)"
             },
             {
                 "command": "clangd.memoryUsage",
-                "title": "clangd: Show memory usage",
+                "category": "clangd",
+                "title": "Show memory usage",
                 "enablement": "clangd.memoryUsage.supported",
                 "icon": "$(refresh)"
             },
             {
                 "command": "clangd.memoryUsage.close",
+                "category": "clangd",
                 "title": "Close",
                 "icon": "$(panel-close)"
             },
             {
                 "command": "clangd.ast",
+                "category": "clangd",
                 "title": "Show AST",
                 "enablement": "clangd.ast.supported",
                 "icon": "$(list-tree)"
             },
             {
                 "command": "clangd.ast.close",
+                "category": "clangd",
                 "title": "Close",
                 "icon": "$(panel-close)"
             },
             {
                 "command": "clangd.projectConfig",
-                "title": "clangd: Open project configuration file",
+                "category": "clangd",
+                "title": "Open project configuration file",
                 "icon": "$(gear)"
             },
             {
                 "command": "clangd.userConfig",
-                "title": "clangd: Open user configuration file",
+                "category": "clangd",
+                "title": "Open user configuration file",
                 "icon": "$(gear)"
             }
         ],
@@ -254,7 +269,7 @@
                 },
                 {
                     "command": "clangd.switchheadersource",
-                    "group": "0_navigation@5"
+                    "group": "navigation@5"
                 },
                 {
                     "command": "clangd.ast",
