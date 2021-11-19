@@ -269,6 +269,7 @@
                 },
                 {
                     "command": "clangd.switchheadersource",
+                    "when": "resourceLangId == c || resourceLangId == cpp || resourceLangId == cuda || resourceLangId == objective-c || resourceLangId == objective-cpp",
                     "group": "0_navigation@5"
                 },
                 {
