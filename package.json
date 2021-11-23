@@ -162,7 +162,7 @@
             {
                 "command": "clangd.switchheadersource",
                 "category": "clangd",
-                "title": "Switch Source/Header"
+                "title": "Switch Between Source/Header"
             },
             {
                 "command": "clangd.install",
