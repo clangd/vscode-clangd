@@ -64,6 +64,9 @@ export async function activate(context: vscode.ExtensionContext) {
   const api: API = {
     ast(): Promise<ASTNode | null> {
       return clangdContext.clangdAst();
+    },
+    hover(): Promise<any> {
+      return clangdContext.clangdHover();
     }
   };
 

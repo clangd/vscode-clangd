@@ -2,7 +2,7 @@
     "name": "vscode-clangd",
     "displayName": "forkclangd",
     "description": "C and C++ completion, navigation, and insights",
-    "version": "0.1.13",
+    "version": "0.1.14",
     "publisher": "flywine",
     "license": "MIT",
     "homepage": "https://clangd.llvm.org/",
@@ -244,7 +244,11 @@
                 "category": "clangd",
                 "title": "Open user configuration file",
                 "icon": "$(gear)"
-            }
+            },
+            {
+				"command": "clangd.createFuncImpl",
+				"title": "Create function implement"
+			}
         ],
         "keybindings": [
             {
