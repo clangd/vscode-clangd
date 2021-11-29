@@ -25,7 +25,7 @@
     "activationEvents": [
         "onLanguage:c",
         "onLanguage:cpp",
-        "onLanguage:cuda",
+        "onLanguage:cuda-cpp",
         "onLanguage:objective-c",
         "onLanguage:objective-cpp",
         "onCommand:clangd.activate",
@@ -77,13 +77,6 @@
                     "**/MSVC/*/include/**"
                 ],
                 "firstLine": "^/[/*].*-\\*-\\s*C\\+\\+\\s*-\\*-.*"
-            },
-            {
-                "id": "cuda",
-                "extensions": [
-                    ".cu",
-                    ".cuh"
-                ]
             }
         ],
         "configuration": {
@@ -269,7 +262,7 @@
                 },
                 {
                     "command": "clangd.switchheadersource",
-                    "when": "resourceLangId == c || resourceLangId == cpp || resourceLangId == cuda || resourceLangId == objective-c || resourceLangId == objective-cpp",
+                    "when": "resourceLangId == c || resourceLangId == cpp || resourceLangId == cuda-cpp || resourceLangId == objective-c || resourceLangId == objective-cpp",
                     "group": "0_navigation@5"
                 },
                 {
