@@ -16,8 +16,7 @@ import * as typeHierarchy from './type-hierarchy';
 const clangdDocumentSelector = [
   {scheme: 'file', language: 'c'},
   {scheme: 'file', language: 'cpp'},
-  // CUDA is not supported by vscode, but our extension does supports it.
-  {scheme: 'file', language: 'cuda'},
+  {scheme: 'file', language: 'cuda-cpp'},
   {scheme: 'file', language: 'objective-c'},
   {scheme: 'file', language: 'objective-cpp'},
 ];
