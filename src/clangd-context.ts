@@ -172,6 +172,20 @@ export class ClangdContext implements vscode.Disposable {
         (e) => isClangdDocument(e.document));
   }
 
+  async clangdAst(): Promise<ast.ASTNode | null> {
+    const converter = this.client.code2ProtocolConverter;
+    const editor = vscode.window.activeTextEditor;
+    if (!editor) {
+      return null;
+    }
+
+    return this.client.sendRequest(ast.ASTRequestType, {
+      textDocument:
+          converter.asTextDocumentIdentifier(editor.document),
+      range: converter.asRange(editor.selection),
+    });
+  }
+
   dispose() {
     this.subscriptions.forEach((d) => { d.dispose(); });
     this.subscriptions = []

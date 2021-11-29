@@ -15,7 +15,7 @@ interface ASTParams {
   textDocument: vscodelc.TextDocumentIdentifier;
   range: vscodelc.Range;
 }
-interface ASTNode {
+export interface ASTNode {
   role: string;    // e.g. expression
   kind: string;    // e.g. BinaryOperator
   detail?: string; // e.g. ||
@@ -23,7 +23,7 @@ interface ASTNode {
   children?: Array<ASTNode>;
   range?: vscodelc.Range;
 }
-const ASTRequestType =
+export const ASTRequestType =
     new vscodelc.RequestType<ASTParams, ASTNode|null, void>('textDocument/ast');
 
 class ASTFeature implements vscodelc.StaticFeature {

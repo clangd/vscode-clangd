@@ -1,3 +1,4 @@
+import { API, ASTNode } from './api';
 import * as vscode from 'vscode';
 
 import {ClangdContext} from './clangd-context';
@@ -20,11 +21,11 @@ export async function activate(context: vscode.ExtensionContext) {
   context.subscriptions.push(
       vscode.commands.registerCommand('clangd.restart', async () => {
         await clangdContext.dispose();
-        await clangdContext.activate(context.globalStoragePath, outputChannel,
+        await clangdContext.activate(context.globalStorageUri.fsPath, outputChannel,
                                      context.workspaceState);
       }));
 
-  await clangdContext.activate(context.globalStoragePath, outputChannel,
+  await clangdContext.activate(context.globalStorageUri.fsPath, outputChannel,
                                context.workspaceState);
 
   const shouldCheck = vscode.workspace.getConfiguration('clangd').get(
@@ -59,4 +60,12 @@ export async function activate(context: vscode.ExtensionContext) {
       }
     }, 5000);
   }
+
+  const api: API = {
+    ast(): Promise<ASTNode | null> {
+      return clangdContext.clangdAst();
+    }
+  };
+
+  return api;
 }
