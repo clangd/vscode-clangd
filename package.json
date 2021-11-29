@@ -3,7 +3,7 @@
     "displayName": "forkclangd",
     "description": "C and C++ completion, navigation, and insights",
     "version": "0.1.13",
-    "publisher": "fork-llvm-vs-code-extensions",
+    "publisher": "flywine",
     "license": "MIT",
     "homepage": "https://clangd.llvm.org/",
     "icon": "icon.png",
