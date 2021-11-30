@@ -1,6 +1,7 @@
 import * as vscode from 'vscode';
 
 import {ClangdContext} from './clangd-context';
+import { API, Hover } from './api';
 
 /**
  *  This method is called when the extension is activated. The extension is
@@ -19,12 +20,12 @@ export async function activate(context: vscode.ExtensionContext) {
       vscode.commands.registerCommand('clangd.activate', async () => {}));
   context.subscriptions.push(
       vscode.commands.registerCommand('clangd.restart', async () => {
-        await clangdContext.dispose();
-        await clangdContext.activate(context.globalStoragePath, outputChannel,
+        clangdContext.dispose();
+        await clangdContext.activate(context.globalStorageUri.fsPath, outputChannel,
                                      context.workspaceState);
       }));
 
-  await clangdContext.activate(context.globalStoragePath, outputChannel,
+  await clangdContext.activate(context.globalStorageUri.fsPath, outputChannel,
                                context.workspaceState);
 
   const shouldCheck = vscode.workspace.getConfiguration('clangd').get(
@@ -59,4 +60,12 @@ export async function activate(context: vscode.ExtensionContext) {
       }
     }, 5000);
   }
+
+  const api: API = {
+    hover(): Promise<Hover|null> {
+      return clangdContext.hover();
+    }
+  };
+
+  return api;
 }

@@ -12,6 +12,7 @@ import * as openConfig from './open-config';
 import * as semanticHighlighting from './semantic-highlighting';
 import * as switchSourceHeader from './switch-source-header';
 import * as typeHierarchy from './type-hierarchy';
+import { Hover } from './api';
 
 const clangdDocumentSelector = [
   {scheme: 'file', language: 'c'},
@@ -174,5 +175,22 @@ export class ClangdContext implements vscode.Disposable {
   dispose() {
     this.subscriptions.forEach((d) => { d.dispose(); });
     this.subscriptions = []
+  }
+
+  hover(): Promise<Hover|null> {
+    const editor = vscode.window.activeTextEditor;
+    if (!editor) {
+      return new Promise((_resolve, reject) => {
+        reject(null);
+      });
+    }
+    const position = editor.selection.active;
+    const uri = editor.document.uri;
+    return this.client.sendRequest<any>('textDocument/hover', {
+      position,
+      textDocument: {
+        uri: uri.toString(true),
+      },
+    });
   }
 }
