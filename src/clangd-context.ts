@@ -1,5 +1,6 @@
 import * as vscode from 'vscode';
 import * as vscodelc from 'vscode-languageclient/node';
+import * as vscodelcAsync from 'vscode-languageclient/lib/common/utils/async';
 
 import * as ast from './ast';
 import * as config from './config';
@@ -55,6 +56,41 @@ class EnableEditsNearCursorFeature implements vscodelc.StaticFeature {
   dispose() {}
 }
 
+class PendingTextChange {
+  _document: vscode.TextDocument;
+  _consumer: (data: vscode.TextDocumentChangeEvent) => vscode.ProviderResult<void>;
+  _changes?: ReadonlyArray<vscode.TextDocumentContentChangeEvent>;
+
+  constructor(document: vscode.TextDocument, consumer: (data: vscode.TextDocumentChangeEvent) => vscode.ProviderResult<void>) {
+    this._document = document;
+    this._consumer = consumer;
+  }
+
+  matches(document: vscode.TextDocument) {
+    return document.uri == this._document.uri;
+  }
+
+  merge(changes: ReadonlyArray<vscode.TextDocumentContentChangeEvent>) {
+    if (this._changes) {
+      this._changes = this._changes.concat(changes);
+    }
+    else {
+      this._changes = changes;
+    }
+  }
+
+  async send() {
+    let event: vscode.TextDocumentChangeEvent = {
+      document: this._document,
+      contentChanges: this._changes ? this._changes : [],
+    };
+
+    this._changes = undefined;
+
+    return await this._consumer(event);
+  }
+}
+
 export class ClangdContext implements vscode.Disposable {
   subscriptions: vscode.Disposable[] = [];
   client!: ClangdLanguageClient;
@@ -107,6 +143,8 @@ export class ClangdContext implements vscode.Disposable {
       middleware: {
         provideCompletionItem: async (document, position, context, token,
                                       next) => {
+          await this.flushPendingTextChanges();
+
           let list = await next(document, position, context, token);
           if (!config.get<boolean>('serverCompletionRanking'))
             return list;
@@ -126,6 +164,8 @@ export class ClangdContext implements vscode.Disposable {
         // from filtering out any results, e.g. enable workspaceSymbols for
         // qualified symbols.
         provideWorkspaceSymbols: async (query, token, next) => {
+          await this.flushPendingTextChanges();
+
           let symbols = await next(query, token);
           return symbols?.map(symbol => {
             // Only make this adjustment if the query is in fact qualified.
@@ -141,6 +181,28 @@ export class ClangdContext implements vscode.Disposable {
             }
             return symbol;
           })
+        },
+        didChange: async (event, next) => {
+          if (this.pendingTextChange) {
+            this.textChangeDelayer.cancel();
+
+            if (this.pendingTextChange.matches(event.document)) {
+              this.pendingTextChange.merge(event.contentChanges);
+            }
+            else {
+              let sendingTextChange = this.pendingTextChange;
+              this.pendingTextChange = new PendingTextChange(event.document, next);
+              this.pendingTextChange.merge(event.contentChanges);
+
+              await sendingTextChange.send();
+            }
+          }
+          else {
+            this.pendingTextChange = new PendingTextChange(event.document, next);
+            this.pendingTextChange.merge(event.contentChanges);
+          }
+
+          this.textChangeDelayer.trigger(() => { this.flushPendingTextChanges(); });
         },
       },
     };
@@ -174,5 +236,17 @@ export class ClangdContext implements vscode.Disposable {
   dispose() {
     this.subscriptions.forEach((d) => { d.dispose(); });
     this.subscriptions = []
+  }
+
+  pendingTextChange?: PendingTextChange;
+  textChangeDelayer = new vscodelcAsync.Delayer<void>(2000);
+
+  async flushPendingTextChanges() {
+    let sendingTextChange = this.pendingTextChange;
+    if (sendingTextChange) {
+      this.pendingTextChange = undefined;
+
+      return await sendingTextChange.send();
+    }
   }
 }
