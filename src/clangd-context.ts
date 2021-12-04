@@ -182,6 +182,12 @@ export class ClangdContext implements vscode.Disposable {
             return symbol;
           })
         },
+        didSave: async (document, next) => {
+          if (this.pendingTextChange && this.pendingTextChange.matches(document)) {
+            await this.flushPendingTextChanges();
+          }
+          return await next(document);
+        },
         didChange: async (event, next) => {
           if (this.pendingTextChange) {
             this.textChangeDelayer.cancel();
