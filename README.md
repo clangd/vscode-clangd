@@ -102,4 +102,5 @@ clangd is part of the [LLVM project](https://llvm.org).
 
 If you'd like to help out, reach out to clangd-dev@lists.llvm.org.
 
-If you've found a bug, please file at https://github.com/clangd/clangd/issues.
+If you've found a bug in this extension, please file it at https://github.com/clangd/vscode-clangd/issues.
+If you've found a bug in clangd, please file at https://github.com/clangd/clangd/issues.
