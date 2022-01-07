@@ -104,7 +104,8 @@
                 "clangd.semanticHighlighting": {
                     "type": "boolean",
                     "default": true,
-                    "description": "Enable semantic highlighting in clangd."
+                    "description": "Enable semantic highlighting in clangd.",
+                    "deprecationMessage": "Legacy semanticHighlights is no longer supported. Please use `editor.semanticHighlighting.enabled` instead."
                 },
                 "clangd.fallbackFlags": {
                     "type": "array",

@@ -9,7 +9,6 @@ import * as inlayHints from './inlay-hints';
 import * as install from './install';
 import * as memoryUsage from './memory-usage';
 import * as openConfig from './open-config';
-import * as semanticHighlighting from './semantic-highlighting';
 import * as switchSourceHeader from './switch-source-header';
 import * as typeHierarchy from './type-hierarchy';
 
@@ -151,8 +150,6 @@ export class ClangdContext implements vscode.Disposable {
         this.client.createDefaultErrorHandler(
             // max restart count
             config.get<boolean>('restartAfterCrash') ? /*default*/ 4 : 0);
-    if (config.get<boolean>('semanticHighlighting'))
-      semanticHighlighting.activate(this);
     this.client.registerFeature(new EnableEditsNearCursorFeature);
     typeHierarchy.activate(this);
     inlayHints.activate(this);
