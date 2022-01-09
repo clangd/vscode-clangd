@@ -95,11 +95,14 @@ function decorationType(_kind: string) {
 
 /// Feature state and triggering.
 
-interface FileEntry {
-  document: vscode.TextDocument;
-
+// Inlay information for an individual file.
+// - created when the file is first made visible (foreground)
+// - updated when the file is edited or made visible again
+// - destroyed when the file is closed
+interface FileState {
   // Last applied decorations.
-  cachedDecorations: Map<string, vscode.DecorationOptions[]>|null;
+  cachedDecorations: Map<string, vscode.DecorationOptions[]> | null;
+  cachedDecorationsVersion: number | null;
 
   // Source of the token to cancel in-flight inlay hints request if any.
   inlaysRequest: vscode.CancellationTokenSource|null;
@@ -109,7 +112,7 @@ const enabledSetting = 'editor.inlayHints.enabled';
 
 class InlayHintsFeature implements vscodelc.StaticFeature {
   private enabled = false;
-  private sourceFiles = new Map<string, FileEntry>(); // keys are URIs
+  private sourceFiles = new Map<string, FileState>(); // keys are URIs
   private decorationTypes = new Map<string, vscode.TextEditorDecorationType>();
   private readonly disposables: vscode.Disposable[] = [];
 
@@ -138,44 +141,30 @@ class InlayHintsFeature implements vscodelc.StaticFeature {
     this.enabled = enabled;
     enabled ? this.startShowingHints() : this.stopShowingHints();
   }
+  
+  onDidCloseTextDocument(document: vscode.TextDocument) {
+    if (!this.enabled)
+      return;
+    
+    // Drop state for any file that is now closed.
+    const uri = document.uri.toString();
+    const file = this.sourceFiles.get(uri);
+    if (file) {
+      file.inlaysRequest?.cancel()
+      this.sourceFiles.delete(uri);
+    }        
+  }
 
   onDidChangeVisibleTextEditors() {
     if (!this.enabled)
       return;
 
-    const newSourceFiles = new Map<string, FileEntry>();
-
-    // Rerender all, even up-to-date editors for simplicity
+    // When an editor is made visible we have no inlay hints.
+    // Obtain and render them, either from the cache or by issuing a request.
+    // (This is redundant for already-visible editors, we could detect that).
     this.context.visibleClangdEditors.forEach(async editor => {
-      const uri = editor.document.uri.toString();
-      const file = this.sourceFiles.get(uri) ?? {
-        document: editor.document,
-        cachedDecorations: null,
-        inlaysRequest: null
-      };
-      newSourceFiles.set(uri, file);
-
-      // No text documents changed, so we may try to use the cache
-      if (!file.cachedDecorations) {
-        const hints = await this.fetchHints(file);
-        if (!hints)
-          return;
-
-        file.cachedDecorations = hintsToDecorations(
-            hints, this.context.client.protocol2CodeConverter);
-      }
-
-      this.renderDecorations(editor, file.cachedDecorations);
+      this.update(editor.document);
     });
-
-    // Cancel requests for no longer visible (disposed) source files
-    this.sourceFiles.forEach((file, uri) => {
-      if (!newSourceFiles.has(uri)) {
-        file.inlaysRequest?.cancel();
-      }
-    });
-
-    this.sourceFiles = newSourceFiles;
   }
 
   onDidChangeTextDocument({contentChanges,
@@ -183,27 +172,18 @@ class InlayHintsFeature implements vscodelc.StaticFeature {
     if (!this.enabled || contentChanges.length === 0 ||
         !isClangdDocument(document))
       return;
-    this.update(document.uri.toString());
+    this.update(document);
   }
 
   dispose() { this.stopShowingHints(); }
 
   private startShowingHints() {
     vscode.window.onDidChangeVisibleTextEditors(
-        this.onDidChangeVisibleTextEditors, this, this.disposables);
+      this.onDidChangeVisibleTextEditors, this, this.disposables);
+    vscode.workspace.onDidCloseTextDocument(this.onDidCloseTextDocument, this, this.disposables);
     vscode.workspace.onDidChangeTextDocument(this.onDidChangeTextDocument, this,
-                                             this.disposables);
-
-    // Set up initial cache shape
-    this.context.visibleClangdEditors.forEach(
-        editor => this.sourceFiles.set(editor.document.uri.toString(), {
-          document: editor.document,
-          inlaysRequest: null,
-          cachedDecorations: null
-        }));
-
-    for (const uri of this.sourceFiles.keys())
-      this.update(uri);
+                                            this.disposables);
+    this.onDidChangeVisibleTextEditors();
   }
 
   private stopShowingHints() {
@@ -224,32 +204,49 @@ class InlayHintsFeature implements vscodelc.StaticFeature {
       editor.setDecorations(type, decorations.get(kind) || []);
   }
 
-  private update(uri: string) {
-    const file = this.sourceFiles.get(uri);
-    if (!file)
-      return;
-    this.fetchHints(file).then(hints => {
-      if (!hints)
-        return;
+  // Update cached and displayed inlays for a document.
+  private async update(document: vscode.TextDocument) {
+    const uri = document.uri.toString();
+    if (!this.sourceFiles.has(uri))
+      this.sourceFiles.set(uri, {
+        cachedDecorations: null,
+        cachedDecorationsVersion: null,
+        inlaysRequest: null  
+      });
+    const file = this.sourceFiles.get(uri)!;
 
-      file.cachedDecorations =
-          hintsToDecorations(hints, this.context.client.protocol2CodeConverter);
+    // Invalidate the cache if the file content doesn't match.
+    if (document.version != file.cachedDecorationsVersion)
+      file.cachedDecorations = null;
+    
+    // Fetch inlays if we don't have them.
+    if (!file.cachedDecorations) {
+      const requestVersion = document.version;
+      await this.fetchHints(uri, file).then(hints => {
+        if (!hints)
+          return;
+        file.cachedDecorations = hintsToDecorations(hints, this.context.client.protocol2CodeConverter);
+        file.cachedDecorationsVersion = requestVersion;
+      });   
+    }
 
-      for (const editor of this.context.visibleClangdEditors) {
-        if (editor.document.uri.toString() == uri) {
+    // And apply them to the editor.
+    for (const editor of this.context.visibleClangdEditors) {
+      if (editor.document.uri.toString() == uri) {
+        if (file.cachedDecorations &&
+            file.cachedDecorationsVersion == editor.document.version)
           this.renderDecorations(editor, file.cachedDecorations);
-        }
       }
-    });
+    }
   }
 
-  private async fetchHints(file: FileEntry): Promise<InlayHint[]|null> {
+  private async fetchHints(uri: string, file: FileState): Promise<InlayHint[]|null> {
     file.inlaysRequest?.cancel();
 
     const tokenSource = new vscode.CancellationTokenSource();
     file.inlaysRequest = tokenSource;
 
-    const request = {textDocument: {uri: file.document.uri.toString()}};
+    const request = {textDocument: {uri}};
 
     return this.context.client.sendRequest(InlayHintsRequest.type, request,
                                            tokenSource.token);
