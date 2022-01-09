@@ -217,7 +217,8 @@ class InlayHintsFeature implements vscodelc.StaticFeature {
 
   private update(uri: string) {
     const file = this.sourceFiles.get(uri);
-    if (!file) return;
+    if (!file)
+      return;
     this.fetchHints(file).then(hints => {
       if (!hints)
         return;
