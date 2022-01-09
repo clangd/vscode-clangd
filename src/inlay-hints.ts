@@ -156,7 +156,7 @@ class InlayHintsFeature implements vscodelc.StaticFeature {
     if (!this.enabled || contentChanges.length === 0 ||
         !isClangdDocument(document))
       return;
-    this.syncCacheAndRenderHints();
+    this.update(document.uri.toString());
   }
 
   dispose() { this.stopShowingHints(); }
@@ -175,7 +175,8 @@ class InlayHintsFeature implements vscodelc.StaticFeature {
           cachedDecorations: null
         }));
 
-    this.syncCacheAndRenderHints();
+    for (const uri in this.sourceFiles.keys)
+      this.update(uri);
   }
 
   private stopShowingHints() {
@@ -191,22 +192,6 @@ class InlayHintsFeature implements vscodelc.StaticFeature {
     editor.setDecorations(parameterHintStyle.decorationType,
                           decorations.parameterHints);
     editor.setDecorations(typeHintStyle.decorationType, decorations.typeHints);
-  }
-
-  private syncCacheAndRenderHints() {
-    this.sourceFiles.forEach(
-        (file, uri) => this.fetchHints(file).then(hints => {
-          if (!hints)
-            return;
-
-          file.cachedDecorations = this.hintsToDecorations(hints);
-
-          for (const editor of this.context.visibleClangdEditors) {
-            if (editor.document.uri.toString() == uri) {
-              this.renderDecorations(editor, file.cachedDecorations);
-            }
-          }
-        }));
   }
 
   private hintsToDecorations(hints: InlayHint[]): InlayDecorations {
@@ -228,6 +213,23 @@ class InlayHintsFeature implements vscodelc.StaticFeature {
       }
     }
     return decorations;
+  }
+
+  private update(uri: string) {
+    const file = this.sourceFiles.get(uri);
+    if (!file) return;
+    this.fetchHints(file).then(hints => {
+      if (!hints)
+        return;
+
+      file.cachedDecorations = this.hintsToDecorations(hints);
+
+      for (const editor of this.context.visibleClangdEditors) {
+        if (editor.document.uri.toString() == uri) {
+          this.renderDecorations(editor, file.cachedDecorations);
+        }
+      }
+    });
   }
 
   private async fetchHints(file: FileEntry): Promise<InlayHint[]|null> {
