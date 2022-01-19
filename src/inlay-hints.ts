@@ -175,7 +175,7 @@ class InlayHintsFeature implements vscodelc.StaticFeature {
           cachedDecorations: null
         }));
 
-    for (const uri in this.sourceFiles.keys)
+    for (const uri of this.sourceFiles.keys())
       this.update(uri);
   }
 
