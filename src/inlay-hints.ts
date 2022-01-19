@@ -93,6 +93,8 @@ interface FileEntry {
   inlaysRequest: vscode.CancellationTokenSource|null;
 }
 
+const enabledSetting = 'editor.inlayHints.enabled';
+
 class InlayHintsFeature implements vscodelc.StaticFeature {
   private enabled = false;
   private sourceFiles = new Map<string, FileEntry>(); // keys are URIs
@@ -108,9 +110,20 @@ class InlayHintsFeature implements vscodelc.StaticFeature {
     const serverCapabilities: vscodelc.ServerCapabilities&
         {clangdInlayHintsProvider?: boolean} = capabilities;
     if (serverCapabilities.clangdInlayHintsProvider) {
-      this.enabled = true;
-      this.startShowingHints();
+      vscode.workspace.onDidChangeConfiguration(e => {
+        if (e.affectsConfiguration(enabledSetting))
+          this.checkEnabled()
+      });
+      this.checkEnabled();
     }
+  }
+
+  checkEnabled() {
+    const enabled = vscode.workspace.getConfiguration().get<boolean>(enabledSetting, false);
+    if (enabled == this.enabled)
+      return;
+    this.enabled = enabled;
+    enabled ? this.startShowingHints() : this.stopShowingHints();
   }
 
   onDidChangeVisibleTextEditors() {
