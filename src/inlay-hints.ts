@@ -101,8 +101,8 @@ function decorationType(_kind: string) {
 // - destroyed when the file is closed
 interface FileState {
   // Last applied decorations.
-  cachedDecorations: Map<string, vscode.DecorationOptions[]> | null;
-  cachedDecorationsVersion: number | null;
+  cachedDecorations: Map<string, vscode.DecorationOptions[]>|null;
+  cachedDecorationsVersion: number|null;
 
   // Source of the token to cancel in-flight inlay hints request if any.
   inlaysRequest: vscode.CancellationTokenSource|null;
@@ -135,24 +135,25 @@ class InlayHintsFeature implements vscodelc.StaticFeature {
   }
 
   checkEnabled() {
-    const enabled = vscode.workspace.getConfiguration().get<boolean>(enabledSetting, false);
+    const enabled =
+        vscode.workspace.getConfiguration().get<boolean>(enabledSetting, false);
     if (enabled == this.enabled)
       return;
     this.enabled = enabled;
     enabled ? this.startShowingHints() : this.stopShowingHints();
   }
-  
+
   onDidCloseTextDocument(document: vscode.TextDocument) {
     if (!this.enabled)
       return;
-    
+
     // Drop state for any file that is now closed.
     const uri = document.uri.toString();
     const file = this.sourceFiles.get(uri);
     if (file) {
-      file.inlaysRequest?.cancel()
+      file.inlaysRequest?.cancel();
       this.sourceFiles.delete(uri);
-    }        
+    }
   }
 
   onDidChangeVisibleTextEditors() {
@@ -162,9 +163,8 @@ class InlayHintsFeature implements vscodelc.StaticFeature {
     // When an editor is made visible we have no inlay hints.
     // Obtain and render them, either from the cache or by issuing a request.
     // (This is redundant for already-visible editors, we could detect that).
-    this.context.visibleClangdEditors.forEach(async editor => {
-      this.update(editor.document);
-    });
+    this.context.visibleClangdEditors.forEach(
+        async editor => { this.update(editor.document); });
   }
 
   onDidChangeTextDocument({contentChanges,
@@ -179,10 +179,11 @@ class InlayHintsFeature implements vscodelc.StaticFeature {
 
   private startShowingHints() {
     vscode.window.onDidChangeVisibleTextEditors(
-      this.onDidChangeVisibleTextEditors, this, this.disposables);
-    vscode.workspace.onDidCloseTextDocument(this.onDidCloseTextDocument, this, this.disposables);
-    vscode.workspace.onDidChangeTextDocument(this.onDidChangeTextDocument, this,
+        this.onDidChangeVisibleTextEditors, this, this.disposables);
+    vscode.workspace.onDidCloseTextDocument(this.onDidCloseTextDocument, this,
                                             this.disposables);
+    vscode.workspace.onDidChangeTextDocument(this.onDidChangeTextDocument, this,
+                                             this.disposables);
     this.onDidChangeVisibleTextEditors();
   }
 
@@ -211,23 +212,24 @@ class InlayHintsFeature implements vscodelc.StaticFeature {
       this.sourceFiles.set(uri, {
         cachedDecorations: null,
         cachedDecorationsVersion: null,
-        inlaysRequest: null  
+        inlaysRequest: null
       });
     const file = this.sourceFiles.get(uri)!;
 
     // Invalidate the cache if the file content doesn't match.
     if (document.version != file.cachedDecorationsVersion)
       file.cachedDecorations = null;
-    
+
     // Fetch inlays if we don't have them.
     if (!file.cachedDecorations) {
       const requestVersion = document.version;
       await this.fetchHints(uri, file).then(hints => {
         if (!hints)
           return;
-        file.cachedDecorations = hintsToDecorations(hints, this.context.client.protocol2CodeConverter);
+        file.cachedDecorations = hintsToDecorations(
+            hints, this.context.client.protocol2CodeConverter);
         file.cachedDecorationsVersion = requestVersion;
-      });   
+      });
     }
 
     // And apply them to the editor.
@@ -240,7 +242,8 @@ class InlayHintsFeature implements vscodelc.StaticFeature {
     }
   }
 
-  private async fetchHints(uri: string, file: FileState): Promise<InlayHint[]|null> {
+  private async fetchHints(uri: string,
+                           file: FileState): Promise<InlayHint[]|null> {
     file.inlaysRequest?.cancel();
 
     const tokenSource = new vscode.CancellationTokenSource();
