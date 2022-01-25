@@ -1,8 +1,7 @@
-.*
-.*/**
-out/test/**
-test/**
-src/**
-**/*.map
-tsconfig.json
-DEVELOPING.md
+**
+!*.md
+!*.png
+!doc-assets/**
+!icon.png
+!out/bundle.js
+!package.json
