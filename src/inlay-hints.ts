@@ -126,6 +126,15 @@ class InlayHintsFeature implements vscodelc.StaticFeature {
     const serverCapabilities: vscodelc.ServerCapabilities&
         {clangdInlayHintsProvider?: boolean} = capabilities;
     if (serverCapabilities.clangdInlayHintsProvider) {
+      // The command provides a quick way to toggle inlay hints (key-bindable).
+      // FIXME: this is a core VSCode setting, ideally they provide the command.
+      // We toggle it globally, language-specific is nicer but undiscoverable.
+      vscode.commands.registerCommand('clangd.inlayHints.toggle', () => {
+        const current = vscode.workspace.getConfiguration().get<boolean>(
+            enabledSetting, false);
+        vscode.workspace.getConfiguration().update(
+            enabledSetting, !current, vscode.ConfigurationTarget.Global);
+      });
       vscode.workspace.onDidChangeConfiguration(e => {
         if (e.affectsConfiguration(enabledSetting))
           this.checkEnabled()

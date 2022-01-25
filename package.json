@@ -237,6 +237,11 @@
                 "category": "clangd",
                 "title": "Open user configuration file",
                 "icon": "$(gear)"
+            },
+            {
+                "command": "clangd.inlayHints.toggle",
+                "category": "clangd",
+                "title": "Toggle inlay hints"
             }
         ],
         "keybindings": [
