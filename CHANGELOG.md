@@ -1,5 +1,16 @@
 # Change Log
 
+## Version 0.1.14: January 25, 2022
+
+* Inlay hints: fully support clangd's
+  [documented protocol extension](https://clangd.llvm.org/extensions#inlay-hints):
+  arbitrary types and the `position` property.
+* Inlay hints: cache hints more and refresh them less often.
+* Inlay hints: respect editor.inlayHints.enabled, and provide a toggle command.
+* CUDA: use VSCode's built-in language detection
+* Switch header/source: constrain to applicable languages, add to context menu
+* Releases now pushed to OpenVSX as well as VSCode Marketplace
+
 ## Version 0.1.13: August 24, 2021
 
 * Add option to suppress warning about the Microsoft C/C++ extension
