@@ -46,9 +46,7 @@
     "dependencies": {
         "@clangd/install": "0.1.4",
         "abort-controller": "^3.0.0",
-        "jsonc-parser": "^2.1.0",
-        "vscode-languageclient": "7.1.0-next.1",
-        "vscode-languageserver-types": "3.16.0"
+        "vscode-languageclient": "7.1.0-next.1"
     },
     "devDependencies": {
         "@types/glob": "^7.1.1",
@@ -58,9 +56,9 @@
         "clang-format": "1.4.0",
         "glob": "^7.1.4",
         "mocha": "^9.1.3",
+        "ovsx": "^0.2.1",
         "typescript": "^3.8.3",
         "vsce": "^1.93.0",
-        "ovsx": "^0.2.1",
         "vscode-test": "^1.3.0"
     },
     "repository": {
@@ -343,24 +341,24 @@
             ]
         },
         "colors": [
-          {
-            "id": "clangd.inlayHints.foreground",
-            "description": "Foreground color of inlay hints",
-            "defaults": {
-              "dark": "#A0A0A0F0",
-              "light": "#747474",
-              "highContrast": "#BEBEBE"
+            {
+                "id": "clangd.inlayHints.foreground",
+                "description": "Foreground color of inlay hints",
+                "defaults": {
+                    "dark": "#A0A0A0F0",
+                    "light": "#747474",
+                    "highContrast": "#BEBEBE"
+                }
+            },
+            {
+                "id": "clangd.inlayHints.background",
+                "description": "Background color of inlay hints",
+                "defaults": {
+                    "dark": "#11223300",
+                    "light": "#11223300",
+                    "highContrast": "#11223300"
+                }
             }
-          },
-          {
-            "id": "clangd.inlayHints.background",
-            "description": "Background color of inlay hints",
-            "defaults": {
-              "dark": "#11223300",
-              "light": "#11223300",
-              "highContrast": "#11223300"
-            }
-          }
         ]
     }
 }
