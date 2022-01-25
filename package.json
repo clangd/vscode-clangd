@@ -46,7 +46,7 @@
     "dependencies": {
         "@clangd/install": "0.1.4",
         "abort-controller": "^3.0.0",
-        "vscode-languageclient": "7.1.0-next.1"
+        "vscode-languageclient": "7.1.0-next.5"
     },
     "devDependencies": {
         "@types/glob": "^7.1.1",
