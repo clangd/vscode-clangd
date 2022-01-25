@@ -12,11 +12,12 @@ import * as config from './config';
 // Returns the clangd path to be used, or null if clangd is not installed.
 export async function activate(
     context: ClangdContext, globalStoragePath: string,
-    workspaceState: vscode.Memento): Promise<string|null> {
+    workspaceState: vscode.Memento,
+    globalState: vscode.Memento): Promise<string|null> {
   // If the workspace overrides clangd.path, give the user a chance to bless it.
   await config.getSecureOrPrompt<string>('path', workspaceState);
 
-  const ui = new UI(context, globalStoragePath, workspaceState);
+  const ui = new UI(context, globalStoragePath, workspaceState, globalState);
   context.subscriptions.push(vscode.commands.registerCommand(
       'clangd.install', async () => common.installLatest(ui)));
   context.subscriptions.push(vscode.commands.registerCommand(
@@ -27,7 +28,8 @@ export async function activate(
 
 class UI {
   constructor(private context: ClangdContext, private globalStoragePath: string,
-              private workspaceState: vscode.Memento) {}
+              private workspaceState: vscode.Memento,
+              private globalState: vscode.Memento) {}
 
   get storagePath(): string { return this.globalStoragePath; }
   async choose(prompt: string, options: string[]): Promise<string|undefined> {
@@ -86,6 +88,21 @@ class UI {
     }
   }
 
+  async promptDelete(path: string): Promise<boolean|undefined> {
+    const message = `Delete the previous clangd installation? ${path}`;
+    const remove = 'Delete it';
+    const preserve = 'Keep it';
+    const response =
+        await vscode.window.showInformationMessage(message, remove, preserve);
+    if (response === remove) {
+      return true;
+    } else if (response === preserve) {
+      return false;
+    } else {
+      return undefined; // User dismissed prompt, bail out.
+    }
+  }
+
   async promptReload(message: string) {
     if (await vscode.window.showInformationMessage(message, 'Reload window'))
       vscode.commands.executeCommand('workbench.action.reloadWindow');
@@ -135,5 +152,12 @@ class UI {
   }
   set clangdPath(p: string) {
     config.update('path', p, vscode.ConfigurationTarget.Global);
+  }
+
+  get cleanupPath(): string|undefined {
+    return this.globalState.get<string>('clangd.install.cleanupPath');
+  }
+  set cleanupPath(p: string|undefined) {
+    this.globalState.update('clangd.install.cleanupPath', p);
   }
 }

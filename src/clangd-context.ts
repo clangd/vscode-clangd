@@ -59,9 +59,9 @@ export class ClangdContext implements vscode.Disposable {
   client!: ClangdLanguageClient;
 
   async activate(globalStoragePath: string, outputChannel: vscode.OutputChannel,
-                 workspaceState: vscode.Memento) {
-    const clangdPath =
-        await install.activate(this, globalStoragePath, workspaceState);
+                 workspaceState: vscode.Memento, globalState: vscode.Memento) {
+    const clangdPath = await install.activate(this, globalStoragePath,
+                                              workspaceState, globalState);
     if (!clangdPath)
       return;
 
