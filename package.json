@@ -55,7 +55,7 @@
         "@types/vscode": "1.56.*",
         "clang-format": "1.4.0",
         "glob": "^7.1.4",
-        "mocha": "^9.1.3",
+        "mocha": "^9.2.0",
         "ovsx": "^0.2.1",
         "typescript": "^3.8.3",
         "vsce": "^1.93.0",
