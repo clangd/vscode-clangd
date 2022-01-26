@@ -1,14 +1,14 @@
 {
     "name": "vscode-clangd",
     "displayName": "clangd",
-    "description": "C and C++ completion, navigation, and insights",
-    "version": "0.1.12",
+    "description": "C/C++ completion, navigation, and insights",
+    "version": "0.1.14",
     "publisher": "llvm-vs-code-extensions",
     "license": "MIT",
     "homepage": "https://clangd.llvm.org/",
     "icon": "icon.png",
     "engines": {
-        "vscode": "^1.52.0"
+        "vscode": "^1.56.0"
     },
     "categories": [
         "Programming Languages",
@@ -25,7 +25,7 @@
     "activationEvents": [
         "onLanguage:c",
         "onLanguage:cpp",
-        "onLanguage:cuda",
+        "onLanguage:cuda-cpp",
         "onLanguage:objective-c",
         "onLanguage:objective-cpp",
         "onCommand:clangd.activate",
@@ -40,23 +40,23 @@
         "test": "tsc -p ./ && node ./out/test/index.js",
         "package": "vsce package --baseImagesUrl https://raw.githubusercontent.com/clangd/vscode-clangd/master/",
         "publish": "vsce publish --baseImagesUrl https://raw.githubusercontent.com/clangd/vscode-clangd/master/",
+        "publish-openvsx": "ovsx publish --baseImagesUrl https://raw.githubusercontent.com/clangd/vscode-clangd/master/",
         "git-clang-format": "git-clang-format"
     },
     "dependencies": {
         "@clangd/install": "0.1.4",
         "abort-controller": "^3.0.0",
-        "jsonc-parser": "^2.1.0",
-        "vscode-languageclient": "7.1.0-next.1",
-        "vscode-languageserver-types": "3.16.0"
+        "vscode-languageclient": "7.1.0-next.1"
     },
     "devDependencies": {
         "@types/glob": "^7.1.1",
         "@types/mocha": "^7.0.2",
         "@types/node": "^6.0.40",
-        "@types/vscode": "1.52.*",
+        "@types/vscode": "1.56.*",
         "clang-format": "1.4.0",
         "glob": "^7.1.4",
-        "mocha": "^7.1.0",
+        "mocha": "^9.2.0",
+        "ovsx": "^0.2.1",
         "typescript": "^3.8.3",
         "vsce": "^1.93.0",
         "vscode-test": "^1.3.0"
@@ -75,13 +75,6 @@
                     "**/MSVC/*/include/**"
                 ],
                 "firstLine": "^/[/*].*-\\*-\\s*C\\+\\+\\s*-\\*-.*"
-            },
-            {
-                "id": "cuda",
-                "extensions": [
-                    ".cu",
-                    ".cuh"
-                ]
             }
         ],
         "configuration": {
@@ -109,7 +102,8 @@
                 "clangd.semanticHighlighting": {
                     "type": "boolean",
                     "default": true,
-                    "description": "Enable semantic highlighting in clangd."
+                    "description": "Enable semantic highlighting in clangd.",
+                    "deprecationMessage": "Legacy semanticHighlights is no longer supported. Please use `editor.semanticHighlighting.enabled` instead."
                 },
                 "clangd.fallbackFlags": {
                     "type": "array",
@@ -148,80 +142,105 @@
                         "Automatically restart the server",
                         "Do nothing"
                     ]
+                },
+                "clangd.detectExtensionConflicts": {
+                    "type": "boolean",
+                    "default": true,
+                    "description": "Warn about conflicting extensions and suggest disabling them."
                 }
             }
         },
         "commands": [
             {
                 "command": "clangd.switchheadersource",
-                "title": "clangd: Switch between source/header"
+                "category": "clangd",
+                "title": "Switch Between Source/Header"
             },
             {
                 "command": "clangd.install",
-                "title": "clangd: Download language server"
+                "category": "clangd",
+                "title": "Download language server"
             },
             {
                 "command": "clangd.update",
-                "title": "clangd: Check for language server update"
+                "category": "clangd",
+                "title": "Check for language server update"
             },
             {
                 "command": "clangd.activate",
-                "title": "clangd: Manually activate extension"
+                "category": "clangd",
+                "title": "Manually activate extension"
             },
             {
                 "command": "clangd.restart",
-                "title": "clangd: Restart language server"
+                "category": "clangd",
+                "title": "Restart language server"
             },
             {
                 "command": "clangd.typeHierarchy",
+                "category": "clangd",
                 "title": "Open Type Hierarchy"
             },
             {
                 "command": "clangd.typeHierarchy.viewParents",
+                "category": "clangd",
                 "title": "Types: Show Base Classes",
                 "icon": "$(triangle-up)"
             },
             {
                 "command": "clangd.typeHierarchy.viewChildren",
+                "category": "clangd",
                 "title": "Types: Show Derived Classes",
                 "icon": "$(triangle-down)"
             },
             {
                 "command": "clangd.typeHierarchy.close",
+                "category": "clangd",
                 "title": "Close",
                 "icon": "$(panel-close)"
             },
             {
                 "command": "clangd.memoryUsage",
-                "title": "clangd: Show memory usage",
+                "category": "clangd",
+                "title": "Show memory usage",
                 "enablement": "clangd.memoryUsage.supported",
                 "icon": "$(refresh)"
             },
             {
                 "command": "clangd.memoryUsage.close",
+                "category": "clangd",
                 "title": "Close",
                 "icon": "$(panel-close)"
             },
             {
                 "command": "clangd.ast",
+                "category": "clangd",
                 "title": "Show AST",
                 "enablement": "clangd.ast.supported",
                 "icon": "$(list-tree)"
             },
             {
                 "command": "clangd.ast.close",
+                "category": "clangd",
                 "title": "Close",
                 "icon": "$(panel-close)"
             },
             {
                 "command": "clangd.projectConfig",
-                "title": "clangd: Open project configuration file",
+                "category": "clangd",
+                "title": "Open project configuration file",
                 "icon": "$(gear)"
             },
             {
                 "command": "clangd.userConfig",
-                "title": "clangd: Open user configuration file",
+                "category": "clangd",
+                "title": "Open user configuration file",
                 "icon": "$(gear)"
+            },
+            {
+                "command": "clangd.inlayHints.toggle",
+                "category": "clangd",
+                "title": "Toggle inlay hints"
             }
         ],
         "keybindings": [
@@ -244,6 +263,11 @@
                     "when": "resourceLangId == cpp && clangd.enableTypeHierarchy",
                     "group": "0_navigation@4",
                     "_comment": "see https://github.com/microsoft/vscode-references-view/blob/f63eaed9934ca5ecc8f3fb3ca096f38c6e5e181f/package.json#L162"
+                },
+                {
+                    "command": "clangd.switchheadersource",
+                    "when": "resourceLangId == c || resourceLangId == cpp || resourceLangId == cuda-cpp || resourceLangId == objective-c || resourceLangId == objective-cpp",
+                    "group": "0_navigation@5"
                 },
                 {
                     "command": "clangd.ast",
@@ -317,24 +341,24 @@
             ]
         },
         "colors": [
-          {
-            "id": "clangd.inlayHints.foreground",
-            "description": "Foreground color of inlay hints",
-            "defaults": {
-              "dark": "#A0A0A0F0",
-              "light": "#747474",
-              "highContrast": "#BEBEBE"
+            {
+                "id": "clangd.inlayHints.foreground",
+                "description": "Foreground color of inlay hints",
+                "defaults": {
+                    "dark": "#A0A0A0F0",
+                    "light": "#747474",
+                    "highContrast": "#BEBEBE"
+                }
+            },
+            {
+                "id": "clangd.inlayHints.background",
+                "description": "Background color of inlay hints",
+                "defaults": {
+                    "dark": "#11223300",
+                    "light": "#11223300",
+                    "highContrast": "#11223300"
+                }
             }
-          },
-          {
-            "id": "clangd.inlayHints.background",
-            "description": "Background color of inlay hints",
-            "defaults": {
-              "dark": "#11223300",
-              "light": "#11223300",
-              "highContrast": "#11223300"
-            }
-          }
         ]
     }
 }

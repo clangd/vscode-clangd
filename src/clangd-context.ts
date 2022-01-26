@@ -9,15 +9,13 @@ import * as inlayHints from './inlay-hints';
 import * as install from './install';
 import * as memoryUsage from './memory-usage';
 import * as openConfig from './open-config';
-import * as semanticHighlighting from './semantic-highlighting';
 import * as switchSourceHeader from './switch-source-header';
 import * as typeHierarchy from './type-hierarchy';
 
 const clangdDocumentSelector = [
   {scheme: 'file', language: 'c'},
   {scheme: 'file', language: 'cpp'},
-  // CUDA is not supported by vscode, but our extension does supports it.
-  {scheme: 'file', language: 'cuda'},
+  {scheme: 'file', language: 'cuda-cpp'},
   {scheme: 'file', language: 'objective-c'},
   {scheme: 'file', language: 'objective-cpp'},
 ];
@@ -152,8 +150,6 @@ export class ClangdContext implements vscode.Disposable {
         this.client.createDefaultErrorHandler(
             // max restart count
             config.get<boolean>('restartAfterCrash') ? /*default*/ 4 : 0);
-    if (config.get<boolean>('semanticHighlighting'))
-      semanticHighlighting.activate(this);
     this.client.registerFeature(new EnableEditsNearCursorFeature);
     typeHierarchy.activate(this);
     inlayHints.activate(this);

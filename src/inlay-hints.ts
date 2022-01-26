@@ -1,7 +1,6 @@
-// This file implements the client side of the proposed inlay hints
-// extension to LSP. The proposal is based on the one at
-// https://github.com/microsoft/language-server-protocol/issues/956,
-// with some modifications that reflect discussions in that issue.
+// This file implements the client side of clangd's inlay hints
+// extension to LSP: https://clangd.llvm.org/extensions#inlay-hints
+//
 // The feature allows the server to provide the client with inline
 // annotations to display for e.g. parameter names at call sites.
 // The client-side implementation is adapted from rust-analyzer's.
@@ -16,8 +15,8 @@ export function activate(context: ClangdContext) {
   context.client.registerFeature(feature);
 }
 
-// Currently, only one hint kind (parameter hints) are supported,
-// but others (e.g. type hints) may be added in the future.
+/// Protocol ///
+
 enum InlayHintKind {
   Parameter = 'parameter',
   Type = 'type'
@@ -25,6 +24,7 @@ enum InlayHintKind {
 
 interface InlayHint {
   range: vscodelc.Range;
+  position?: vscodelc.Position; // omitted by old servers, see hintSide.
   kind: InlayHintKind|string;
   label: string;
 }
@@ -39,63 +39,81 @@ export const type =
         'clangd/inlayHints');
 }
 
-interface InlayDecorations {
-  // Hints are grouped based on their InlayHintKind, because different kinds
-  // require different decoration types.
-  // A future iteration of the API may have free-form hint kinds, and instead
-  // specify style-related information (e.g. before vs. after) explicitly.
-  // With such an API, we could group hints based on unique presentation styles
-  // instead.
-  parameterHints: vscode.DecorationOptions[];
-  typeHints: vscode.DecorationOptions[];
+/// Conversion to VSCode decorations ///
+
+function hintsToDecorations(hints: InlayHint[],
+                            conv: vscodelc.Protocol2CodeConverter) {
+  var result = new Map<string, vscode.DecorationOptions[]>();
+  for (const hint of hints) {
+    if (!result.has(hint.kind))
+      result.set(hint.kind, []);
+    result.get(hint.kind)!.push({
+      range: conv.asRange(hint.range),
+      renderOptions: {[hintSide(hint)]: {contentText: hint.label}}
+    })
+  }
+  return result;
 }
 
-interface HintStyle {
-  decorationType: vscode.TextEditorDecorationType;
-
-  toDecoration(hint: InlayHint,
-               conv: vscodelc.Protocol2CodeConverter): vscode.DecorationOptions;
+function positionEq(a: vscodelc.Position, b: vscodelc.Position) {
+  return a.character == b.character && a.line == b.line;
 }
 
-const parameterHintStyle = createHintStyle('before');
-const typeHintStyle = createHintStyle('after');
+function hintSide(hint: InlayHint): 'before'|'after' {
+  // clangd only sends 'position' values that are one of the range endpoints.
+  if (hint.position) {
+    if (positionEq(hint.position, hint.range.start))
+      return 'before';
+    if (positionEq(hint.position, hint.range.end))
+      return 'after';
+  }
+  // An earlier version of clangd's protocol sent range, but not position.
+  // The kind should determine whether the position is the start or end.
+  // These kinds were emitted at the time.
+  if (hint.kind == InlayHintKind.Parameter)
+    return 'before';
+  if (hint.kind == InlayHintKind.Type)
+    return 'after';
+  // This shouldn't happen: old servers shouldn't send any other kinds.
+  return 'before';
+}
 
-function createHintStyle(position: 'before'|'after'): HintStyle {
+function decorationType(_kind: string) {
+  // FIXME: kind ignored for now.
   const fg = new vscode.ThemeColor('clangd.inlayHints.foreground');
   const bg = new vscode.ThemeColor('clangd.inlayHints.background');
-  return {
-    decorationType: vscode.window.createTextEditorDecorationType({
-      [position]: {
-        color: fg,
-        backgroundColor: bg,
-        fontStyle: 'normal',
-        fontWeight: 'normal',
-        textDecoration: ';font-size:smaller'
-      }
-    }),
-    toDecoration(hint: InlayHint, conv: vscodelc.Protocol2CodeConverter):
-        vscode.DecorationOptions {
-          return {
-            range: conv.asRange(hint.range),
-            renderOptions: {[position]: {contentText: hint.label}}
-          };
-        }
+  const attachmentOpts = {
+    color: fg,
+    backgroundColor: bg,
+    fontStyle: 'normal',
+    fontWeight: 'normal',
+    textDecoration: ';font-size:smaller',
   };
+  return vscode.window.createTextEditorDecorationType(
+      {before: attachmentOpts, after: attachmentOpts});
 }
 
-interface FileEntry {
-  document: vscode.TextDocument;
+/// Feature state and triggering.
 
+// Inlay information for an individual file.
+// - created when the file is first made visible (foreground)
+// - updated when the file is edited or made visible again
+// - destroyed when the file is closed
+interface FileState {
   // Last applied decorations.
-  cachedDecorations: InlayDecorations|null;
+  cachedDecorations: Map<string, vscode.DecorationOptions[]>|null;
+  cachedDecorationsVersion: number|null;
 
   // Source of the token to cancel in-flight inlay hints request if any.
   inlaysRequest: vscode.CancellationTokenSource|null;
 }
 
+const enabledSetting = 'editor.inlayHints.enabled';
+
 class InlayHintsFeature implements vscodelc.StaticFeature {
   private enabled = false;
-  private sourceFiles = new Map<string, FileEntry>(); // keys are URIs
+  private sourceFiles = new Map<string, FileState>(); // keys are URIs
+  private decorationTypes = new Map<string, vscode.TextEditorDecorationType>();
   private readonly disposables: vscode.Disposable[] = [];
 
   constructor(private readonly context: ClangdContext) {}
@@ -108,8 +126,42 @@ class InlayHintsFeature implements vscodelc.StaticFeature {
     const serverCapabilities: vscodelc.ServerCapabilities&
         {clangdInlayHintsProvider?: boolean} = capabilities;
     if (serverCapabilities.clangdInlayHintsProvider) {
-      this.enabled = true;
-      this.startShowingHints();
+      // The command provides a quick way to toggle inlay hints (key-bindable).
+      // FIXME: this is a core VSCode setting, ideally they provide the command.
+      // We toggle it globally, language-specific is nicer but undiscoverable.
+      vscode.commands.registerCommand('clangd.inlayHints.toggle', () => {
+        const current = vscode.workspace.getConfiguration().get<boolean>(
+            enabledSetting, false);
+        vscode.workspace.getConfiguration().update(
+            enabledSetting, !current, vscode.ConfigurationTarget.Global);
+      });
+      vscode.workspace.onDidChangeConfiguration(e => {
+        if (e.affectsConfiguration(enabledSetting))
+          this.checkEnabled()
+      });
+      this.checkEnabled();
+    }
+  }
+
+  checkEnabled() {
+    const enabled =
+        vscode.workspace.getConfiguration().get<boolean>(enabledSetting, false);
+    if (enabled == this.enabled)
+      return;
+    this.enabled = enabled;
+    enabled ? this.startShowingHints() : this.stopShowingHints();
+  }
+
+  onDidCloseTextDocument(document: vscode.TextDocument) {
+    if (!this.enabled)
+      return;
+
+    // Drop state for any file that is now closed.
+    const uri = document.uri.toString();
+    const file = this.sourceFiles.get(uri);
+    if (file) {
+      file.inlaysRequest?.cancel();
+      this.sourceFiles.delete(uri);
     }
   }
 
@@ -117,38 +169,11 @@ class InlayHintsFeature implements vscodelc.StaticFeature {
     if (!this.enabled)
       return;
 
-    const newSourceFiles = new Map<string, FileEntry>();
-
-    // Rerender all, even up-to-date editors for simplicity
-    this.context.visibleClangdEditors.forEach(async editor => {
-      const uri = editor.document.uri.toString();
-      const file = this.sourceFiles.get(uri) ?? {
-        document: editor.document,
-        cachedDecorations: null,
-        inlaysRequest: null
-      };
-      newSourceFiles.set(uri, file);
-
-      // No text documents changed, so we may try to use the cache
-      if (!file.cachedDecorations) {
-        const hints = await this.fetchHints(file);
-        if (!hints)
-          return;
-
-        file.cachedDecorations = this.hintsToDecorations(hints);
-      }
-
-      this.renderDecorations(editor, file.cachedDecorations);
-    });
-
-    // Cancel requests for no longer visible (disposed) source files
-    this.sourceFiles.forEach((file, uri) => {
-      if (!newSourceFiles.has(uri)) {
-        file.inlaysRequest?.cancel();
-      }
-    });
-
-    this.sourceFiles = newSourceFiles;
+    // When an editor is made visible we have no inlay hints.
+    // Obtain and render them, either from the cache or by issuing a request.
+    // (This is redundant for already-visible editors, we could detect that).
+    this.context.visibleClangdEditors.forEach(
+        async editor => { this.update(editor.document); });
   }
 
   onDidChangeTextDocument({contentChanges,
@@ -156,7 +181,7 @@ class InlayHintsFeature implements vscodelc.StaticFeature {
     if (!this.enabled || contentChanges.length === 0 ||
         !isClangdDocument(document))
       return;
-    this.syncCacheAndRenderHints();
+    this.update(document);
   }
 
   dispose() { this.stopShowingHints(); }
@@ -164,79 +189,76 @@ class InlayHintsFeature implements vscodelc.StaticFeature {
   private startShowingHints() {
     vscode.window.onDidChangeVisibleTextEditors(
         this.onDidChangeVisibleTextEditors, this, this.disposables);
+    vscode.workspace.onDidCloseTextDocument(this.onDidCloseTextDocument, this,
+                                            this.disposables);
     vscode.workspace.onDidChangeTextDocument(this.onDidChangeTextDocument, this,
                                              this.disposables);
-
-    // Set up initial cache shape
-    this.context.visibleClangdEditors.forEach(
-        editor => this.sourceFiles.set(editor.document.uri.toString(), {
-          document: editor.document,
-          inlaysRequest: null,
-          cachedDecorations: null
-        }));
-
-    this.syncCacheAndRenderHints();
+    this.onDidChangeVisibleTextEditors();
   }
 
   private stopShowingHints() {
     this.sourceFiles.forEach(file => file.inlaysRequest?.cancel());
     this.context.visibleClangdEditors.forEach(
-        editor => this.renderDecorations(editor,
-                                         {parameterHints: [], typeHints: []}));
+        editor => this.renderDecorations(editor, new Map()));
     this.disposables.forEach(d => d.dispose());
   }
 
   private renderDecorations(editor: vscode.TextEditor,
-                            decorations: InlayDecorations) {
-    editor.setDecorations(parameterHintStyle.decorationType,
-                          decorations.parameterHints);
-    editor.setDecorations(typeHintStyle.decorationType, decorations.typeHints);
+                            decorations:
+                                Map<string, vscode.DecorationOptions[]>) {
+    for (const kind of decorations.keys())
+      if (!this.decorationTypes.has(kind))
+        this.decorationTypes.set(kind, decorationType(kind));
+    // Overwrite every kind we ever saw, so we are sure to clear stale hints.
+    for (const [kind, type] of this.decorationTypes)
+      editor.setDecorations(type, decorations.get(kind) || []);
   }
 
-  private syncCacheAndRenderHints() {
-    this.sourceFiles.forEach(
-        (file, uri) => this.fetchHints(file).then(hints => {
-          if (!hints)
-            return;
+  // Update cached and displayed inlays for a document.
+  private async update(document: vscode.TextDocument) {
+    const uri = document.uri.toString();
+    if (!this.sourceFiles.has(uri))
+      this.sourceFiles.set(uri, {
+        cachedDecorations: null,
+        cachedDecorationsVersion: null,
+        inlaysRequest: null
+      });
+    const file = this.sourceFiles.get(uri)!;
 
-          file.cachedDecorations = this.hintsToDecorations(hints);
+    // Invalidate the cache if the file content doesn't match.
+    if (document.version != file.cachedDecorationsVersion)
+      file.cachedDecorations = null;
 
-          for (const editor of this.context.visibleClangdEditors) {
-            if (editor.document.uri.toString() == uri) {
-              this.renderDecorations(editor, file.cachedDecorations);
-            }
-          }
-        }));
-  }
+    // Fetch inlays if we don't have them.
+    if (!file.cachedDecorations) {
+      const requestVersion = document.version;
+      await this.fetchHints(uri, file).then(hints => {
+        if (!hints)
+          return;
+        file.cachedDecorations = hintsToDecorations(
+            hints, this.context.client.protocol2CodeConverter);
+        file.cachedDecorationsVersion = requestVersion;
+      });
+    }
 
-  private hintsToDecorations(hints: InlayHint[]): InlayDecorations {
-    const decorations: InlayDecorations = {parameterHints: [], typeHints: []};
-    const conv = this.context.client.protocol2CodeConverter;
-    for (const hint of hints) {
-      switch (hint.kind) {
-      case InlayHintKind.Parameter: {
-        decorations.parameterHints.push(
-            parameterHintStyle.toDecoration(hint, conv));
-        continue;
-      }
-      case InlayHintKind.Type: {
-        decorations.typeHints.push(typeHintStyle.toDecoration(hint, conv));
-        continue;
-      }
-        // Don't handle unknown hint kinds because we don't know how to style
-        // them. This may change in a future version of the protocol.
+    // And apply them to the editor.
+    for (const editor of this.context.visibleClangdEditors) {
+      if (editor.document.uri.toString() == uri) {
+        if (file.cachedDecorations &&
+            file.cachedDecorationsVersion == editor.document.version)
+          this.renderDecorations(editor, file.cachedDecorations);
       }
     }
-    return decorations;
   }
 
-  private async fetchHints(file: FileEntry): Promise<InlayHint[]|null> {
+  private async fetchHints(uri: string,
+                           file: FileState): Promise<InlayHint[]|null> {
     file.inlaysRequest?.cancel();
 
     const tokenSource = new vscode.CancellationTokenSource();
     file.inlaysRequest = tokenSource;
 
-    const request = {textDocument: {uri: file.document.uri.toString()}};
+    const request = {textDocument: {uri}};
 
     return this.context.client.sendRequest(InlayHintsRequest.type, request,
                                            tokenSource.token);

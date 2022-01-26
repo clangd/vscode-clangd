@@ -1,7 +1,8 @@
-name: Publish to VSCode marketplace
+name: Publish release
 on:
   push:
     branches: [ master ]
+    paths: [ 'package.json' ]
 jobs:
   publish:
     runs-on: ubuntu-latest
@@ -20,9 +21,24 @@ jobs:
       run: npm ci
     - if: steps.check.outputs.changed == 'true'
       run: npm test
-    - name: publish
+    - name: package
       if: steps.check.outputs.changed == 'true'
-      # The token will be expired in on 01/10/2022. Regenerate it at
+      run: npm run package
+    - name: publish to Github
+      uses: ncipollo/release-action@v1
+      if: steps.check.outputs.changed == 'true'
+      with:
+        artifacts: "vscode-clangd-*.vsix"
+        tag: ${{ steps.check.outputs.version }}
+        commit: ${{ steps.check.outputs.commit }}
+        token: ${{ secrets.GITHUB_TOKEN }}
+    - name: publish to VSCode Marketplace
+      if: steps.check.outputs.changed == 'true'
+      # The token will expire. Regenerate it at:
       # https://llvm-vs-code-extensions.visualstudio.com/_usersSettings/tokens.
       run: npm run publish -- -p "${{ secrets.VSCODE_MARKETPLACE_TOKEN }}"
-
+    - name: publish to OpenVSX
+      if: steps.check.outputs.changed == 'true'
+      # The token will expire. Regenerate it at:
+      # https://open-vsx.org/user-settings/tokens
+      run: npm run publish-openvsx -- -p "${{ secrets.OPENVSX_TOKEN }}"
