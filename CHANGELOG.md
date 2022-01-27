@@ -1,5 +1,10 @@
 # Change Log
 
+## Version 0.1.15: January 27, 2022
+
+* Fix: clangd extension fails to restart, [#291](https://github.com/clangd/vscode-clangd/pull/291)
+* Legacy semantic-highlighting is no longer supported, [#273](https://github.com/clangd/vscode-clangd/pull/273)
+
 ## Version 0.1.14: January 25, 2022
 
 * Inlay hints: fully support clangd's
