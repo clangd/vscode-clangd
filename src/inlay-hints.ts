@@ -112,6 +112,7 @@ const enabledSetting = 'editor.inlayHints.enabled';
 
 class InlayHintsFeature implements vscodelc.StaticFeature {
   private enabled = false;
+  private commandRegistered = false;
   private sourceFiles = new Map<string, FileState>(); // keys are URIs
   private decorationTypes = new Map<string, vscode.TextEditorDecorationType>();
   private readonly disposables: vscode.Disposable[] = [];
@@ -126,16 +127,21 @@ class InlayHintsFeature implements vscodelc.StaticFeature {
     const serverCapabilities: vscodelc.ServerCapabilities&
         {clangdInlayHintsProvider?: boolean} = capabilities;
     if (serverCapabilities.clangdInlayHintsProvider) {
-      // The command provides a quick way to toggle inlay hints (key-bindable).
-      // FIXME: this is a core VSCode setting, ideally they provide the command.
-      // We toggle it globally, language-specific is nicer but undiscoverable.
-      this.context.subscriptions.push(
-          vscode.commands.registerCommand('clangd.inlayHints.toggle', () => {
-            const current = vscode.workspace.getConfiguration().get<boolean>(
-                enabledSetting, false);
-            vscode.workspace.getConfiguration().update(
-                enabledSetting, !current, vscode.ConfigurationTarget.Global);
-          }));
+      if (!this.commandRegistered) {
+        // The command provides a quick way to toggle inlay hints
+        // (key-bindable).
+        // FIXME: this is a core VSCode setting, ideally they provide the
+        // command. We toggle it globally, language-specific is nicer but
+        // undiscoverable.
+        this.commandRegistered = true;
+        this.context.subscriptions.push(
+            vscode.commands.registerCommand('clangd.inlayHints.toggle', () => {
+              const current = vscode.workspace.getConfiguration().get<boolean>(
+                  enabledSetting, false);
+              vscode.workspace.getConfiguration().update(
+                  enabledSetting, !current, vscode.ConfigurationTarget.Global);
+            }));
+      }
       vscode.workspace.onDidChangeConfiguration(e => {
         if (e.affectsConfiguration(enabledSetting))
           this.checkEnabled()
