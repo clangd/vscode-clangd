@@ -54,7 +54,7 @@
         "@types/mocha": "^7.0.2",
         "@types/node": "^6.0.40",
         "@types/vscode": "1.56.*",
-        "clang-format": "1.4.0",
+        "clang-format": "1.6.0",
         "esbuild": "^0.14.13",
         "glob": "^7.1.4",
         "mocha": "^9.2.0",
