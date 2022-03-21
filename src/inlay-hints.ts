@@ -4,6 +4,10 @@
 // The feature allows the server to provide the client with inline
 // annotations to display for e.g. parameter names at call sites.
 // The client-side implementation is adapted from rust-analyzer's.
+//
+// This extension predates the textDocument/inlayHints request from LSP 3.17.
+// The standard protocol is used when available (via vscode-languageclient) and
+// this logic is disabled in that case. It will eventually be removed.
 
 import * as vscode from 'vscode';
 import * as vscodelc from 'vscode-languageclient/node';
@@ -125,29 +129,33 @@ class InlayHintsFeature implements vscodelc.StaticFeature {
   initialize(capabilities: vscodelc.ServerCapabilities,
              _documentSelector: vscodelc.DocumentSelector|undefined) {
     const serverCapabilities: vscodelc.ServerCapabilities&
-        {clangdInlayHintsProvider?: boolean} = capabilities;
-    if (serverCapabilities.clangdInlayHintsProvider) {
-      if (!this.commandRegistered) {
-        // The command provides a quick way to toggle inlay hints
-        // (key-bindable).
-        // FIXME: this is a core VSCode setting, ideally they provide the
-        // command. We toggle it globally, language-specific is nicer but
-        // undiscoverable.
-        this.commandRegistered = true;
-        this.context.subscriptions.push(
-            vscode.commands.registerCommand('clangd.inlayHints.toggle', () => {
-              const current = vscode.workspace.getConfiguration().get<boolean>(
-                  enabledSetting, false);
-              vscode.workspace.getConfiguration().update(
-                  enabledSetting, !current, vscode.ConfigurationTarget.Global);
-            }));
-      }
-      vscode.workspace.onDidChangeConfiguration(e => {
-        if (e.affectsConfiguration(enabledSetting))
-          this.checkEnabled()
-      });
-      this.checkEnabled();
+        {clangdInlayHintsProvider?: boolean, inlayHintProvider?: any} =
+        capabilities;
+    // If the clangd server supports LSP 3.17 inlay hints, these are handled by
+    // the vscode-languageclient library - don't send custom requests too!
+    if (!serverCapabilities.clangdInlayHintsProvider ||
+        serverCapabilities.inlayHintProvider)
+      return;
+    if (!this.commandRegistered) {
+      // The command provides a quick way to toggle inlay hints
+      // (key-bindable).
+      // FIXME: this is a core VSCode setting, ideally they provide the
+      // command. We toggle it globally, language-specific is nicer but
+      // undiscoverable.
+      this.commandRegistered = true;
+      this.context.subscriptions.push(
+          vscode.commands.registerCommand('clangd.inlayHints.toggle', () => {
+            const current = vscode.workspace.getConfiguration().get<boolean>(
+                enabledSetting, false);
+            vscode.workspace.getConfiguration().update(
+                enabledSetting, !current, vscode.ConfigurationTarget.Global);
+          }));
     }
+    vscode.workspace.onDidChangeConfiguration(e => {
+      if (e.affectsConfiguration(enabledSetting))
+        this.checkEnabled()
+    });
+    this.checkEnabled();
   }
 
   checkEnabled() {
