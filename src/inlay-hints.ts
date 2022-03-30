@@ -74,9 +74,8 @@ class InlayHintsFeature implements vscodelc.StaticFeature {
                 enabledSetting, !current, vscode.ConfigurationTarget.Global);
           }));
     }
-    this.context.subscriptions.push(
-        vscode.languages.registerInlayHintsProvider(
-            clangdDocumentSelector, new Provider(this.context)));
+    this.context.subscriptions.push(vscode.languages.registerInlayHintsProvider(
+        clangdDocumentSelector, new Provider(this.context)));
   }
 
   dispose() {}
