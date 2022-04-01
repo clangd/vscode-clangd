@@ -8,7 +8,7 @@
     "homepage": "https://clangd.llvm.org/",
     "icon": "icon.png",
     "engines": {
-        "vscode": "^1.56.0"
+        "vscode": "^1.65.0"
     },
     "categories": [
         "Programming Languages",
@@ -53,7 +53,7 @@
         "@types/glob": "^7.1.1",
         "@types/mocha": "^7.0.2",
         "@types/node": "^6.0.40",
-        "@types/vscode": "1.56.*",
+        "@types/vscode": "1.65.0",
         "clang-format": "1.6.0",
         "esbuild": "^0.14.13",
         "glob": "^7.1.4",
@@ -341,26 +341,6 @@
                     "when": "clangd.ast.hasData"
                 }
             ]
-        },
-        "colors": [
-            {
-                "id": "clangd.inlayHints.foreground",
-                "description": "Foreground color of inlay hints",
-                "defaults": {
-                    "dark": "#A0A0A0F0",
-                    "light": "#747474",
-                    "highContrast": "#BEBEBE"
-                }
-            },
-            {
-                "id": "clangd.inlayHints.background",
-                "description": "Background color of inlay hints",
-                "defaults": {
-                    "dark": "#11223300",
-                    "light": "#11223300",
-                    "highContrast": "#11223300"
-                }
-            }
-        ]
+        }
     }
 }
