@@ -21,8 +21,8 @@
         "reveal": "silent",
     },
 
-    // Run custom "compile" script as defined in package.json
-    "args": ["run", "compile", "--loglevel", "silent"],
+    // Run custom "ts-compile" script as defined in package.json
+    "args": ["run", "ts-compile", "--loglevel", "silent"],
 
     // tsc compiler is kept alive and runs in the background.
     "isBackground": true,
