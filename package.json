@@ -244,6 +244,12 @@
                 "command": "clangd.inlayHints.toggle",
                 "category": "clangd",
                 "title": "Toggle inlay hints"
+            },
+            {
+                "command": "clangd.run3c",
+                "category": "clangd",
+                "title": "Run 3C on this file",
+                "icon": "$(gear)"
             }
         ],
         "keybindings": [
