@@ -98,6 +98,12 @@
                     },
                     "description": "Arguments for clangd server."
                 },
+                "clangd.autoStart": {
+                    "type": "boolean",
+                    "default": true,
+                    "description": "Start clangd language server automatically when opening a file or project.",
+                    "scope": "resource"
+                },
                 "clangd.trace": {
                     "type": "string",
                     "description": "Names a file that clangd should log a performance trace to, in chrome trace-viewer JSON format."
@@ -178,6 +184,11 @@
                 "command": "clangd.restart",
                 "category": "clangd",
                 "title": "Restart language server"
+            },
+            {
+                "command": "clangd.stop",
+                "category": "clangd",
+                "title": "Stop language server"
             },
             {
                 "command": "clangd.typeHierarchy",
