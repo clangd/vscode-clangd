@@ -1,5 +1,11 @@
 # Change Log
 
+## Version 0.1.16: April 25, 2022
+
+* Fix: "command clangd.inlayHints.toggle already exists" error on restarting clangd, [#302](https://github.com/clangd/vscode-clangd/pull/302)
+* Inlay hints: switch to use VSCode's native implementation, [#301](https://github.com/clangd/vscode-clangd/pull/301)
+* Bundle extension code into a single js file, reducing vsix file size, [#287](https://github.com/clangd/vscode-clangd/pull/287)
+
 ## Version 0.1.15: January 27, 2022
 
 * Fix: clangd extension fails to restart, [#291](https://github.com/clangd/vscode-clangd/pull/291)
