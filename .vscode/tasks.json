@@ -21,12 +21,6 @@
         "reveal": "silent",
     },
 
-    // Run custom "ts-compile" script as defined in package.json
-    "args": ["run", "ts-compile", "--loglevel", "silent"],
-
-    // tsc compiler is kept alive and runs in the background.
-    "isBackground": true,
-
-    // Find compilation problems in the output through tsc in watch mode.
-    "problemMatcher": "$tsc-watch"
+    // Build bundle with sourcemaps, suitable for debugging.
+    "args": ["run", "esbuild", "--", "--sourcemap"],
 }
