@@ -35,7 +35,7 @@
     "main": "./out/bundle",
     "scripts": {
         "esbuild": "esbuild ./src/extension.ts --bundle --outfile=out/bundle.js --external:vscode --format=cjs --platform=node",
-        "vscode:prepublish": "npm run esbuild -- --minify",
+        "vscode:prepublish": "npm run esbuild -- --minify --keep-names",
         "compile": "npm run esbuild -- --sourcemap --watch",
         "ts-compile": "tsc -watch -p ./",
         "format": "clang-format -i --glob=\"{src,test}/*.ts\"",
