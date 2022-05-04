@@ -1,5 +1,9 @@
 # Change Log
 
+## Version 0.1.17: May 4, 2022
+
+* Fix errors in "download language server" command introduced in 0.1.16. [#325](https://github.com/clangd/vscode-clangd/issues/325)
+
 ## Version 0.1.16: April 25, 2022
 
 * Fix: "command clangd.inlayHints.toggle already exists" error on restarting clangd, [#302](https://github.com/clangd/vscode-clangd/pull/302)
