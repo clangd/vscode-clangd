@@ -16,19 +16,7 @@ export function activate(
         let disposable = vscode.commands.registerTextEditorCommand(
             'clangd.run3c', async (editor,_edit) => {
                 const converter = context.client.code2ProtocolConverter;
-                if (!vscode.workspace.workspaceFolders) {
-                    vscode.window.showInformationMessage("Open a folder/workspace first");
-                    return;
-                }
-                const backupURI = vscode.Uri.parse(vscode.workspace.workspaceFolders[0].uri.path+'/backup');
-                const originalURI = vscode.workspace.workspaceFolders[0].uri.path+'/backup/';
-                vscode.workspace.fs.createDirectory(backupURI);
-                const files = await vscode.workspace.findFiles('**/*.*');
-                files.forEach(function(file){
-                    const fileName = file.path.substring(file.path.lastIndexOf("/")+1);
-                    const FileURI = vscode.Uri.parse(originalURI+'/backup/'+fileName);
-                    vscode.workspace.fs.copy(file,FileURI,{overwrite:true});
-                });
+                
                 const usage = 
                     await context.client.sendRequest(Run3CRequest, {
                         textDocument:
