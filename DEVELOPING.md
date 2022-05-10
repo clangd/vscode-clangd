@@ -17,8 +17,8 @@ point to the binary.
 ```bash
    $ cd vscode-clangd
    $ npm install
-   $ code .
-   # When VSCode starts, press <F5>.
+   $ npm run compile # it runs in watch mode, so you can hit ctrl^c.
+   $ code . --extensionDevelopmentPath=$PWD
 ```
 
 # Contributing
