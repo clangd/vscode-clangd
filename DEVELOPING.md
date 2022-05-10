@@ -7,47 +7,51 @@ A guide of developing `vscode-clangd` extension.
 * VS Code
 * node.js and npm
 
-## Steps
-
-1. Make sure you disable the installed `vscode-clangd` extension in VS Code.
-2. Make sure you have clangd in `/usr/bin/clangd` or edit `src/extension.ts` to
-point to the binary.
-3. To start a development instance of VS code extended with this, run:
+## Building and running (command line)
 
 ```bash
-   $ cd vscode-clangd
-   $ npm install
-   $ code .
-   # When VSCode starts, press <F5>.
+cd vscode-clangd
+npm install
+npm run compile
+code --extensionDevelopmentPath=$PWD
 ```
+
+You can use `npm run compile -- --watch` to continuously rebuild on changes.
+
+## Building, running, and debugging (VSCode)
+
+- ```bash
+  cd vscode-clangd
+  npm install
+  code .
+  ```
+- with the `vscode-clangd` directory open in VSCode, select
+  `Run => Run Without Debugging` or `Run => Start Debugging`
+
+VSCode will recompile the sources for you before launching.
+If you change dependencies in `package.json`, you should run `npm install`.
+
+## Editing and typechecking
+
+`npm run compile` does not actually typecheck the TypeScript code!
+(It stripts type annotations and bundles it, using `esbuild`).
+You can see diagnostics with `npm run check-ts`.
+
+Using a Typescript-aware editor will show you diagnostics, provide
+go-to-definition etc. VSCode works well, or any LSP-capable editor can use
+[typescript-language-server](https://github.com/typescript-language-server/typescript-language-server).
 
 # Contributing
 
 Please follow the existing code style when contributing to the extension, we
 recommend to run `npm run format` before sending a patch.
 
-# Publish to VS Code Marketplace
+# Publish to Marketplace
 
-New changes to `vscode-clangd` are not released until a new version is published
-to the marketplace.
+To create a new release, create a commit that:
 
-## Requirements
+- increases the version number in `package.json`
+- updates `CHANGELOG.md` to cover changes since the last release
 
-* Make sure install the `vsce` command (`npm install -g vsce`)
-* `llvm-vs-code-extensions` account
-* Bump the version in `package.json`, and commit the change.
-
-The extension is published under `llvm-vs-code-extensions` account, which is
-maintained by clangd developers. If you want to make a new release, please
-contact clangd-dev@lists.llvm.org.
-
-## Steps
-
-```bash
-  $ cd vscode-clangd
-  # For the first time, you need to login into the account. vsce will ask you
-    for the Personal Access Token and will remember it for future commands.
-  $ vsce login llvm-vs-code-extensions
-  # Publish the extension to the VSCode marketplace.
-  $ npm run publish
-```
+Our CI will recognize the commit and publish new versions to the VSCode
+Marketplace and the alternative OpenVSX registry.

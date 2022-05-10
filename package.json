@@ -35,9 +35,9 @@
     "main": "./out/bundle",
     "scripts": {
         "esbuild": "esbuild ./src/extension.ts --bundle --outfile=out/bundle.js --external:vscode --format=cjs --platform=node",
-        "vscode:prepublish": "npm run esbuild -- --minify --keep-names",
-        "compile": "npm run esbuild -- --sourcemap --watch",
-        "ts-compile": "tsc -watch -p ./",
+        "vscode:prepublish": "npm run check-ts && npm run esbuild -- --minify --keep-names",
+        "compile": "npm run esbuild -- --sourcemap",
+        "check-ts": "tsc -noEmit -p ./",
         "format": "clang-format -i --glob=\"{src,test}/*.ts\"",
         "test": "tsc -p ./ && node ./out/test/index.js",
         "package": "vsce package --baseImagesUrl https://raw.githubusercontent.com/clangd/vscode-clangd/master/",
