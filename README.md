@@ -82,8 +82,7 @@ clangd to format the old line and semantically reindent.
 
 ![Format-on-type](doc-assets/format.png)
 
-The style used for formatting (and certain other operations) is controlled by
-the .clang-format file is controlled by the project's
+The style used for formatting (and certain other operations) is controlled by the project's
 [.clang-format file](https://clang.llvm.org/docs/ClangFormatStyleOptions.html).
 
 ### Refactoring
