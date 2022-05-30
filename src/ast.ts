@@ -79,6 +79,7 @@ class ASTFeature implements vscodelc.StaticFeature {
     vscode.commands.executeCommand('setContext', 'clangd.ast.supported',
                                    'astProvider' in capabilities);
   }
+  getState(): vscodelc.FeatureState { return {kind: 'static'}; }
   dispose() {}
 }
 

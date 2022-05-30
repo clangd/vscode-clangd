@@ -53,6 +53,7 @@ class InlayHintsFeature implements vscodelc.StaticFeature {
     const serverCapabilities: vscodelc.ServerCapabilities&
         {clangdInlayHintsProvider?: boolean, inlayHintProvider?: any} =
         capabilities;
+
     if (!this.commandRegistered) {
       // The command provides a quick way to toggle inlay hints
       // (key-bindable).
@@ -72,12 +73,12 @@ class InlayHintsFeature implements vscodelc.StaticFeature {
     // If the clangd server supports LSP 3.17 inlay hints, these are handled by
     // the vscode-languageclient library - don't send custom requests too!
     if (!serverCapabilities.clangdInlayHintsProvider ||
-      serverCapabilities.inlayHintProvider)
-    return;
+        serverCapabilities.inlayHintProvider)
+      return;
     this.context.subscriptions.push(vscode.languages.registerInlayHintsProvider(
         clangdDocumentSelector, new Provider(this.context)));
   }
-
+  getState(): vscodelc.FeatureState { return {kind: 'static'}; }
   dispose() {}
 }
 

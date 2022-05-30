@@ -116,12 +116,13 @@ class TypeHierarchyFeature implements vscodelc.StaticFeature {
   initialize(capabilities: vscodelc.ServerCapabilities,
              documentSelector: vscodelc.DocumentSelector|undefined) {
     const serverCapabilities: vscodelc.ServerCapabilities&
-        {typeHierarchyProvider?: boolean} = capabilities;
+        {typeHierarchyProvider?: any} = capabilities;
     if (serverCapabilities.typeHierarchyProvider) {
       this.serverSupportsTypeHierarchy = true;
       this.recomputeEnableTypeHierarchy();
     }
   }
+  getState(): vscodelc.FeatureState { return {kind: 'static'}; }
   dispose() {}
 
   private recomputeEnableTypeHierarchy() {
