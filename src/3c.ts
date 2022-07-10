@@ -22,7 +22,7 @@ export function activate(
                         textDocument:
                             converter.asTextDocumentIdentifier(editor.document),
                     });
-                vscode.window.showInformationMessage('Running 3C');
+                vscode.window.showInformationMessage('Running 3C on this project');
                 console.log('Running the 3C command');
                 const result = usage.details;
                 vscode.window.showInformationMessage(result);

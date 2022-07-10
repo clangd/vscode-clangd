@@ -1,12 +1,12 @@
 {
-    "name": "vscode-clangd",
-    "displayName": "clangd",
-    "description": "C/C++ completion, navigation, and insights",
-    "version": "0.1.15",
-    "publisher": "llvm-vs-code-extensions",
+    "name": "3clsp",
+    "displayName": "3clsp",
+    "description": "LSP extension for 3C",
+    "version": "0.0.1",
+    "publisher": "Purs3Lab",
     "license": "MIT",
-    "homepage": "https://clangd.llvm.org/",
-    "icon": "icon.png",
+    "homepage": "https://purs3lab.github.io/",
+    "icon": "purs3lab-3.png",
     "engines": {
         "vscode": "^1.65.0"
     },
@@ -66,7 +66,7 @@
     },
     "repository": {
         "type": "git",
-        "url": "https://github.com/clangd/vscode-clangd.git"
+        "url": ""
     },
     "qna": "marketplace",
     "contributes": {
@@ -248,7 +248,7 @@
             {
                 "command": "clangd.run3c",
                 "category": "clangd",
-                "title": "Run 3C on this file",
+                "title": "Run 3C on this project",
                 "icon": "$(gear)"
             }
         ],
