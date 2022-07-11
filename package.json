@@ -243,7 +243,8 @@
             {
                 "command": "clangd.inlayHints.toggle",
                 "category": "clangd",
-                "title": "Toggle inlay hints"
+                "title": "Toggle inlay hints",
+                "enablement": "clangd.inlayHints.supported"
             }
         ],
         "keybindings": [

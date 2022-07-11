@@ -53,7 +53,10 @@ class InlayHintsFeature implements vscodelc.StaticFeature {
     const serverCapabilities: vscodelc.ServerCapabilities&
         {clangdInlayHintsProvider?: boolean, inlayHintProvider?: any} =
         capabilities;
-
+    vscode.commands.executeCommand(
+        'setContext', 'clangd.inlayHints.supported',
+        serverCapabilities.clangdInlayHintsProvider ||
+            serverCapabilities.inlayHintProvider);
     if (!this.commandRegistered) {
       // The command provides a quick way to toggle inlay hints
       // (key-bindable).
