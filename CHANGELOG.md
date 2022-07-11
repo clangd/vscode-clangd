@@ -1,5 +1,9 @@
 # Change Log
 
+## Version 0.1.18: July 11, 2022
+
+* Fix inlay-hints not shown when using a standard-inlay-hint-supported clangd. [#342](https://github.com/clangd/vscode-clangd/issues/342)
+
 ## Version 0.1.17: May 4, 2022
 
 * Fix errors in "download language server" command introduced in 0.1.16. [#325](https://github.com/clangd/vscode-clangd/issues/325)
