@@ -74,7 +74,6 @@ class MemoryUsageFeature implements vscodelc.StaticFeature {
     vscode.commands.executeCommand('setContext', 'clangd.memoryUsage.supported',
                                    'memoryUsageProvider' in capabilities);
   }
-  getState(): vscodelc.FeatureState { return {kind: 'static'}; }
   dispose() {}
 }
 
