@@ -1,5 +1,12 @@
 # Change Log
 
+## Version 0.1.20: July 12, 2022
+
+* Update to vscode-languageclient 8. this enables standard LSP inlay hints with a recent clangd, and may carry other behavior changes.
+* Fix inlay-hints not shown when using a standard-inlay-hint-supported clangd. [#342](https://github.com/clangd/vscode-clangd/issues/342)
+* "toggle inlay hints" command now respects the 4 states on/off/onUnlessPressed/offUnlessPressed
+* Commit characters in code completion are explicitly disable (previously ignored due to a bug, see [#357]https://github.com/clangd/vscode-clangd/issues/357)).
+
 ## Version 0.1.19: July 11, 2022
 
 * This is a rollback to address regressions in code completion introduced by 0.1.18.
