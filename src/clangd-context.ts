@@ -51,6 +51,7 @@ class EnableEditsNearCursorFeature implements vscodelc.StaticFeature {
         capabilities.textDocument?.completion;
     extendedCompletionCapabilities.editsNearCursor = true;
   }
+  getState(): vscodelc.FeatureState { return {kind: 'static'}; }
   dispose() {}
 }
 
@@ -162,7 +163,7 @@ export class ClangdContext implements vscode.Disposable {
     memoryUsage.activate(this);
     ast.activate(this);
     openConfig.activate(this);
-    this.subscriptions.push(this.client.start());
+    await this.client.start();
     console.log('Clang Language Server is now active!');
     fileStatus.activate(this);
     switchSourceHeader.activate(this);
@@ -176,6 +177,7 @@ export class ClangdContext implements vscode.Disposable {
 
   dispose() {
     this.subscriptions.forEach((d) => { d.dispose(); });
+    this.client.stop();
     this.subscriptions = []
   }
 }

@@ -26,6 +26,7 @@ class ConfigFileWatcherFeature implements vscodelc.StaticFeature {
       return;
     this.context.subscriptions.push(new ConfigFileWatcher(this.context));
   }
+  getState(): vscodelc.FeatureState { return {kind: 'static'}; }
   dispose() {}
 }
 
