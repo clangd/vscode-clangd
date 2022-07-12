@@ -67,10 +67,21 @@ class InlayHintsFeature implements vscodelc.StaticFeature {
       const enabledSetting = 'editor.inlayHints.enabled';
       this.context.subscriptions.push(
           vscode.commands.registerCommand('clangd.inlayHints.toggle', () => {
-            const current = vscode.workspace.getConfiguration().get<boolean>(
-                enabledSetting, false);
+            // This used to be a boolean, and then became a 4-state enum.
+            var val = vscode.workspace.getConfiguration().get<boolean | string>(
+                enabledSetting, "on");
+            if (val === true || val === "on")
+              val = "off"
+            else if (val === false || val === "off")
+              val = "on";
+            else if (val === "offUnlessPressed")
+              val = "onUnlessPressed";
+            else if (val == "onUnlessPressed")
+              val = "offUnlessPressed";
+            else
+              return;
             vscode.workspace.getConfiguration().update(
-                enabledSetting, !current, vscode.ConfigurationTarget.Global);
+                enabledSetting, val, vscode.ConfigurationTarget.Global);
           }));
     }
     // If the clangd server supports LSP 3.17 inlay hints, these are handled by
