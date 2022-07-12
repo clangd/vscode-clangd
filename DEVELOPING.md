@@ -12,11 +12,9 @@ A guide of developing `vscode-clangd` extension.
 ```bash
 cd vscode-clangd
 npm install
-npm run compile
+npm run compile  # it runs in watch mode, you can hit ctrl-c.
 code --extensionDevelopmentPath=$PWD
 ```
-
-You can use `npm run compile -- --watch` to continuously rebuild on changes.
 
 ## Building, running, and debugging (VSCode)
 
