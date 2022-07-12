@@ -68,16 +68,16 @@ class InlayHintsFeature implements vscodelc.StaticFeature {
       this.context.subscriptions.push(
           vscode.commands.registerCommand('clangd.inlayHints.toggle', () => {
             // This used to be a boolean, and then became a 4-state enum.
-            var val = vscode.workspace.getConfiguration().get<boolean | string>(
-                enabledSetting, "on");
-            if (val === true || val === "on")
-              val = "off"
-            else if (val === false || val === "off")
-              val = "on";
-            else if (val === "offUnlessPressed")
-              val = "onUnlessPressed";
-            else if (val == "onUnlessPressed")
-              val = "offUnlessPressed";
+            var val = vscode.workspace.getConfiguration().get<boolean|string>(
+                enabledSetting, 'on');
+            if (val === true || val === 'on')
+              val = 'off'
+              else if (val === false || val === 'off')
+              val = 'on';
+            else if (val === 'offUnlessPressed')
+              val = 'onUnlessPressed';
+            else if (val == 'onUnlessPressed')
+              val = 'offUnlessPressed';
             else
               return;
             vscode.workspace.getConfiguration().update(
