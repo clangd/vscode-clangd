@@ -71,8 +71,8 @@ class InlayHintsFeature implements vscodelc.StaticFeature {
             var val = vscode.workspace.getConfiguration().get<boolean|string>(
                 enabledSetting, 'on');
             if (val === true || val === 'on')
-              val = 'off'
-              else if (val === false || val === 'off')
+              val = 'off';
+            else if (val === false || val === 'off')
               val = 'on';
             else if (val === 'offUnlessPressed')
               val = 'onUnlessPressed';
