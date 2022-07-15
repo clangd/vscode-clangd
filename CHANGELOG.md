@@ -1,5 +1,9 @@
 # Change Log
 
+## Version 0.1.21: July 15, 2022
+
+* Fix: clangd status bar is missing, [#362](https://github.com/clangd/vscode-clangd/issues/362)
+
 ## Version 0.1.20: July 12, 2022
 
 * Update to vscode-languageclient 8. this enables standard LSP inlay hints with a recent clangd, and may carry other behavior changes.
