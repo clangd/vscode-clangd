@@ -36,7 +36,7 @@ export async function activate(context: vscode.ExtensionContext) {
         const cppToolsConfiguration =
             vscode.workspace.getConfiguration('C_Cpp');
         const cppToolsEnabled = cppToolsConfiguration.get('intelliSenseEngine');
-        if (cppToolsEnabled !== 'Disabled') {
+        if (cppToolsEnabled?.toLowerCase() !== 'disabled') {
           vscode.window
               .showWarningMessage(
                   'You have both the Microsoft C++ (cpptools) extension and ' +
@@ -46,7 +46,7 @@ export async function activate(context: vscode.ExtensionContext) {
               .then(selection => {
                 if (selection == 'Disable IntelliSense') {
                   cppToolsConfiguration.update(
-                      'intelliSenseEngine', 'Disabled',
+                      'intelliSenseEngine', 'disabled',
                       vscode.ConfigurationTarget.Global);
                 } else if (selection == 'Never show this warning') {
                   vscode.workspace.getConfiguration('clangd').update(
