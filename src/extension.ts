@@ -35,7 +35,8 @@ export async function activate(context: vscode.ExtensionContext) {
       if (cppTools && cppTools.isActive) {
         const cppToolsConfiguration =
             vscode.workspace.getConfiguration('C_Cpp');
-        const cppToolsEnabled = cppToolsConfiguration.get('intelliSenseEngine');
+        const cppToolsEnabled =
+            cppToolsConfiguration.get<string>('intelliSenseEngine');
         if (cppToolsEnabled?.toLowerCase() !== 'disabled') {
           vscode.window
               .showWarningMessage(
