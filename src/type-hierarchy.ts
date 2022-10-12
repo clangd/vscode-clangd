@@ -169,9 +169,6 @@ class TypeHierarchyProvider implements
   constructor(context: ClangdContext) {
     this.client = context.client;
 
-    context.subscriptions.push(vscode.window.registerTreeDataProvider(
-        'clangd.typeHierarchyView', this));
-
     context.subscriptions.push(vscode.commands.registerTextEditorCommand(
         'clangd.typeHierarchy', this.reveal, this));
     context.subscriptions.push(vscode.commands.registerCommand(
