@@ -1,5 +1,10 @@
 # Change Log
 
+## Version 0.1.22: October 12, 2022
+
+* Type-hierarchy: Prefer standard/extension version of the feature depending on
+  the clangd, rather than showing both.
+
 ## Version 0.1.21: July 15, 2022
 
 * Fix: clangd status bar is missing, [#362](https://github.com/clangd/vscode-clangd/issues/362)
