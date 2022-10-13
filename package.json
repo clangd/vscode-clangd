@@ -28,6 +28,7 @@
         "onLanguage:cuda-cpp",
         "onLanguage:objective-c",
         "onLanguage:objective-cpp",
+        "onLanguage:hlsl",
         "onCommand:clangd.activate",
         "onCommand:clangd.install",
         "onCommand:clangd.update"

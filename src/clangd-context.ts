@@ -18,6 +18,7 @@ export const clangdDocumentSelector = [
   {scheme: 'file', language: 'cuda-cpp'},
   {scheme: 'file', language: 'objective-c'},
   {scheme: 'file', language: 'objective-cpp'},
+  {scheme: 'file', language: 'hlsl'},
 ];
 
 export function isClangdDocument(document: vscode.TextDocument) {
