@@ -21,11 +21,12 @@ export async function activate(context: vscode.ExtensionContext) {
       vscode.commands.registerCommand('clangd.restart', async () => {
         await clangdContext.dispose();
         await clangdContext.activate(context.globalStoragePath, outputChannel,
-                                     context.workspaceState);
+                                     context.workspaceState,
+                                     context.globalState);
       }));
 
   await clangdContext.activate(context.globalStoragePath, outputChannel,
-                               context.workspaceState);
+                               context.workspaceState, context.globalState);
 
   const shouldCheck = vscode.workspace.getConfiguration('clangd').get(
       'detectExtensionConflicts');
