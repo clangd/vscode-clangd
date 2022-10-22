@@ -122,6 +122,20 @@ export class ClangdContext implements vscode.Disposable {
             // notice until the behavior was in several releases, so we need
             // to override it on the client.
             item.commitCharacters = [];
+            // VSCode won't automatically trigger signature help when entering
+            // a placeholder, e.g. if the completion inserted brackets and
+            // placed the cursor inside them.
+            // https://github.com/microsoft/vscode/issues/164310
+            // They say a plugin should trigger this, but LSP has no mechanism.
+            // https://github.com/microsoft/language-server-protocol/issues/274
+            // (This workaround is incomplete, and only helps the first param).
+            if (item.insertText instanceof vscode.SnippetString &&
+                !item.command &&
+                item.insertText.value.match(/[([{<,] ?\$\{?[01]\D/))
+              item.command = {
+                title: 'Signature help',
+                command: 'editor.action.triggerParameterHints'
+              };
             return item;
           })
           return new vscode.CompletionList(items, /*isIncomplete=*/ true);
