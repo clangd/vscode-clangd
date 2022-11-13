@@ -23,9 +23,16 @@ export async function activate(context: vscode.ExtensionContext) {
         await clangdContext.activate(context.globalStoragePath, outputChannel,
                                      context.workspaceState);
       }));
+  context.subscriptions.push(
+      vscode.commands.registerCommand('clangd.stop', async () => {
+        await clangdContext.dispose();
+      }));
 
-  await clangdContext.activate(context.globalStoragePath, outputChannel,
-                               context.workspaceState);
+  const autoStart = vscode.workspace.getConfiguration('clangd').get('autoStart');
+  if (autoStart) {
+    await clangdContext.activate(context.globalStoragePath, outputChannel,
+                                 context.workspaceState);
+  }
 
   const shouldCheck = vscode.workspace.getConfiguration('clangd').get(
       'detectExtensionConflicts');
