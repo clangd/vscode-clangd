@@ -3,6 +3,7 @@
 
 import * as common from '@clangd/install';
 import AbortController from 'abort-controller';
+import * as os from 'os';
 import * as path from 'path';
 import * as vscode from 'vscode';
 
@@ -128,6 +129,12 @@ class UI {
     let p = config.getSecure<string>('path', this.workspaceState)!;
     // Backwards compatibility: if it's a relative path with a slash, interpret
     // relative to project root.
+    if (p.startsWith('~')) {
+      p = path.join(os.homedir(), p.substring(1));
+    }
+    if (p.indexOf('${userHome}') > -1) {
+      p = p.replace('${userHome}', os.homedir());
+    }
     if (!path.isAbsolute(p) && p.includes(path.sep) &&
         vscode.workspace.rootPath !== undefined)
       p = path.join(vscode.workspace.rootPath, p);
