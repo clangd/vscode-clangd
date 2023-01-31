@@ -69,6 +69,13 @@
         "url": "https://github.com/clangd/vscode-clangd.git"
     },
     "qna": "marketplace",
+    "capabilities": {
+        "untrustedWorkspaces": {
+            "supported": "limited",
+            "description": "In restricted mode clangd.path and clangd.arguments are not respected.",
+            "restrictedConfigurations": ["clangd.path", "clangd.arguments"]
+        }
+    },
     "contributes": {
         "languages": [
             {
