@@ -6,47 +6,6 @@ export function get<T>(key: string): T {
   return substitute(vscode.workspace.getConfiguration('clangd').get<T>(key)!);
 }
 
-// Like get(), but won't load settings from workspace config unless the user has
-// previously explicitly allowed this.
-export function getSecure<T>(key: string, workspaceState: vscode.Memento): T|
-    undefined {
-  const prop = new SecureProperty<T>(key, workspaceState);
-  return prop.get(prop.blessed ?? false);
-}
-
-// Like get(), but won't implicitly load settings from workspace config.
-// If there is workspace config, prompts the user and caches the decision.
-export async function getSecureOrPrompt<T>(
-    key: string, workspaceState: vscode.Memento): Promise<T> {
-  const prop = new SecureProperty<T>(key, workspaceState);
-  // Common case: value not overridden in workspace.
-  if (!prop.mismatched)
-    return prop.get(false)!;
-  // Check whether user has blessed or blocked this value.
-  const blessed = prop.blessed;
-  if (blessed !== undefined)
-    return prop.get(blessed)!;
-  // No cached decision for this value, ask the user.
-  const Yes = 'Yes, use this setting', No = 'No, use my default',
-        Info = 'More Info'
-  switch (await vscode.window.showWarningMessage(
-      `This workspace wants to set clangd.${key} to ${prop.insecureJSON}.
-    \u2029
-    This will override your default of ${prop.secureJSON}.`,
-      Yes, No, Info)) {
-  case Info:
-    vscode.env.openExternal(vscode.Uri.parse(
-        'https://github.com/clangd/vscode-clangd/blob/master/docs/settings.md#security'));
-    break;
-  case Yes:
-    await prop.bless(true);
-    return prop.get(true)!;
-  case No:
-    await prop.bless(false);
-  }
-  return prop.get(false)!;
-}
-
 // Sets the config value `clangd.<key>`. Does not apply substitutions.
 export function update<T>(key: string, value: T,
                           target?: vscode.ConfigurationTarget) {
@@ -94,49 +53,4 @@ function replacement(name: string): string|undefined {
   }
 
   return undefined;
-}
-
-// Caches a user's decision about whether to respect a workspace override of a
-// sensitive setting. Valid only for a particular variable, workspace, and
-// value.
-interface BlessCache {
-  json: string     // JSON-serialized workspace value that the decision governs.
-  allowed: boolean // Whether the user chose to allow this value.
-}
-
-// Common logic between getSecure and getSecureOrPrompt.
-class SecureProperty<T> {
-  secure?: T;
-  insecure?: T;
-  public secureJSON: string;
-  public insecureJSON: string;
-  blessKey: string;
-
-  constructor(key: string, private workspaceState: vscode.Memento) {
-    const cfg = vscode.workspace.getConfiguration('clangd');
-    const inspect = cfg.inspect<T>(key)!;
-    this.secure = inspect.globalValue ?? inspect.defaultValue;
-    this.insecure = cfg.get<T>(key);
-    this.secureJSON = JSON.stringify(this.secure);
-    this.insecureJSON = JSON.stringify(this.insecure);
-    this.blessKey = 'bless.' + key;
-  }
-
-  get mismatched(): boolean { return this.secureJSON !== this.insecureJSON; }
-
-  get(trusted: boolean): T|undefined {
-    return substitute(trusted ? this.insecure : this.secure);
-  }
-
-  get blessed(): boolean|undefined {
-    let cache = this.workspaceState.get<BlessCache>(this.blessKey);
-    if (!cache || cache.json !== this.insecureJSON)
-      return undefined;
-    return cache.allowed;
-  }
-
-  async bless(b: boolean): Promise<void> {
-    await this.workspaceState.update(this.blessKey,
-                                     {json: this.insecureJSON, allowed: b});
-  }
 }
