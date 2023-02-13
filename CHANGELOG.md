@@ -1,5 +1,15 @@
 # Change Log
 
+## Next (not yet released)
+
+* Combine inactive region style with client-side (textmate) token colors [#193](https://github.com/clangd/vscode-clangd/pull/193).
+  Requires clangd 17 or later.
+  * The default inactive region style is reduced opacity. The opacity level can be
+    customized with `clangd.inactiveRegions.opacity`.
+  * An alternative inactive region style of a background highlight can be enabled with
+    `clangd.inactiveRegions.useBackgroundHighlight=true`. The highlight color can be
+    customized with `clangd.inactiveRegions.background` in `workbench.colorCustomizations`.
+
 ## Version 0.1.24: April 21, 2023
 
 - Fix an undefined object access in ClangdContext.dispose() [#461](https://github.com/clangd/vscode-clangd/pull/461)
