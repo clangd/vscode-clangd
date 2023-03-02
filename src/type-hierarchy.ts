@@ -101,8 +101,10 @@ class TypeHierarchyTreeItem extends vscode.TreeItem {
 class TypeHierarchyFeature implements vscodelc.StaticFeature {
   private serverSupportsTypeHierarchy = false;
   private state!: vscodelc.State;
+  private context: ClangdContext;
 
   constructor(context: ClangdContext) {
+    this.context = context;
     new TypeHierarchyProvider(context);
     context.subscriptions.push(context.client.onDidChangeState(stateChange => {
       this.state = stateChange.newState;
@@ -116,10 +118,21 @@ class TypeHierarchyFeature implements vscodelc.StaticFeature {
   initialize(capabilities: vscodelc.ServerCapabilities,
              documentSelector: vscodelc.DocumentSelector|undefined) {
     const serverCapabilities: vscodelc.ServerCapabilities&
-        {typeHierarchyProvider?: any} = capabilities;
-    if (serverCapabilities.typeHierarchyProvider) {
+        {standardTypeHierarchyProvider?: any} = capabilities;
+    // Unfortunately clangd used the same capability name for its pre-standard
+    // protocol as the standard ended up using. We need to prevent
+    // vscode-languageclient from trying to query clangd versions that speak the
+    // incompatible protocol.
+    if (serverCapabilities.typeHierarchyProvider &&
+        !serverCapabilities.standardTypeHierarchyProvider) {
+      // Disable mis-guided support for standard type-hierarchy feature.
+      this.context.client.getFeature('textDocument/prepareTypeHierarchy')
+          .dispose();
       this.serverSupportsTypeHierarchy = true;
       this.recomputeEnableTypeHierarchy();
+    } else {
+      // Either clangd has support for the standard protocol, or no
+      // implementation at all. In either case, don't turn on the extension.
     }
   }
   getState(): vscodelc.FeatureState { return {kind: 'static'}; }
@@ -155,9 +168,6 @@ class TypeHierarchyProvider implements
 
   constructor(context: ClangdContext) {
     this.client = context.client;
-
-    context.subscriptions.push(vscode.window.registerTreeDataProvider(
-        'clangd.typeHierarchyView', this));
 
     context.subscriptions.push(vscode.commands.registerTextEditorCommand(
         'clangd.typeHierarchy', this.reveal, this));

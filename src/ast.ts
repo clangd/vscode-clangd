@@ -47,7 +47,6 @@ class ASTFeature implements vscodelc.StaticFeature {
             // @ts-ignore
             tree.reveal(null);
         }),
-        vscode.window.registerTreeDataProvider('clangd.ast', adapter),
         // Create the "Show AST" command for the context menu.
         // It's only shown if the feature is dynamicaly available (package.json)
         vscode.commands.registerTextEditorCommand(

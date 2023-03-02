@@ -2,7 +2,7 @@
     "name": "vscode-clangd",
     "displayName": "clangd",
     "description": "C/C++ completion, navigation, and insights",
-    "version": "0.1.21",
+    "version": "0.1.23",
     "publisher": "llvm-vs-code-extensions",
     "license": "MIT",
     "homepage": "https://clangd.llvm.org/",
@@ -48,9 +48,9 @@
         "git-clang-format": "git-clang-format --extensions=ts"
     },
     "dependencies": {
-        "@clangd/install": "0.1.4",
+        "@clangd/install": "0.1.16",
         "abort-controller": "^3.0.0",
-        "vscode-languageclient": "8.0.1"
+        "vscode-languageclient": "8.0.2"
     },
     "devDependencies": {
         "@types/glob": "^7.1.1",
@@ -71,6 +71,13 @@
         "url": "https://github.com/clangd/vscode-clangd.git"
     },
     "qna": "marketplace",
+    "capabilities": {
+        "untrustedWorkspaces": {
+            "supported": "limited",
+            "description": "In restricted mode clangd.path and clangd.arguments are not respected.",
+            "restrictedConfigurations": ["clangd.path", "clangd.arguments"]
+        }
+    },
     "contributes": {
         "languages": [
             {

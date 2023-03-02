@@ -1,5 +1,17 @@
 # Change Log
 
+## Version 0.1.23: October 23, 2022
+
+* Update vscode-language client to 8.0.2, with apparent bugfixes
+* clangd autoupdate: correctly detect versions of distro-modified clangd
+* clangd autoupdate: improved error messages
+* fix clangd not detected due to permission issues [#267](https://github.com/clangd/vscode-clangd/issues/267)
+
+## Version 0.1.22: October 12, 2022
+
+* Type-hierarchy: Prefer standard/extension version of the feature depending on
+  the clangd, rather than showing both.
+
 ## Version 0.1.21: July 15, 2022
 
 * Fix: clangd status bar is missing, [#362](https://github.com/clangd/vscode-clangd/issues/362)
