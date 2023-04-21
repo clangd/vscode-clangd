@@ -1,5 +1,10 @@
 # Change Log
 
+## Version 0.1.24: April 21, 2023
+
+- Fix an undefined object access in ClangdContext.dispose() [#461](https://github.com/clangd/vscode-clangd/pull/461)
+- Remove custom secure configuration items and rely on workspace trust from vscode [#451](https://github.com/clangd/vscode-clangd/pull/451)
+
 ## Version 0.1.23: October 23, 2022
 
 * Update vscode-language client to 8.0.2, with apparent bugfixes
