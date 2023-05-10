@@ -157,9 +157,30 @@
                     "type": "boolean",
                     "default": true,
                     "description": "Warn about conflicting extensions and suggest disabling them."
+                },
+                "clangd.inactiveRegions.useBackgroundHighlight": {
+                    "type": "boolean",
+                    "default": false,
+                    "description": "Use a background highlight rather than opacity to identify inactive preprocessor regions."
+                },
+                "clangd.inactiveRegions.opacity": {
+                    "type": "number",
+                    "default": 0.55,
+                    "description": "Opacity of inactive regions (used only if clangd.inactiveRegions.useBackgroundHighlight=false)"
                 }
             }
         },
+        "colors": [
+            {
+                "id": "clangd.inactiveRegions.background",
+                "description": "Background color of inactive code regions (used only if clangd.inactiveRegions.useBackgroundHighlight=true)",
+                "defaults": {
+                    "dark": "#1212124C",
+                    "light": "#DCDCDC4C",
+                    "highContrast": "#FCFCFC4C"
+                }
+            }
+        ],
         "commands": [
             {
                 "command": "clangd.switchheadersource",
