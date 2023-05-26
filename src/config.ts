@@ -1,6 +1,6 @@
+import {homedir} from 'os';
 import * as path from 'path';
 import * as vscode from 'vscode';
-import { homedir } from 'os';
 
 // Gets the config value `clangd.<key>`. Applies ${variable} substitutions.
 export function get<T>(key: string): T {
@@ -35,9 +35,9 @@ function substitute<T>(val: T): T {
 // Subset of substitution variables that are most likely to be useful.
 // https://code.visualstudio.com/docs/editor/variables-reference
 function replacement(name: string): string|undefined {
-	if (name === "userHome") {
-		return homedir();
-	}
+  if (name === 'userHome') {
+    return homedir();
+  }
   if (name === 'workspaceRoot' || name === 'workspaceFolder' ||
       name === 'cwd') {
     if (vscode.workspace.rootPath !== undefined)
