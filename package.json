@@ -303,7 +303,7 @@
                 },
                 {
                     "command": "clangd.ast",
-                    "when": "clangd.ast.supported"
+                    "when": "(resourceLangId == c || resourceLangId == cpp || resourceLangId == cuda-cpp || resourceLangId == objective-c || resourceLangId == objective-cpp) && clangd.ast.supported"
                 }
             ],
             "view/title": [
