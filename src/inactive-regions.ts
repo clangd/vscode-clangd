@@ -65,7 +65,7 @@ export class InactiveRegionsFeature implements vscodelc.StaticFeature {
       this.context.subscriptions.push(
           vscode.window.onDidChangeVisibleTextEditors(
               (editors) => editors.forEach(
-                  (e) => this.applyHighlights(e.document.uri.toString()))));
+                  (e) => this.applyHighlights(e.document.fileName))));
       this.context.subscriptions.push(
           vscode.workspace.onDidChangeConfiguration((conf) => {
             if (!conf.affectsConfiguration('workbench.colorTheme'))
@@ -73,7 +73,7 @@ export class InactiveRegionsFeature implements vscodelc.StaticFeature {
             vscode.window.visibleTextEditors.forEach((e) => {
               if (!this.decorationType)
                 return;
-              const ranges = this.files.get(e.document.uri.toString());
+              const ranges = this.files.get(e.document.fileName);
               if (!ranges)
                 return;
               e.setDecorations(this.decorationType, ranges);
@@ -83,21 +83,21 @@ export class InactiveRegionsFeature implements vscodelc.StaticFeature {
   }
 
   handleNotification(params: InactiveRegionsParams) {
-    const fileUri = params.textDocument.uri;
+    const filePath = vscode.Uri.parse(params.textDocument.uri).fsPath;
     const ranges: vscode.Range[] = params.regions.map(
         (r) => this.context.client.protocol2CodeConverter.asRange(r));
-    this.files.set(fileUri, ranges);
-    this.applyHighlights(fileUri);
+    this.files.set(filePath, ranges);
+    this.applyHighlights(filePath);
   }
 
-  applyHighlights(fileUri: string) {
-    const ranges = this.files.get(fileUri);
+  applyHighlights(filePath: string) {
+    const ranges = this.files.get(filePath);
     if (!ranges)
       return;
     vscode.window.visibleTextEditors.forEach((e) => {
       if (!this.decorationType)
         return;
-      if (e.document.uri.toString() !== fileUri)
+      if (e.document.fileName !== filePath)
         return;
       e.setDecorations(this.decorationType, ranges);
     });
