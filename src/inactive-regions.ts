@@ -5,7 +5,7 @@ import {ClangdContext} from './clangd-context';
 import * as config from './config';
 
 // Parameters for the inactive regions (server-side) push notification.
-interface InactiveRegionsParams {
+export interface InactiveRegionsParams {
   // The text document that has to be decorated with the inactive regions
   // information.
   textDocument: vscodelc.VersionedTextDocumentIdentifier;
@@ -94,7 +94,7 @@ export class InactiveRegionsFeature implements vscodelc.StaticFeature {
     const ranges = this.files.get(filePath);
     if (!ranges)
       return;
-    vscode.window.visibleTextEditors.forEach((e) => {
+    this.context.visibleClangdEditors.forEach((e) => {
       if (!this.decorationType)
         return;
       if (e.document.fileName !== filePath)
