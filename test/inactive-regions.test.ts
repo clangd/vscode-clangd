@@ -10,7 +10,7 @@ import * as mocks from './mocks';
 
 class MockClangdContext implements ClangdContext {
   subscriptions: vscode.Disposable[] = [];
-  client = new vscodelc.LanguageClient('', {command: ''}, {})
+  client = new vscodelc.LanguageClient('', {command: ''}, {});
 
   visibleClangdEditors: vscode.TextEditor[] = [];
 
@@ -39,7 +39,7 @@ suite('InactiveRegionsFeature', () => {
     feature.initialize(serverCapabilities, undefined);
 
     const document = new mocks.MockTextDocument(vscode.Uri.file('/foo.c'), 'c');
-    const editor = new mocks.MockTextEditor(document)
+    const editor = new mocks.MockTextEditor(document);
     const stub = sandbox.stub(editor, 'setDecorations').returns();
     context.visibleClangdEditors = [editor];
 
@@ -91,7 +91,7 @@ suite('InactiveRegionsFeature', () => {
 
     for (const {uri, fromServer} of uris) {
       const document = new mocks.MockTextDocument(uri, 'c');
-      const editor = new mocks.MockTextEditor(document)
+      const editor = new mocks.MockTextEditor(document);
       const stub = sandbox.stub(editor, 'setDecorations').returns();
       context.visibleClangdEditors = [editor];
 
@@ -102,7 +102,7 @@ suite('InactiveRegionsFeature', () => {
       });
 
       sandbox.assert.calledOnceWithExactly(stub, sinon.match.truthy,
-                                           [new vscode.Range(0, 1, 2, 3)])
+                                           [new vscode.Range(0, 1, 2, 3)]);
     }
   });
 });
