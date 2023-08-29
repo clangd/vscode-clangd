@@ -19,10 +19,8 @@ export async function activate(context: vscode.ExtensionContext) {
       vscode.commands.registerCommand('clangd.activate', async () => {
         await clangdContext.activate(context.globalStoragePath, outputChannel);
       }));
-  context.subscriptions.push(
-      vscode.commands.registerCommand('clangd.shutdown', async () => {
-        await clangdContext.dispose();
-      }));
+  context.subscriptions.push(vscode.commands.registerCommand(
+      'clangd.shutdown', async () => { await clangdContext.dispose(); }));
   context.subscriptions.push(
       vscode.commands.registerCommand('clangd.restart', async () => {
         await clangdContext.dispose();
