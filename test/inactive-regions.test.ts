@@ -74,23 +74,23 @@ suite('InactiveRegionsFeature', () => {
 
     const uris = [
       {
-        uri: vscode.Uri.file('/path/to/source.c'),
+        vscodeUri: vscode.Uri.file('/path/to/source.c'),
         fromServer: 'file:///path/to/source.c'
       },
       {
         // Clangd server would encode colons but `vscode.Uri.toString()`
         // doesn't. See #515 for details.
-        uri: vscode.Uri.file('C:/path/to/source.c'),
-        fromServer: 'file:///C%3A/path/to/source.c'
+        vscodeUri: vscode.Uri.file('C:/path/to/source.c'),
+        fromServer: 'file:///C:/path/to/source.c'
       },
       {
-        uri: vscode.Uri.file('/föö/bör/#[0].c'),
+        vscodeUri: vscode.Uri.file('/föö/bör/#[0].c'),
         fromServer: 'file:///f%C3%B6%C3%B6/b%C3%B6r/%23%5B0%5D.c'
       }
     ];
 
-    for (const {uri, fromServer} of uris) {
-      const document = new mocks.MockTextDocument(uri, 'c');
+    for (const {vscodeUri, fromServer} of uris) {
+      const document = new mocks.MockTextDocument(vscodeUri, 'c');
       const editor = new mocks.MockTextEditor(document);
       const stub = sandbox.stub(editor, 'setDecorations').returns();
       context.visibleClangdEditors = [editor];

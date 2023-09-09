@@ -83,7 +83,7 @@ export class InactiveRegionsFeature implements vscodelc.StaticFeature {
   }
 
   handleNotification(params: InactiveRegionsParams) {
-    const filePath = vscode.Uri.parse(params.textDocument.uri).fsPath;
+    const filePath = vscode.Uri.parse(params.textDocument.uri, true).fsPath;
     const ranges: vscode.Range[] = params.regions.map(
         (r) => this.context.client.protocol2CodeConverter.asRange(r));
     this.files.set(filePath, ranges);
