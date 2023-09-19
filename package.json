@@ -230,7 +230,8 @@
             {
                 "command": "clangd.typeHierarchy.close",
                 "category": "clangd",
-                "title": "Close",
+                "enablement": "clangd.typeHierarchyView.visible",
+                "title": "Close type hierarchy view",
                 "icon": "$(panel-close)"
             },
             {
@@ -243,7 +244,8 @@
             {
                 "command": "clangd.memoryUsage.close",
                 "category": "clangd",
-                "title": "Close",
+                "enablement": "clangd.memoryUsage.visible",
+                "title": "Close memory usage view",
                 "icon": "$(panel-close)"
             },
             {
@@ -256,7 +258,8 @@
             {
                 "command": "clangd.ast.close",
                 "category": "clangd",
-                "title": "Close",
+                "enablement": "clangd.ast.visible",
+                "title": "Close AST view",
                 "icon": "$(panel-close)"
             },
             {
