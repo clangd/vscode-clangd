@@ -170,6 +170,11 @@
                     "type": "number",
                     "default": 0.55,
                     "description": "Opacity of inactive regions (used only if clangd.inactiveRegions.useBackgroundHighlight=false)"
+                },
+                "clangd.compilationDatabaseDirectory": {
+                    "type": "string",
+                    "default": "",
+                    "decription": "Workspace-relative directory to search for a compilation database compile_commands.json file. Leave empty to use the workspace root."
                 }
             }
         },
