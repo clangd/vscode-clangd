@@ -279,6 +279,11 @@
                 "category": "clangd",
                 "title": "Toggle inlay hints",
                 "enablement": "clangd.inlayHints.supported"
+            },
+            {
+                "command": "clangd.openDocumentation",
+                "category": "clangd",
+                "title": "Open CppReference documentation for symbol under cursor"
             }
         ],
         "keybindings": [
@@ -291,6 +296,11 @@
             {
                 "command": "clangd.typeHierarchy",
                 "key": "Shift+Alt+t",
+                "when": "editorTextFocus"
+            },
+            {
+                "command": "clangd.openDocumentation",
+                "key": "Shift+f1",
                 "when": "editorTextFocus"
             }
         ],

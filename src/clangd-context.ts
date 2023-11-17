@@ -4,6 +4,7 @@ import * as vscodelc from 'vscode-languageclient/node';
 import * as ast from './ast';
 import * as config from './config';
 import * as configFileWatcher from './config-file-watcher';
+import * as docCppref from './doc-cppref';
 import * as fileStatus from './file-status';
 import * as inactiveRegions from './inactive-regions';
 import * as inlayHints from './inlay-hints';
@@ -168,6 +169,7 @@ export class ClangdContext implements vscode.Disposable {
     fileStatus.activate(this);
     switchSourceHeader.activate(this);
     configFileWatcher.activate(this);
+    docCppref.activate(this);
   }
 
   get visibleClangdEditors(): vscode.TextEditor[] {
