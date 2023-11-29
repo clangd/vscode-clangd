@@ -66,9 +66,14 @@ export class ClangdContext implements vscode.Disposable {
     if (!clangdPath)
       return;
 
+    const args = config.get<string[]>('arguments');
+    const dbDir = config.get<string>('compilationDatabaseDirectory');
+    if (!!dbDir)
+      args.push(`--compile-commands-dir=${dbDir}`);
+
     const clangd: vscodelc.Executable = {
       command: clangdPath,
-      args: await config.get<string[]>('arguments'),
+      args: args,
       options: {cwd: vscode.workspace.rootPath || process.cwd()}
     };
     const traceFile = config.get<string>('trace');

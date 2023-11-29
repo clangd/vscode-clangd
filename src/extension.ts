@@ -23,6 +23,13 @@ export async function activate(context: vscode.ExtensionContext) {
         await clangdContext.activate(context.globalStoragePath, outputChannel);
       }));
 
+  context.subscriptions.push(
+      vscode.workspace.onDidChangeConfiguration(async (conf) => {
+        if (!conf.affectsConfiguration('clangd.compilationDatabaseDirectory'))
+          return;
+        vscode.commands.executeCommand('clangd.restart');
+      }));
+
   await clangdContext.activate(context.globalStoragePath, outputChannel);
 
   const shouldCheck = vscode.workspace.getConfiguration('clangd').get(
