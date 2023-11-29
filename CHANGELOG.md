@@ -1,6 +1,6 @@
 # Change Log
 
-## Next (not yet released)
+## Version 0.1.25: August 15, 2023
 
 * Combine inactive region style with client-side (textmate) token colors [#193](https://github.com/clangd/vscode-clangd/pull/193).
   Requires clangd 17 or later.
@@ -9,6 +9,7 @@
   * An alternative inactive region style of a background highlight can be enabled with
     `clangd.inactiveRegions.useBackgroundHighlight=true`. The highlight color can be
     customized with `clangd.inactiveRegions.background` in `workbench.colorCustomizations`.
+* The variable substitution `${userHome}` is now supported in clangd configuration setting values [#486](https://github.com/clangd/vscode-clangd/pull/486)
 
 ## Version 0.1.24: April 21, 2023
 
