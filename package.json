@@ -47,7 +47,7 @@
         "git-clang-format": "git-clang-format --extensions=ts"
     },
     "dependencies": {
-        "@clangd/install": "0.1.16",
+        "@clangd/install": "0.1.17",
         "abort-controller": "^3.0.0",
         "vscode-languageclient": "8.0.2"
     },
