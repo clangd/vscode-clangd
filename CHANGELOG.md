@@ -1,5 +1,11 @@
 # Change Log
 
+## Version 0.1.26: December 20, 2023
+
+* Bump @clangd/install dependency to 0.1.17. This works around a bug in a
+  dependent library affecting node versions 18.16 and later that can cause
+  the downloaded clangd executable to be corrupt after unzipping.
+
 ## Version 0.1.25: August 15, 2023
 
 * Combine inactive region style with client-side (textmate) token colors [#193](https://github.com/clangd/vscode-clangd/pull/193).
