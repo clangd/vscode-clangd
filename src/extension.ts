@@ -1,6 +1,5 @@
 import * as vscode from 'vscode';
-import type { BaseLanguageClient } from 'vscode-languageclient';
-
+import type {BaseLanguageClient} from 'vscode-languageclient';
 import {ClangdContext} from './clangd-context';
 
 /**
