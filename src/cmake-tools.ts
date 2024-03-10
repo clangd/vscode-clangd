@@ -2,6 +2,7 @@ import * as path from 'path';
 import * as vscode from 'vscode';
 import * as api from 'vscode-cmake-tools';
 import * as vscodelc from 'vscode-languageclient/node';
+import { exec } from 'child_process';
 
 import {ClangdContext} from './clangd-context';
 
@@ -9,6 +10,8 @@ export function activate(context: ClangdContext) {
   const feature = new CMakeToolsFeature(context);
   context.client.registerFeature(feature);
 }
+
+export let clang_resource_dir: string | undefined;
 
 namespace protocol {
 
@@ -102,6 +105,27 @@ class CMakeToolsFeature implements vscodelc.StaticFeature {
 
     if (content.toolchains === undefined)
       return;
+
+    const firstCompiler = content.toolchains.values().next().value as api.CodeModel.Toolchain || undefined;
+    if (firstCompiler !== undefined) {
+      let compilerName =
+        firstCompiler.path.substring(firstCompiler.path.lastIndexOf(path.sep) + 1)
+          .toLowerCase();
+      if (compilerName.endsWith('.exe'))
+        compilerName = compilerName.substring(0, compilerName.length - 4);
+      if (compilerName.indexOf('clang') !== -1) {
+        exec(`${firstCompiler.path} -print-file-name=`, (error, stdout, stderr) => {
+          if (error) {
+            return;
+          }
+          while (stdout.endsWith('\n') || stdout.endsWith('\r')) stdout = stdout.slice(0, -1);
+          if (stdout !== clang_resource_dir) {
+            clang_resource_dir = stdout;
+            vscode.commands.executeCommand('clangd.restart');
+          }
+        });
+      }
+    }
 
     const request: protocol.DidChangeConfigurationParams = {
       settings: {compilationDatabaseChanges: {}}

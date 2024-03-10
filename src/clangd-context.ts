@@ -67,9 +67,14 @@ export class ClangdContext implements vscode.Disposable {
     if (!clangdPath)
       return;
 
+    let args = await config.get<string[]>('arguments');
+    if (cmakeTools.clang_resource_dir !== undefined) {
+      args = [...args, `--resource-dir=${cmakeTools.clang_resource_dir}`];
+    }
+
     const clangd: vscodelc.Executable = {
       command: clangdPath,
-      args: await config.get<string[]>('arguments'),
+      args: args,
       options: {cwd: vscode.workspace.rootPath || process.cwd()}
     };
     const traceFile = config.get<string>('trace');
