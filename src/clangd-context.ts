@@ -19,10 +19,13 @@ export const clangdDocumentSelector = [
   {scheme: 'file', language: 'cuda-cpp'},
   {scheme: 'file', language: 'objective-c'},
   {scheme: 'file', language: 'objective-cpp'},
+  {scheme: 'file', language: 'hlsl'},
 ];
 
 export function isClangdDocument(document: vscode.TextDocument) {
-  return vscode.languages.match(clangdDocumentSelector, document);
+  if (vscode.workspace.getConfiguration('clangd').get('enableHLSL'))
+    return vscode.languages.match(clangdDocumentSelector, document);
+  return vscode.languages.match(clangdDocumentSelector.slice(0, -1), document);
 }
 
 class ClangdLanguageClient extends vscodelc.LanguageClient {

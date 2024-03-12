@@ -20,7 +20,8 @@
         "C++",
         "clang",
         "clangd",
-        "LLVM"
+        "LLVM",
+        "HLSL"
     ],
     "activationEvents": [
         "onLanguage:c",
@@ -28,6 +29,7 @@
         "onLanguage:cuda-cpp",
         "onLanguage:objective-c",
         "onLanguage:objective-cpp",
+        "onLanguage:hlsl",
         "onCommand:clangd.activate",
         "onCommand:clangd.install",
         "onCommand:clangd.update"
@@ -170,6 +172,11 @@
                     "type": "number",
                     "default": 0.55,
                     "description": "Opacity of inactive regions (used only if clangd.inactiveRegions.useBackgroundHighlight=false)"
+                },
+                "clangd.enableHLSL": {
+                    "type": "boolean",
+                    "default": false,
+                    "description": "Enable experimental HLSL Support."
                 }
             }
         },
