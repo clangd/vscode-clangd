@@ -112,6 +112,8 @@ export class ClangdContext implements vscode.Disposable {
       middleware: {
         provideCompletionItem: async (document, position, context, token,
                                       next) => {
+          if (!config.get<boolean>('enableCodeCompletion'))
+            return new vscode.CompletionList([], /*isIncomplete=*/ false);
           let list = await next(document, position, context, token);
           if (!config.get<boolean>('serverCompletionRanking'))
             return list;
