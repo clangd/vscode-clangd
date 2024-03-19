@@ -1,6 +1,6 @@
 # Change Log
 
-## Version 0.1.27: March 16, 2023
+## Version 0.1.27: March 16, 2024
 
 * Trigger signature help when accepting code completions, where appropriate [#390](https://github.com/clangd/vscode-clangd/issues/390)
 * Gracefully handle `clangd.restart`` being invoked when the extension hasn't been activated yet [#502](https://github.com/clangd/vscode-clangd/issues/502)
