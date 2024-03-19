@@ -25,7 +25,7 @@ export async function activate(context: vscode.ExtensionContext) {
         // stop/start cycle in this situation is pointless, and doesn't work
         // anyways because the client can't be stop()-ped when it's still in the
         // Starting state).
-        if (!clangdContext.clientIsReady()) {
+        if (clangdContext.clientIsStarting()) {
           return;
         }
         await clangdContext.dispose();
