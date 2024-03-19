@@ -16,7 +16,7 @@ class MockClangdContext implements ClangdContext {
 
   async activate() { throw new Error('Method not implemented.'); }
 
-  clientIsReady() { return true; }
+  clientIsStarting() { return false; }
 
   dispose() { throw new Error('Method not implemented.'); }
 }

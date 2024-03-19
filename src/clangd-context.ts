@@ -191,8 +191,8 @@ export class ClangdContext implements vscode.Disposable {
         (e) => isClangdDocument(e.document));
   }
 
-  clientIsReady() {
-    return this.client && this.client.state == vscodelc.State.Running;
+  clientIsStarting() {
+    return this.client && this.client.state == vscodelc.State.Starting;
   }
 
   dispose() {
