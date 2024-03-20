@@ -1,9 +1,13 @@
 # Change Log
 
+## Version 0.1.28: March 20, 2024
+
+* Fix a regression in the behaviour of `clangd.restart` introduced in 0.1.27 [#599](https://github.com/clangd/vscode-clangd/issues/599)
+
 ## Version 0.1.27: March 16, 2024
 
 * Trigger signature help when accepting code completions, where appropriate [#390](https://github.com/clangd/vscode-clangd/issues/390)
-* Gracefully handle `clangd.restart`` being invoked when the extension hasn't been activated yet [#502](https://github.com/clangd/vscode-clangd/issues/502)
+* Gracefully handle `clangd.restart` being invoked when the extension hasn't been activated yet [#502](https://github.com/clangd/vscode-clangd/issues/502)
 * Add an option to disable code completion [#588](https://github.com/clangd/vscode-clangd/issues/588)
 
 ## Version 0.1.26: December 20, 2023
