@@ -2,6 +2,7 @@ import * as vscode from 'vscode';
 import * as vscodelc from 'vscode-languageclient/node';
 
 import * as ast from './ast';
+import * as cmakeTools from './cmake-tools';
 import * as config from './config';
 import * as configFileWatcher from './config-file-watcher';
 import * as fileStatus from './file-status';
@@ -66,9 +67,14 @@ export class ClangdContext implements vscode.Disposable {
     if (!clangdPath)
       return;
 
+    let args = await config.get<string[]>('arguments');
+    if (cmakeTools.clang_resource_dir !== undefined) {
+      args = [...args, `--resource-dir=${cmakeTools.clang_resource_dir}`];
+    }
+
     const clangd: vscodelc.Executable = {
       command: clangdPath,
-      args: await config.get<string[]>('arguments'),
+      args: args,
       options: {cwd: vscode.workspace.rootPath || process.cwd()}
     };
     const traceFile = config.get<string>('trace');
@@ -184,6 +190,7 @@ export class ClangdContext implements vscode.Disposable {
     fileStatus.activate(this);
     switchSourceHeader.activate(this);
     configFileWatcher.activate(this);
+    cmakeTools.activate(this);
   }
 
   get visibleClangdEditors(): vscode.TextEditor[] {
