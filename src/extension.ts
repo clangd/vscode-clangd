@@ -1,12 +1,12 @@
 import * as vscode from 'vscode';
-import type {BaseLanguageClient} from 'vscode-languageclient';
 import {ClangdContext} from './clangd-context';
+import {ClangdExtension, ClangdExtensionImpl} from './api';
 
 /**
  *  This method is called when the extension is activated. The extension is
  *  activated the very first time a command is executed.
  */
-export async function activate(context: vscode.ExtensionContext): Promise<BaseLanguageClient> {
+export async function activate(context: vscode.ExtensionContext): Promise<ClangdExtension> {
   const outputChannel = vscode.window.createOutputChannel('clangd');
   context.subscriptions.push(outputChannel);
 
@@ -68,5 +68,5 @@ export async function activate(context: vscode.ExtensionContext): Promise<BaseLa
     }, 5000);
   }
 
-  return clangdContext.client;
+  return new ClangdExtensionImpl(clangdContext.client);
 }
