@@ -30,7 +30,11 @@
         "onLanguage:objective-cpp",
         "onCommand:clangd.activate",
         "onCommand:clangd.install",
-        "onCommand:clangd.update"
+        "onCommand:clangd.update",
+        "onCommand:clangd.restart",
+        "onCommand:clangd.switchheadersource",
+        "onCommand:clangd.projectConfig",
+        "onCommand:clangd.userConfig"
     ],
     "main": "./out/bundle",
     "scripts": {
