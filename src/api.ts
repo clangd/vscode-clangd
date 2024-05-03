@@ -1,12 +1,5 @@
 import {BaseLanguageClient} from 'vscode-languageclient';
-
-export interface ClangdApiV1 {
-  languageClient: BaseLanguageClient
-}
-
-export interface ClangdExtension {
-  getApi(version: 1): ClangdApiV1;
-}
+import {ClangdApiV1, ClangdExtension} from '../api/vscode-clangd';
 
 export class ClangdExtensionImpl implements ClangdExtension {
   constructor(

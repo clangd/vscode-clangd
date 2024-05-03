@@ -4,27 +4,15 @@ import * as vscode from 'vscode';
 import * as vscodelc from 'vscode-languageclient/node';
 
 import {ClangdContext} from './clangd-context';
+import {ASTParams, ASTNode, ASTType} from '../api/vscode-clangd';
 
 export function activate(context: ClangdContext) {
   const feature = new ASTFeature(context);
   context.client.registerFeature(feature);
 }
 
-// The wire format: we send a position, and get back a tree of ASTNode.
-interface ASTParams {
-  textDocument: vscodelc.TextDocumentIdentifier;
-  range: vscodelc.Range;
-}
-interface ASTNode {
-  role: string;    // e.g. expression
-  kind: string;    // e.g. BinaryOperator
-  detail?: string; // e.g. ||
-  arcana?: string; // e.g. BinaryOperator <0x12345> <col:12, col:1> 'bool' '||'
-  children?: Array<ASTNode>;
-  range?: vscodelc.Range;
-}
 const ASTRequestType =
-    new vscodelc.RequestType<ASTParams, ASTNode|null, void>('textDocument/ast');
+    new vscodelc.RequestType<ASTParams, ASTNode|null, void>(ASTType);
 
 class ASTFeature implements vscodelc.StaticFeature {
   constructor(private context: ClangdContext) {

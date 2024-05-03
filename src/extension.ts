@@ -1,6 +1,7 @@
 import * as vscode from 'vscode';
 import {ClangdContext} from './clangd-context';
-import {ClangdExtension, ClangdExtensionImpl} from './api';
+import {ClangdExtension} from '../api/vscode-clangd';
+import {ClangdExtensionImpl} from './api';
 
 /**
  *  This method is called when the extension is activated. The extension is
