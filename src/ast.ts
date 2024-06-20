@@ -4,7 +4,9 @@ import * as vscode from 'vscode';
 import * as vscodelc from 'vscode-languageclient/node';
 
 import {ClangdContext} from './clangd-context';
-import {ASTParams, ASTNode, ASTType} from '../api/vscode-clangd';
+import type {ASTParams, ASTNode} from '../api/vscode-clangd';
+
+const ASTType = 'textDocument/ast';
 
 export function activate(context: ClangdContext) {
   const feature = new ASTFeature(context);

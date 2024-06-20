@@ -16,8 +16,6 @@ export interface ASTNode {
   range?: vscodelc.Range;
 }
 
-export const ASTType = 'textDocument/ast';
-
 export interface ClangdApiV1 {
   languageClient: BaseLanguageClient
 }
