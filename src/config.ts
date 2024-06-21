@@ -46,7 +46,7 @@ function replacement(name: string): string|undefined {
       return path.dirname(vscode.window.activeTextEditor.document.uri.fsPath);
     return process.cwd();
   }
-  if (name === 'workspaceFolderBasename' && 
+  if (name === 'workspaceFolderBasename' &&
       vscode.workspace.rootPath !== undefined) {
     return path.basename(vscode.workspace.rootPath);
   }
