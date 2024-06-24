@@ -35,7 +35,8 @@ export async function activate(context: vscode.ExtensionContext) {
   await clangdContext.activate(context.globalStoragePath, outputChannel);
 
   const shouldCheck = vscode.workspace.getConfiguration('clangd').get(
-      'detectExtensionConflicts');
+      'detectExtensionConflicts') && vscode.workspace.getConfiguration('clangd').get(
+        'enable');
   if (shouldCheck) {
     const interval = setInterval(function() {
       const cppTools = vscode.extensions.getExtension('ms-vscode.cpptools');
