@@ -9,9 +9,9 @@ import type { ClangdExtension, ASTParams, ASTNode } from '@clangd/vscode-clangd'
 const CLANGD_EXTENSION = 'llvm-vs-code-extensions.vscode-clangd';
 const CLANGD_API_VERSION = 1;
 
-const ASTType = 'textDocument/ast';
+const ASTRequestMethod = 'textDocument/ast';
 
-const provideHover = (document: vscode.TextDocument, position: vscode.Position, _token: vscode.CancellationToken): Promise<vscode.Hover | undefined> => {
+const provideHover = async (document: vscode.TextDocument, position: vscode.Position, _token: vscode.CancellationToken): Promise<vscode.Hover | undefined> => {
 
     const clangdExtension = vscode.extensions.getExtension<ClangdExtension>(CLANGD_EXTENSION);
 
@@ -22,11 +22,13 @@ const provideHover = (document: vscode.TextDocument, position: vscode.Position, 
         const range = api.languageClient.code2ProtocolConverter.asRange(new vscode.Range(position, position));
         const params: ASTParams = { textDocument, range };
  
-        const ast: ASTNode | undefined = await api.languageClient.sendRequest(ASTType, params);
+        const ast: ASTNode | undefined = await api.languageClient.sendRequest(ASTRequestMethod, params);
 
         return {
             contents: [ast.kind]
         };
     }
 };
+
+vscode.languages.registerHoverProvider(['c', 'cpp'], { provideHover });
 ```

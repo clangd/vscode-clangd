@@ -7,6 +7,8 @@
         "registry": "https://npm.pkg.github.com"
     },
     "repository": "https://github.com/clangd/vscode-clangd",
+    "license": "MIT",
+    "homepage": "https://github.com/clangd/vscode-clangd/blob/master/api/README.md",
     "dependencies": {
         "vscode-languageclient": "8.0.2"
     }

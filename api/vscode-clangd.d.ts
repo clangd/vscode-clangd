@@ -1,12 +1,27 @@
 import {BaseLanguageClient} from 'vscode-languageclient';
 import * as vscodelc from 'vscode-languageclient/node';
 
-// The wire format: we send a position, and get back a tree of ASTNode.
+export interface ClangdApiV1 {
+  // vscode-clangd's language client which can be used to send requests to the clangd language server
+  // Standard requests: https://microsoft.github.io/language-server-protocol/specifications/specification-current
+  // clangd custom requests: https://clangd.llvm.org/extensions
+  languageClient: BaseLanguageClient
+}
+
+export interface ClangdExtension {
+  getApi(version: 1): ClangdApiV1;
+}
+
+// clangd custom request types (type declarations for other requests may be added later)
+
+// textDocument/ast wire format
+// Send: position
 export interface ASTParams {
   textDocument: vscodelc.TextDocumentIdentifier;
   range: vscodelc.Range;
 }
 
+// Receive: tree of ASTNode
 export interface ASTNode {
   role: string;    // e.g. expression
   kind: string;    // e.g. BinaryOperator
@@ -14,12 +29,4 @@ export interface ASTNode {
   arcana?: string; // e.g. BinaryOperator <0x12345> <col:12, col:1> 'bool' '||'
   children?: Array<ASTNode>;
   range?: vscodelc.Range;
-}
-
-export interface ClangdApiV1 {
-  languageClient: BaseLanguageClient
-}
-
-export interface ClangdExtension {
-  getApi(version: 1): ClangdApiV1;
 }

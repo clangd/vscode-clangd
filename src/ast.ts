@@ -6,7 +6,7 @@ import * as vscodelc from 'vscode-languageclient/node';
 import {ClangdContext} from './clangd-context';
 import type {ASTParams, ASTNode} from '../api/vscode-clangd';
 
-const ASTType = 'textDocument/ast';
+const ASTRequestMethod = 'textDocument/ast';
 
 export function activate(context: ClangdContext) {
   const feature = new ASTFeature(context);
@@ -14,7 +14,7 @@ export function activate(context: ClangdContext) {
 }
 
 const ASTRequestType =
-    new vscodelc.RequestType<ASTParams, ASTNode|null, void>(ASTType);
+    new vscodelc.RequestType<ASTParams, ASTNode|null, void>(ASTRequestMethod);
 
 class ASTFeature implements vscodelc.StaticFeature {
   constructor(private context: ClangdContext) {
