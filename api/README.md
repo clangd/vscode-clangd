@@ -24,6 +24,10 @@ const provideHover = async (document: vscode.TextDocument, position: vscode.Posi
  
         const ast: ASTNode | undefined = await api.languageClient.sendRequest(ASTRequestMethod, params);
 
+        if (!ast) {
+            return undefined;
+        }
+
         return {
             contents: [ast.kind]
         };
