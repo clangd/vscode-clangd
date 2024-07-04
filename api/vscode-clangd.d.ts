@@ -2,9 +2,12 @@ import {BaseLanguageClient} from 'vscode-languageclient';
 import * as vscodelc from 'vscode-languageclient/node';
 
 export interface ClangdApiV1 {
-  // vscode-clangd's language client which can be used to send requests to the clangd language server
-  // Standard requests: https://microsoft.github.io/language-server-protocol/specifications/specification-current
-  // clangd custom requests: https://clangd.llvm.org/extensions
+  // vscode-clangd's language client which can be used to send requests to the
+  // clangd language server
+  // Standard requests:
+  // https://microsoft.github.io/language-server-protocol/specifications/specification-current
+  // clangd custom requests:
+  // https://clangd.llvm.org/extensions
   languageClient: BaseLanguageClient
 }
 
@@ -12,7 +15,8 @@ export interface ClangdExtension {
   getApi(version: 1): ClangdApiV1;
 }
 
-// clangd custom request types (type declarations for other requests may be added later)
+// clangd custom request types
+// (type declarations for other requests may be added later)
 
 // textDocument/ast wire format
 // Send: position
