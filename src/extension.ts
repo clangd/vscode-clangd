@@ -3,9 +3,9 @@ import * as vscode from 'vscode';
 import {ClangdExtension} from '../api/vscode-clangd';
 
 import {ClangdExtensionImpl} from './api';
-import { ClangdContext } from './clangd-context';
+import {ClangdContext} from './clangd-context';
 
-let apiInstance: ClangdExtensionImpl | undefined;
+let apiInstance: ClangdExtensionImpl|undefined;
 
 /**
  *  This method is called when the extension is activated. The extension is
