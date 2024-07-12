@@ -175,6 +175,11 @@
                   "type": "boolean",
                   "default": true,
                   "description": "Enable code completion provided by the language server"
+                },
+                "clangd.includePath": {
+                  "type": "string",
+                  "default": "**",
+                  "description": "Only analyze documents within paths that match"
                 }
             }
         },
