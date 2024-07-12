@@ -1,5 +1,15 @@
 # Change Log
 
+## Version 0.1.29: July 12, 2024
+
+* vscode-clangd now exposes an [API](https://github.com/clangd/vscode-clangd/blob/master/api/README.md)
+  to other VSCode extensions, allowing them to make requests of their own to the clangd server [#575](https://github.com/clangd/vscode-clangd/pull/575)
+* The predefined variable `${workspaceFolderBasename}` is now recognized in settings values
+  such as `"clangd.arguments"` [#147](https://github.com/clangd/vscode-clangd/issues/147)
+* Bug fixes to inactive region highlighting
+  * Decorations are now cleared on clangd restart [#600](https://github.com/clangd/vscode-clangd/issues/600)
+  * Decorations are now updated when their settings are changed [#613](https://github.com/clangd/vscode-clangd/pull/613)
+
 ## Version 0.1.28: March 20, 2024
 
 * Fix a regression in the behaviour of `clangd.restart` introduced in 0.1.27 [#599](https://github.com/clangd/vscode-clangd/issues/599)
