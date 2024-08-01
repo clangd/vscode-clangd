@@ -120,5 +120,5 @@ export class InactiveRegionsFeature implements vscodelc.StaticFeature {
 
   // clears inactive region decorations on disposal so they don't persist after
   // extension is deactivated
-  dispose() { this.decorationType?.dispose(); }
+  clear() { this.decorationType?.dispose(); }
 }

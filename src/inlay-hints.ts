@@ -93,7 +93,7 @@ class InlayHintsFeature implements vscodelc.StaticFeature {
         clangdDocumentSelector, new Provider(this.context)));
   }
   getState(): vscodelc.FeatureState { return {kind: 'static'}; }
-  dispose() {}
+  clear() {}
 }
 
 class Provider implements vscode.InlayHintsProvider {

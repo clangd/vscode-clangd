@@ -2,7 +2,6 @@
 // This wraps `@clangd/install` in the VSCode UI. See that package for more.
 
 import * as common from '@clangd/install';
-import AbortController from 'abort-controller';
 import * as path from 'path';
 import * as vscode from 'vscode';
 
@@ -56,6 +55,13 @@ class UI {
       });
     });
     return Promise.resolve(result); // Thenable to real promise.
+  }
+  localize(message: string, ...args: Array<string|number|boolean>): string {
+    let ret = message;
+    for (const i in args) {
+      ret.replace(`{${i}}`, args[i].toString());
+    }
+    return ret;
   }
   error(s: string) { vscode.window.showErrorMessage(s); }
   info(s: string) { vscode.window.showInformationMessage(s); }

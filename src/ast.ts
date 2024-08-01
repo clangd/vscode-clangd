@@ -69,7 +69,7 @@ class ASTFeature implements vscodelc.StaticFeature {
                                    'astProvider' in capabilities);
   }
   getState(): vscodelc.FeatureState { return {kind: 'static'}; }
-  dispose() {}
+  clear() {}
 }
 
 // Icons used for nodes of particular roles and kinds. (Kind takes precedence).
