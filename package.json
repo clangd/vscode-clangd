@@ -141,6 +141,11 @@
                     "default": false,
                     "description": "Check for language server updates on startup."
                 },
+                "clangd.env": {
+                    "type": "object",
+                    "default": {},
+                    "description": "Additional environment variables to be defined for the clangd server."
+                },
                 "clangd.onConfigChanged": {
                     "type": "string",
                     "default": "prompt",
