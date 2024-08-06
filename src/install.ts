@@ -12,9 +12,6 @@ import * as config from './config';
 // Returns the clangd path to be used, or null if clangd is not installed.
 export async function activate(
     context: ClangdContext, globalStoragePath: string): Promise<string|null> {
-  // If the workspace overrides clangd.path, give the user a chance to bless it.
-  await config.get<string>('path');
-
   const ui = new UI(context, globalStoragePath);
   context.subscriptions.push(vscode.commands.registerCommand(
       'clangd.install', async () => common.installLatest(ui)));
