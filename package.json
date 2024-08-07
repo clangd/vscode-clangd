@@ -172,9 +172,14 @@
                     "description": "Opacity of inactive regions (used only if clangd.inactiveRegions.useBackgroundHighlight=false)"
                 },
                 "clangd.enableCodeCompletion": {
-                  "type": "boolean",
-                  "default": true,
-                  "description": "Enable code completion provided by the language server"
+                    "type": "boolean",
+                    "default": true,
+                    "description": "Enable code completion provided by the language server"
+                },
+                "clangd.enable": {
+                    "type": "boolean",
+                    "default": true,
+                    "description": "Enable clangd language server features"
                 }
             }
         },

@@ -66,6 +66,10 @@ export class ClangdContext implements vscode.Disposable {
     if (!clangdPath)
       return;
 
+    if (!config.get<boolean>('enable')) {
+      return;
+    }
+
     const clangd: vscodelc.Executable = {
       command: clangdPath,
       args: await config.get<string[]>('arguments'),
