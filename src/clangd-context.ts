@@ -13,13 +13,28 @@ import * as openConfig from './open-config';
 import * as switchSourceHeader from './switch-source-header';
 import * as typeHierarchy from './type-hierarchy';
 
-export const clangdDocumentSelector = [
-  {scheme: 'file', language: 'c'},
-  {scheme: 'file', language: 'cpp'},
-  {scheme: 'file', language: 'cuda-cpp'},
-  {scheme: 'file', language: 'objective-c'},
-  {scheme: 'file', language: 'objective-cpp'},
+const includePath = vscode.workspace.getConfiguration().get<string>('clangd.includePath') || "**";
+export let clangdDocumentSelector = [
+  {scheme: 'file', language: 'c', pattern: includePath },
+  {scheme: 'file', language: 'cpp', pattern: includePath },
+  {scheme: 'file', language: 'cuda-cpp', pattern: includePath },
+  {scheme: 'file', language: 'objective-c', pattern: includePath },
+  {scheme: 'file', language: 'objective-cpp', pattern: includePath },
 ];
+
+// Update clangdDocumentSelector when includePath setting is changed
+vscode.workspace.onDidChangeConfiguration((conf) => {
+  if (conf.affectsConfiguration('clangd.includePath')) {
+    const includePath = vscode.workspace.getConfiguration().get<string>('clangd.includePath') || '**';
+    clangdDocumentSelector = [
+      {scheme: 'file', language: 'c', pattern: includePath },
+      {scheme: 'file', language: 'cpp', pattern: includePath },
+      {scheme: 'file', language: 'cuda-cpp', pattern: includePath },
+      {scheme: 'file', language: 'objective-c', pattern: includePath },
+      {scheme: 'file', language: 'objective-cpp', pattern: includePath },
+    ];
+  }
+});
 
 export function isClangdDocument(document: vscode.TextDocument) {
   return vscode.languages.match(clangdDocumentSelector, document);
