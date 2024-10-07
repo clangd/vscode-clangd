@@ -291,12 +291,12 @@
                 "command": "clangd.switchheadersource",
                 "key": "Alt+o",
                 "mac": "Alt+cmd+o",
-                "when": "editorTextFocus"
+                "when": "(resourceLangId == c || resourceLangId == cpp || resourceLangId == cuda-cpp || resourceLangId == objective-c || resourceLangId == objective-cpp) && editorTextFocus"
             },
             {
                 "command": "clangd.typeHierarchy",
                 "key": "Shift+Alt+t",
-                "when": "editorTextFocus"
+                "when": "(resourceLangId == cpp || resourceLangId == cuda-cpp || resourceLangId == objective-c || resourceLangId == objective-cpp) && editorTextFocus"
             }
         ],
         "menus": {
