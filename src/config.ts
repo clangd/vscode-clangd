@@ -3,8 +3,16 @@ import * as path from 'path';
 import * as vscode from 'vscode';
 
 // Gets the config value `clangd.<key>`. Applies ${variable} substitutions.
-export function get<T>(key: string): T {
-  return substitute(vscode.workspace.getConfiguration('clangd').get<T>(key)!);
+export function get<T>(
+  key: string,
+  scope?: vscode.ConfigurationScope | null
+): T {
+  if (key === "fallbackFlags" && scope) {
+    return substitute(
+      vscode.workspace.getConfiguration("clangd", scope).get<T>(key)!
+    );
+  }
+  return substitute(vscode.workspace.getConfiguration("clangd").get<T>(key)!);
 }
 
 // Sets the config value `clangd.<key>`. Does not apply substitutions.
