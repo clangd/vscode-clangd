@@ -121,6 +121,7 @@
                 "clangd.fallbackFlags": {
                     "type": "array",
                     "default": [],
+                    "scope": "language-overridable",
                     "items": {
                         "type": "string"
                     },
