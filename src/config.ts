@@ -8,9 +8,10 @@ export function get<T>(
   scope?: vscode.ConfigurationScope | null
 ): T {
   if (key === "fallbackFlags" && scope) {
-    return substitute(
-      vscode.workspace.getConfiguration("clangd", scope).get<T>(key)!
-    );
+    const scopedConfig = vscode.workspace.getConfiguration("clangd", scope).get<T>(key);
+    if (scopedConfig) {
+      return substitute(scopedConfig);
+    }
   }
   return substitute(vscode.workspace.getConfiguration("clangd").get<T>(key)!);
 }
