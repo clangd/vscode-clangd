@@ -141,6 +141,11 @@ export class ClangdContext implements vscode.Disposable {
           })
           return new vscode.CompletionList(items, /*isIncomplete=*/ true);
         },
+        provideHover: async (document, position, token, next) => {
+          if (!config.get<boolean>('enableHover'))
+            return null;
+          return next(document, position, token);
+        },
         // VSCode applies fuzzy match only on the symbol name, thus it throws
         // away all results if query token is a prefix qualified name.
         // By adding the containerName to the symbol name, it prevents VSCode
