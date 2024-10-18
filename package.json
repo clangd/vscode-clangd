@@ -175,6 +175,11 @@
                   "type": "boolean",
                   "default": true,
                   "description": "Enable code completion provided by the language server"
+                },
+                "clangd.enableHover": {
+                  "type": "boolean",
+                  "default": true,
+                  "description": "Enable hovers provided by the language server"
                 }
             }
         },
