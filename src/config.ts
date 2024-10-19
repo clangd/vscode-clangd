@@ -20,13 +20,14 @@ function substitute<T>(val: T): T {
       // If there's no replacement available, keep the placeholder.
       return replacement(name) ?? match;
     }) as unknown as T;
-  } else if (Array.isArray(val))
+  } else if (Array.isArray(val)) {
     val = val.map((x) => substitute(x)) as unknown as T;
-  else if (typeof val === 'object') {
+  } else if (typeof val === 'object') {
     // Substitute values but not keys, so we don't deal with collisions.
     const result = {} as {[k: string]: any};
-    for (let [k, v] of Object.entries(val))
-      result[k] = substitute(v);
+    for (const key in val) {
+      result[key] = substitute(val[key]);
+    }
     val = result as T;
   }
   return val;

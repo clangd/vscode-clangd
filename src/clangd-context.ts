@@ -53,7 +53,7 @@ class EnableEditsNearCursorFeature implements vscodelc.StaticFeature {
     extendedCompletionCapabilities.editsNearCursor = true;
   }
   getState(): vscodelc.FeatureState { return {kind: 'static'}; }
-  dispose() {}
+  clear() {}
 }
 
 export class ClangdContext implements vscode.Disposable {
