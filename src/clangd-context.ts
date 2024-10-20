@@ -1,3 +1,4 @@
+import * as fs from 'fs';
 import * as vscode from 'vscode';
 import * as vscodelc from 'vscode-languageclient/node';
 
@@ -104,6 +105,11 @@ export class ClangdContext implements vscode.Disposable {
       // We also mark the list as incomplete to force retrieving new rankings.
       // See https://github.com/microsoft/language-server-protocol/issues/898
       middleware: {
+        provideDeclaration: this.remapDefinitionSymlink.bind(this),
+        provideDefinition: this.remapDefinitionSymlink.bind(this),
+        provideTypeDefinition: this.remapDefinitionSymlink.bind(this),
+        provideImplementation: this.remapDefinitionSymlink.bind(this),
+
         provideCompletionItem: async (document, position, context, token,
                                       next) => {
           if (!config.get<boolean>('enableCodeCompletion'))
@@ -206,4 +212,65 @@ export class ClangdContext implements vscode.Disposable {
       this.client.stop();
     this.subscriptions = []
   }
+
+  private async remapDefinitionSymlink(
+    document: vscode.TextDocument, position: vscode.Position,
+    token: vscode.CancellationToken,
+    next: vscodelc.ProvideDeclarationSignature) {
+  let definition = await next(document, position, token);
+  if (!config.get<boolean>('followSymlinks')) {
+    return definition;
+  }
+  if (definition) {
+    if (Array.isArray(definition)) {
+      const res = await Promise.all(definition.map(async (e) => {
+        if ('targetUri' in e)
+          return e;
+        else {
+          if (e.uri.scheme != 'file')
+            return e;
+
+          const s =
+              await vscode.workspace.fs.stat(vscode.Uri.file(e.uri.path));
+          if (s.type & vscode.FileType.SymbolicLink) {
+            const p = await this.safeFollowSymLink(e.uri.fsPath)
+            return new vscode.Location(vscode.Uri.file(p), e.range)
+          }
+
+          return e;
+        }
+      })) as vscode.Declaration
+
+      return res;
+    } else {
+      if (definition.uri.scheme != 'file')
+        return definition;
+
+      const s = await vscode.workspace.fs.stat(
+          vscode.Uri.file(definition.uri.path));
+      if (s.type & vscode.FileType.SymbolicLink) {
+        const p = await this.safeFollowSymLink(definition.uri.fsPath)
+        return new vscode.Location(vscode.Uri.file(p), definition.range)
+      }
+
+      return definition;
+    }
+  }
+  return definition;
+}
+
+/**
+ * Attempt to resolve a symlink, returning the path unchanged if unable
+ * @param linkPath file path to resolve
+ * @returns
+ */
+private async safeFollowSymLink(linkPath: string): Promise<string> {
+  return await new Promise(
+      (then, _) => {fs.readlink(linkPath, (err, resolvedPath) => {
+        if (err) {
+          then(linkPath);
+        }
+        then(resolvedPath);
+      })})
+}
 }
