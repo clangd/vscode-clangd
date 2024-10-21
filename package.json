@@ -156,6 +156,11 @@
                         "Do nothing"
                     ]
                 },
+                "clangd.onConfigChangedForceEnable": {
+                    "type": "boolean",
+                    "default": false,
+                    "description": "Force enable of \"On Config Changed\" option regardless of clangd version."
+                },
                 "clangd.detectExtensionConflicts": {
                     "type": "boolean",
                     "default": true,
