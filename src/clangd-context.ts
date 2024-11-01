@@ -78,12 +78,20 @@ export class ClangdContext implements vscode.Disposable {
     }
     const serverOptions: vscodelc.ServerOptions = clangd;
 
+    const editor = vscode.window.activeTextEditor;
+    const currentLanguageScope: vscode.ConfigurationScope | undefined = editor
+        ? { languageId: editor.document.languageId}
+        : undefined;
+
     const clientOptions: vscodelc.LanguageClientOptions = {
       // Register the server for c-family and cuda files.
       documentSelector: clangdDocumentSelector,
       initializationOptions: {
         clangdFileStatus: true,
-        fallbackFlags: config.get<string[]>('fallbackFlags')
+        fallbackFlags: config.get<string[]>(
+          "fallbackFlags",
+          currentLanguageScope
+        ),
       },
       outputChannel: outputChannel,
       // Do not switch to output window when clangd returns output.
