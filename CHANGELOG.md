@@ -1,5 +1,11 @@
 # Change Log
 
+## Version 0.1.30: November 4, 2024
+
+* Added option to disable hovers [#703](https://github.com/clangd/vscode-clangd/pull/703)
+* Key bindings are restricted to the supported files [#690](https://github.com/clangd/vscode-clangd/pull/690)
+* Allow "clangd.path" to point to a shell script (restoring behavior from VS Code 1.91) [#708](https://github.com/clangd/vscode-clangd/pull/708), [#715](https://github.com/clangd/vscode-clangd/pull/715)
+
 ## Version 0.1.29: July 12, 2024
 
 * vscode-clangd now exposes an [API](https://github.com/clangd/vscode-clangd/blob/master/api/README.md)
