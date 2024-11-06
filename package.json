@@ -180,6 +180,11 @@
                   "type": "boolean",
                   "default": true,
                   "description": "Enable hovers provided by the language server"
+                },
+                "clangd.followSymlinks": {
+                  "type": "boolean",
+                  "default": false,
+                  "description": "Follow symlinks when resolving a symbol"
                 }
             }
         },
