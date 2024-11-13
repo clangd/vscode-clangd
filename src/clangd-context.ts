@@ -67,9 +67,7 @@ export class ClangdContext implements vscode.Disposable {
       return;
 
     const clangd: vscodelc.Executable = {
-      // Quote the path. With `shell: true`, this is needed
-      // in case the path contains spaces.
-      command: `"${clangdPath}"`,
+      command: clangdPath,
       args: await config.get<string[]>('arguments'),
       options: {cwd: vscode.workspace.rootPath || process.cwd(), shell: true}
     };
