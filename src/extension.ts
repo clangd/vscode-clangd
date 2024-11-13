@@ -47,7 +47,8 @@ export async function activate(context: vscode.ExtensionContext):
     await clangdContext.activate(context.globalStoragePath, outputChannel);
 
     shouldCheck = vscode.workspace.getConfiguration('clangd').get<boolean>(
-      'detectExtensionConflicts') ?? false;
+                      'detectExtensionConflicts') ??
+                  false;
   }
 
   if (shouldCheck) {
