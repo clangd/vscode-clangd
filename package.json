@@ -2,7 +2,7 @@
     "name": "vscode-clangd",
     "displayName": "clangd",
     "description": "C/C++ completion, navigation, and insights",
-    "version": "0.1.29",
+    "version": "0.1.30",
     "publisher": "llvm-vs-code-extensions",
     "license": "MIT",
     "homepage": "https://clangd.llvm.org/",
@@ -76,7 +76,10 @@
         "untrustedWorkspaces": {
             "supported": "limited",
             "description": "In restricted mode clangd.path and clangd.arguments are not respected.",
-            "restrictedConfigurations": ["clangd.path", "clangd.arguments"]
+            "restrictedConfigurations": [
+                "clangd.path",
+                "clangd.arguments"
+            ]
         }
     },
     "contributes": {
@@ -172,14 +175,14 @@
                     "description": "Opacity of inactive regions (used only if clangd.inactiveRegions.useBackgroundHighlight=false)"
                 },
                 "clangd.enableCodeCompletion": {
-                  "type": "boolean",
-                  "default": true,
-                  "description": "Enable code completion provided by the language server"
+                    "type": "boolean",
+                    "default": true,
+                    "description": "Enable code completion provided by the language server"
                 },
                 "clangd.enableHover": {
-                  "type": "boolean",
-                  "default": true,
-                  "description": "Enable hovers provided by the language server"
+                    "type": "boolean",
+                    "default": true,
+                    "description": "Enable hovers provided by the language server"
                 },
                 "clangd.enable": {
                     "type": "boolean",
