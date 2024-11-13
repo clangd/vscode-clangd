@@ -183,6 +183,11 @@
                     "type": "boolean",
                     "default": true,
                     "description": "Enable hovers provided by the language server"
+                },
+                "clangd.enable": {
+                    "type": "boolean",
+                    "default": true,
+                    "description": "Enable clangd language server features"
                 }
             }
         },

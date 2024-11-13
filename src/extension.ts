@@ -41,10 +41,16 @@ export async function activate(context: vscode.ExtensionContext):
         }
       }));
 
-  await clangdContext.activate(context.globalStoragePath, outputChannel);
+  let shouldCheck = false;
 
-  const shouldCheck = vscode.workspace.getConfiguration('clangd').get(
-      'detectExtensionConflicts');
+  if (vscode.workspace.getConfiguration('clangd').get<boolean>('enable')) {
+    await clangdContext.activate(context.globalStoragePath, outputChannel);
+
+    shouldCheck = vscode.workspace.getConfiguration('clangd').get<boolean>(
+                      'detectExtensionConflicts') ??
+                  false;
+  }
+
   if (shouldCheck) {
     const interval = setInterval(function() {
       const cppTools = vscode.extensions.getExtension('ms-vscode.cpptools');
