@@ -1,5 +1,10 @@
 # Change Log
 
+## Version 0.1.31: November 13, 2024
+
+* Reverted [#708](https://github.com/clangd/vscode-clangd/pull/708) and [#715](https://github.com/clangd/vscode-clangd/pull/715) for causing [#722](https://github.com/clangd/vscode-clangd/issues/722)
+
+
 ## Version 0.1.30: November 13, 2024
 
 * Added option to disable hovers [#703](https://github.com/clangd/vscode-clangd/pull/703)
