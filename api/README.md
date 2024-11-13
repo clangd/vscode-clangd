@@ -7,7 +7,7 @@ import * as vscode from 'vscode';
 import type { ClangdExtension, ASTParams, ASTNode } from '@clangd/vscode-clangd';
 
 const CLANGD_EXTENSION = 'llvm-vs-code-extensions.vscode-clangd';
-const CLANGD_API_VERSION = 1;
+const CLANGD_API_VERSION = 2;
 
 const ASTRequestMethod = 'textDocument/ast';
 
@@ -17,6 +17,11 @@ const provideHover = async (document: vscode.TextDocument, position: vscode.Posi
 
     if (clangdExtension) {
         const api = (await clangdExtension.activate()).getApi(CLANGD_API_VERSION);
+
+        // Extension may be disabled
+        if (!api.languageClient) {
+            return undefined;
+        }
  
         const textDocument = api.languageClient.code2ProtocolConverter.asTextDocumentIdentifier(document);
         const range = api.languageClient.code2ProtocolConverter.asRange(new vscode.Range(position, position));

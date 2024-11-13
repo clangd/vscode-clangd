@@ -15,9 +15,9 @@ export const type =
             'textDocument/switchSourceHeader');
 }
 
-async function switchSourceHeader(client: vscodelc.LanguageClient):
-    Promise<void> {
-  if (!vscode.window.activeTextEditor)
+async function switchSourceHeader(client
+                                  ?: vscodelc.LanguageClient): Promise<void> {
+  if (!client || !vscode.window.activeTextEditor)
     return;
   const uri = vscode.Uri.file(vscode.window.activeTextEditor.document.fileName);
 

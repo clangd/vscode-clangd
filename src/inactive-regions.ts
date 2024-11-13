@@ -21,9 +21,11 @@ export const NotificationType =
 
 export function activate(context: ClangdContext) {
   const feature = new InactiveRegionsFeature(context);
-  context.client.registerFeature(feature);
-  context.client.onNotification(NotificationType,
-                                feature.handleNotification.bind(feature));
+  if (context.client) {
+    context.client.registerFeature(feature);
+    context.client.onNotification(NotificationType,
+                                  feature.handleNotification.bind(feature));
+  }
 }
 
 export class InactiveRegionsFeature implements vscodelc.StaticFeature {
@@ -80,9 +82,12 @@ export class InactiveRegionsFeature implements vscodelc.StaticFeature {
   }
 
   handleNotification(params: InactiveRegionsParams) {
+    if (!this.context.client) {
+      return;
+    }
     const filePath = vscode.Uri.parse(params.textDocument.uri, true).fsPath;
     const ranges: vscode.Range[] = params.regions.map(
-        (r) => this.context.client.protocol2CodeConverter.asRange(r));
+        (r) => this.context.client!.protocol2CodeConverter.asRange(r));
     this.files.set(filePath, ranges);
     this.applyHighlights(filePath);
   }

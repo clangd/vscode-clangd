@@ -9,8 +9,10 @@ import type {ASTParams, ASTNode} from '../api/vscode-clangd';
 const ASTRequestMethod = 'textDocument/ast';
 
 export function activate(context: ClangdContext) {
-  const feature = new ASTFeature(context);
-  context.client.registerFeature(feature);
+  if (context.client) {
+    const feature = new ASTFeature(context);
+    context.client.registerFeature(feature);
+  }
 }
 
 const ASTRequestType =
@@ -42,13 +44,15 @@ class ASTFeature implements vscodelc.StaticFeature {
         vscode.commands.registerTextEditorCommand(
             'clangd.ast',
             async (editor, _edit) => {
-              const converter = this.context.client.code2ProtocolConverter;
-              const item =
-                  await this.context.client.sendRequest(ASTRequestType, {
-                    textDocument:
-                        converter.asTextDocumentIdentifier(editor.document),
-                    range: converter.asRange(editor.selection),
-                  });
+              let item: ASTNode|null = null;
+              if (this.context.client) {
+                const converter = this.context.client.code2ProtocolConverter;
+                item = await this.context.client.sendRequest(ASTRequestType, {
+                  textDocument:
+                      converter.asTextDocumentIdentifier(editor.document),
+                  range: converter.asRange(editor.selection),
+                });
+              }
               if (!item)
                 vscode.window.showInformationMessage(
                     'No AST node at selection');

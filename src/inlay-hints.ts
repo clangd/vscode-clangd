@@ -11,11 +11,17 @@
 import * as vscode from 'vscode';
 import * as vscodelc from 'vscode-languageclient/node';
 
-import {ClangdContext, clangdDocumentSelector} from './clangd-context';
+import {
+  ClangdContext,
+  clangdDocumentSelector,
+  ClangdLanguageClient
+} from './clangd-context';
 
 export function activate(context: ClangdContext) {
-  const feature = new InlayHintsFeature(context);
-  context.client.registerFeature(feature);
+  if (context.client) {
+    const feature = new InlayHintsFeature(context);
+    context.client.registerFeature(feature);
+  }
 }
 
 namespace protocol {
@@ -107,10 +113,10 @@ class Provider implements vscode.InlayHintsProvider {
     return undefined;
   }
 
-  decode(hint: protocol.InlayHint): vscode.InlayHint {
+  decode(hint: protocol.InlayHint,
+         client: ClangdLanguageClient): vscode.InlayHint {
     return {
-      position:
-          this.context.client.protocol2CodeConverter.asPosition(hint.position!),
+      position: client.protocol2CodeConverter.asPosition(hint.position!),
       kind: this.decodeKind(hint.kind),
       label: hint.label.trim(),
       paddingLeft: hint.label.startsWith(' '),
@@ -121,6 +127,9 @@ class Provider implements vscode.InlayHintsProvider {
   async provideInlayHints(document: vscode.TextDocument, range: vscode.Range,
                           token: vscode.CancellationToken):
       Promise<vscode.InlayHint[]> {
+    if (!this.context.client) {
+      return [];
+    }
     const request: protocol.InlayHintsParams = {
       textDocument: {uri: document.uri.toString()},
       range: this.context.client.code2ProtocolConverter.asRange(range),
@@ -128,6 +137,6 @@ class Provider implements vscode.InlayHintsProvider {
 
     const result = await this.context.client.sendRequest(
         protocol.InlayHintsRequest.type, request, token);
-    return result.map(this.decode, this);
+    return result.map(hint => this.decode(hint, this.context.client!));
   }
 }

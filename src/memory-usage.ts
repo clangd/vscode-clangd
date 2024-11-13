@@ -11,8 +11,10 @@ import * as vscodelc from 'vscode-languageclient/node';
 import {ClangdContext} from './clangd-context';
 
 export function activate(context: ClangdContext) {
-  const feature = new MemoryUsageFeature(context);
-  context.client.registerFeature(feature);
+  if (context.client) {
+    const feature = new MemoryUsageFeature(context);
+    context.client.registerFeature(feature);
+  }
 }
 
 // LSP wire format for this clangd feature.
@@ -58,9 +60,11 @@ class MemoryUsageFeature implements vscodelc.StaticFeature {
         vscode.window.registerTreeDataProvider('clangd.memoryUsage', adapter));
     this.context.subscriptions.push(
         vscode.commands.registerCommand('clangd.memoryUsage', async () => {
-          const usage =
-              await this.context.client.sendRequest(MemoryUsageRequest, {});
-          adapter.root = convert(usage, '<root>');
+          if (this.context.client) {
+            const usage =
+                await this.context.client.sendRequest(MemoryUsageRequest, {});
+            adapter.root = convert(usage, '<root>');
+          }
         }));
     this.context.subscriptions.push(vscode.commands.registerCommand(
         'clangd.memoryUsage.close', () => adapter.root = undefined));

@@ -25,7 +25,7 @@ export function isClangdDocument(document: vscode.TextDocument) {
   return vscode.languages.match(clangdDocumentSelector, document);
 }
 
-class ClangdLanguageClient extends vscodelc.LanguageClient {
+export class ClangdLanguageClient extends vscodelc.LanguageClient {
   // Override the default implementation for failed requests. The default
   // behavior is just to log failures in the output panel, however output panel
   // is designed for extension debugging purpose, normal users will not open it,
@@ -58,7 +58,7 @@ class EnableEditsNearCursorFeature implements vscodelc.StaticFeature {
 
 export class ClangdContext implements vscode.Disposable {
   subscriptions: vscode.Disposable[] = [];
-  client!: ClangdLanguageClient;
+  client: ClangdLanguageClient|undefined;
 
   async activate(globalStoragePath: string,
                  outputChannel: vscode.OutputChannel) {

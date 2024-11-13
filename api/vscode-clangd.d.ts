@@ -8,11 +8,22 @@ export interface ClangdApiV1 {
   // https://microsoft.github.io/language-server-protocol/specifications/specification-current
   // clangd custom requests:
   // https://clangd.llvm.org/extensions
-  languageClient: BaseLanguageClient
+  languageClient: BaseLanguageClient;
+}
+
+export interface ClangdApiV2 {
+  // vscode-clangd's language client which can be used to send requests to the
+  // clangd language server
+  // Standard requests:
+  // https://microsoft.github.io/language-server-protocol/specifications/specification-current
+  // clangd custom requests:
+  // https://clangd.llvm.org/extensions
+  languageClient: BaseLanguageClient | undefined;
 }
 
 export interface ClangdExtension {
   getApi(version: 1): ClangdApiV1;
+  getApi(version: 2): ClangdApiV2;
 }
 
 // clangd custom request types

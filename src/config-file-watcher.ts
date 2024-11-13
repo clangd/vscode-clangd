@@ -6,7 +6,9 @@ import * as config from './config';
 
 export function activate(context: ClangdContext) {
   if (config.get<string>('onConfigChanged') !== 'ignore') {
-    context.client.registerFeature(new ConfigFileWatcherFeature(context));
+    if (context.client) {
+      context.client.registerFeature(new ConfigFileWatcherFeature(context));
+    }
   }
 }
 
