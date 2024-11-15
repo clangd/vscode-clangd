@@ -85,9 +85,10 @@ export class InactiveRegionsFeature implements vscodelc.StaticFeature {
     if (!this.context.client) {
       return;
     }
+    const converter = this.context.client.protocol2CodeConverter;
     const filePath = vscode.Uri.parse(params.textDocument.uri, true).fsPath;
-    const ranges: vscode.Range[] = params.regions.map(
-        (r) => this.context.client!.protocol2CodeConverter.asRange(r));
+    const ranges: vscode.Range[] =
+        params.regions.map((r) => converter.asRange(r));
     this.files.set(filePath, ranges);
     this.applyHighlights(filePath);
   }

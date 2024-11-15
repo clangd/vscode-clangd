@@ -67,11 +67,9 @@ export class ClangdContext implements vscode.Disposable {
       return;
 
     const clangd: vscodelc.Executable = {
-      // Quote the path. With `shell: true`, this is needed
-      // in case the path contains spaces.
-      command: `"${clangdPath}"`,
+      command: clangdPath,
       args: await config.get<string[]>('arguments'),
-      options: {cwd: vscode.workspace.rootPath || process.cwd(), shell: true}
+      options: {cwd: vscode.workspace.rootPath || process.cwd()}
     };
     const traceFile = config.get<string>('trace');
     if (!!traceFile) {
@@ -106,43 +104,51 @@ export class ClangdContext implements vscode.Disposable {
       // We also mark the list as incomplete to force retrieving new rankings.
       // See https://github.com/microsoft/language-server-protocol/issues/898
       middleware: {
-        provideCompletionItem: async (document, position, context, token,
-                                      next) => {
-          if (!config.get<boolean>('enableCodeCompletion'))
-            return new vscode.CompletionList([], /*isIncomplete=*/ false);
-          let list = await next(document, position, context, token);
-          if (!config.get<boolean>('serverCompletionRanking'))
-            return list;
-          let items = (Array.isArray(list) ? list : list!.items).map(item => {
-            // Gets the prefix used by VSCode when doing fuzzymatch.
-            let prefix = document.getText(
-                new vscode.Range((item.range as vscode.Range).start, position))
-            if (prefix)
-            item.filterText = prefix + '_' + item.filterText;
-            // Workaround for https://github.com/clangd/vscode-clangd/issues/357
-            // clangd's used of commit-characters was well-intentioned, but
-            // overall UX is poor. Due to vscode-languageclient bugs, we didn't
-            // notice until the behavior was in several releases, so we need
-            // to override it on the client.
-            item.commitCharacters = [];
-            // VSCode won't automatically trigger signature help when entering
-            // a placeholder, e.g. if the completion inserted brackets and
-            // placed the cursor inside them.
-            // https://github.com/microsoft/vscode/issues/164310
-            // They say a plugin should trigger this, but LSP has no mechanism.
-            // https://github.com/microsoft/language-server-protocol/issues/274
-            // (This workaround is incomplete, and only helps the first param).
-            if (item.insertText instanceof vscode.SnippetString &&
-                !item.command &&
-                item.insertText.value.match(/[([{<,] ?\$\{?[01]\D/))
-              item.command = {
-                title: 'Signature help',
-                command: 'editor.action.triggerParameterHints'
-              };
-            return item;
-          })
-          return new vscode.CompletionList(items, /*isIncomplete=*/ true);
-        },
+        provideCompletionItem:
+            async (document, position, context, token, next) => {
+              if (!config.get<boolean>('enableCodeCompletion'))
+                return new vscode.CompletionList([], /*isIncomplete=*/ false);
+              let list = await next(document, position, context, token);
+              if (!config.get<boolean>('serverCompletionRanking'))
+                return list;
+              let items =
+                  (!list                 ? []
+                   : Array.isArray(list) ? list
+                                         : list.items)
+                      .map(item => {
+                        // Gets the prefix used by VSCode when doing fuzzymatch.
+                        let prefix = document.getText(new vscode.Range(
+                            (item.range as vscode.Range).start, position))
+                        if (prefix)
+                        item.filterText = prefix + '_' + item.filterText;
+                        // Workaround for
+                        // https://github.com/clangd/vscode-clangd/issues/357
+                        // clangd's used of commit-characters was
+                        // well-intentioned, but overall UX is poor. Due to
+                        // vscode-languageclient bugs, we didn't notice until
+                        // the behavior was in several releases, so we need to
+                        // override it on the client.
+                        item.commitCharacters = [];
+                        // VSCode won't automatically trigger signature help
+                        // when entering a placeholder, e.g. if the completion
+                        // inserted brackets and placed the cursor inside them.
+                        // https://github.com/microsoft/vscode/issues/164310
+                        // They say a plugin should trigger this, but LSP has no
+                        // mechanism.
+                        // https://github.com/microsoft/language-server-protocol/issues/274
+                        // (This workaround is incomplete, and only helps the
+                        // first param).
+                        if (item.insertText instanceof vscode.SnippetString &&
+                            !item.command &&
+                            item.insertText.value.match(/[([{<,] ?\$\{?[01]\D/))
+                          item.command = {
+                            title: 'Signature help',
+                            command: 'editor.action.triggerParameterHints'
+                          };
+                        return item;
+                      })
+              return new vscode.CompletionList(items, /*isIncomplete=*/ true);
+            },
         provideHover: async (document, position, token, next) => {
           if (!config.get<boolean>('enableHover'))
             return null;
