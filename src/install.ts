@@ -9,8 +9,9 @@ import * as vscode from 'vscode';
 import * as config from './config';
 
 // Returns the clangd path to be used, or null if clangd is not installed.
-export async function activate(
-    disposables: vscode.Disposable[], globalStoragePath: string): Promise<string|null> {
+export async function activate(disposables: vscode.Disposable[],
+                               globalStoragePath: string):
+    Promise<string|null> {
   const ui = new UI(disposables, globalStoragePath);
   disposables.push(vscode.commands.registerCommand(
       'clangd.install', async () => common.installLatest(ui)));
@@ -59,8 +60,7 @@ class UI {
   error(s: string) { vscode.window.showErrorMessage(s); }
   info(s: string) { vscode.window.showInformationMessage(s); }
   command(name: string, body: () => any) {
-    this.disposables.push(
-        vscode.commands.registerCommand(name, body));
+    this.disposables.push(vscode.commands.registerCommand(name, body));
   }
 
   async shouldReuse(release: string): Promise<boolean|undefined> {

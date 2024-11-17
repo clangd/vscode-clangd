@@ -8,7 +8,7 @@ export interface ClangdApiV1 {
   // https://microsoft.github.io/language-server-protocol/specifications/specification-current
   // clangd custom requests:
   // https://clangd.llvm.org/extensions
-  languageClient: BaseLanguageClient | undefined
+  languageClient: BaseLanguageClient|undefined
 }
 
 export interface ClangdExtension {

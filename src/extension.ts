@@ -16,7 +16,7 @@ export async function activate(context: vscode.ExtensionContext):
   const outputChannel = vscode.window.createOutputChannel('clangd');
   context.subscriptions.push(outputChannel);
 
-  let clangdContext: ClangdContext | null = null;
+  let clangdContext: ClangdContext|null = null;
 
   // An empty place holder for the activate command, otherwise we'll get an
   // "command is not registered" error.
@@ -35,7 +35,8 @@ export async function activate(context: vscode.ExtensionContext):
         }
         if (clangdContext)
           await clangdContext.dispose();
-        clangdContext = await createContext(context.globalStoragePath, outputChannel);
+        clangdContext =
+            await createContext(context.globalStoragePath, outputChannel);
         if (clangdContext)
           context.subscriptions.push(clangdContext);
         if (apiInstance) {
