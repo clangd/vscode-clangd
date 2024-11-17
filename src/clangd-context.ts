@@ -62,7 +62,7 @@ export class ClangdContext implements vscode.Disposable {
 
   async activate(globalStoragePath: string,
                  outputChannel: vscode.OutputChannel) {
-    const clangdPath = await install.activate(this, globalStoragePath);
+    const clangdPath = await install.activate(this.subscriptions, globalStoragePath);
     if (!clangdPath)
       return;
 
