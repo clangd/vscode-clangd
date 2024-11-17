@@ -56,25 +56,25 @@ class EnableEditsNearCursorFeature implements vscodelc.StaticFeature {
   dispose() {}
 }
 
-export async function createContext(globalStoragePath: string,
-                                    outputChannel: vscode.OutputChannel):
-    Promise<ClangdContext|null> {
-  const subscriptions: vscode.Disposable[] = [];
-  const clangdPath = await install.activate(subscriptions, globalStoragePath);
-  if (!clangdPath)
-    return null;
-
-  const clangdArguments = await config.get<string[]>('arguments');
-
-  return new ClangdContext(clangdPath, clangdArguments, outputChannel);
-}
-
 export class ClangdContext implements vscode.Disposable {
   subscriptions: vscode.Disposable[] = [];
   client: ClangdLanguageClient;
 
-  constructor(clangdPath: string, clangdArguments: string[],
-              outputChannel: vscode.OutputChannel) {
+  static async create(globalStoragePath: string,
+                      outputChannel: vscode.OutputChannel):
+      Promise<ClangdContext|null> {
+    const subscriptions: vscode.Disposable[] = [];
+    const clangdPath = await install.activate(subscriptions, globalStoragePath);
+    if (!clangdPath)
+    return null;
+
+    const clangdArguments = await config.get<string[]>('arguments');
+
+    return new ClangdContext(clangdPath, clangdArguments, outputChannel);
+  }
+
+  private constructor(clangdPath: string, clangdArguments: string[],
+                      outputChannel: vscode.OutputChannel) {
     const clangd: vscodelc.Executable = {
       command: clangdPath,
       args: clangdArguments,
@@ -120,7 +120,8 @@ export class ClangdContext implements vscode.Disposable {
           let list = await next(document, position, context, token);
           if (!config.get<boolean>('serverCompletionRanking'))
             return list;
-          let items = (Array.isArray(list) ? list : list!.items).map(item => {
+          let items = (!list ? [] : Array.isArray(list) ? list : list.items);
+          items = items.map(item => {
             // Gets the prefix used by VSCode when doing fuzzymatch.
             let prefix = document.getText(
                 new vscode.Range((item.range as vscode.Range).start, position))

@@ -120,7 +120,7 @@ class UI {
   }
 
   get clangdPath(): string {
-    let p = config.get<string>('path')!;
+    let p = config.get<string>('path');
     // Backwards compatibility: if it's a relative path with a slash, interpret
     // relative to project root.
     if (!path.isAbsolute(p) && p.includes(path.sep) &&

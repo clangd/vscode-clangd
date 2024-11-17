@@ -3,7 +3,7 @@ import * as vscode from 'vscode';
 import {ClangdExtension} from '../api/vscode-clangd';
 
 import {ClangdExtensionImpl} from './api';
-import {ClangdContext, createContext} from './clangd-context';
+import {ClangdContext} from './clangd-context';
 
 let apiInstance: ClangdExtensionImpl|undefined;
 
@@ -34,9 +34,9 @@ export async function activate(context: vscode.ExtensionContext):
           return;
         }
         if (clangdContext)
-          await clangdContext.dispose();
+          clangdContext.dispose();
         clangdContext =
-            await createContext(context.globalStoragePath, outputChannel);
+            await ClangdContext.create(context.globalStoragePath, outputChannel);
         if (clangdContext)
           context.subscriptions.push(clangdContext);
         if (apiInstance) {
@@ -48,7 +48,7 @@ export async function activate(context: vscode.ExtensionContext):
 
   if (vscode.workspace.getConfiguration('clangd').get<boolean>('enable')) {
     clangdContext =
-        await createContext(context.globalStoragePath, outputChannel);
+        await ClangdContext.create(context.globalStoragePath, outputChannel);
     if (clangdContext)
       context.subscriptions.push(clangdContext);
 
