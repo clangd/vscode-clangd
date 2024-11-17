@@ -56,19 +56,27 @@ class EnableEditsNearCursorFeature implements vscodelc.StaticFeature {
   dispose() {}
 }
 
+export async function createContext(globalStoragePath: string,
+  outputChannel: vscode.OutputChannel): Promise<ClangdContext | null> {
+  const subscriptions: vscode.Disposable[] = [];
+  const clangdPath = await install.activate(subscriptions, globalStoragePath);
+  if (!clangdPath)
+    return null;
+
+  const clangdArguments = await config.get<string[]>('arguments');
+
+  return new ClangdContext(clangdPath, clangdArguments, outputChannel);
+}
+
 export class ClangdContext implements vscode.Disposable {
   subscriptions: vscode.Disposable[] = [];
-  client!: ClangdLanguageClient;
+  client: ClangdLanguageClient;
 
-  async activate(globalStoragePath: string,
-                 outputChannel: vscode.OutputChannel) {
-    const clangdPath = await install.activate(this.subscriptions, globalStoragePath);
-    if (!clangdPath)
-      return;
-
+  constructor(clangdPath: string, clangdArguments: string[],
+    outputChannel: vscode.OutputChannel) {
     const clangd: vscodelc.Executable = {
       command: clangdPath,
-      args: await config.get<string[]>('arguments'),
+      args: clangdArguments,
       options: {cwd: vscode.workspace.rootPath || process.cwd()}
     };
     const traceFile = config.get<string>('trace');
