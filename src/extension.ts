@@ -39,7 +39,7 @@ export async function activate(context: vscode.ExtensionContext):
         if (clangdContext)
           context.subscriptions.push(clangdContext);
         if (apiInstance) {
-          apiInstance.client = clangdContext!.client;
+          apiInstance.client = clangdContext?.client;
         }
       }));
 
@@ -87,6 +87,6 @@ export async function activate(context: vscode.ExtensionContext):
     }, 5000);
   }
 
-  apiInstance = new ClangdExtensionImpl(clangdContext!.client);
+  apiInstance = new ClangdExtensionImpl(clangdContext?.client);
   return apiInstance;
 }
