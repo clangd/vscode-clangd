@@ -47,7 +47,8 @@ export async function activate(context: vscode.ExtensionContext):
   let shouldCheck = false;
 
   if (vscode.workspace.getConfiguration('clangd').get<boolean>('enable')) {
-    clangdContext = await createContext(context.globalStoragePath, outputChannel);
+    clangdContext =
+        await createContext(context.globalStoragePath, outputChannel);
     if (clangdContext)
       context.subscriptions.push(clangdContext);
 

@@ -58,7 +58,7 @@ class EnableEditsNearCursorFeature implements vscodelc.StaticFeature {
 
 export async function createContext(globalStoragePath: string,
                                     outputChannel: vscode.OutputChannel):
-    Promise<ClangdContext | null> {
+    Promise<ClangdContext|null> {
   const subscriptions: vscode.Disposable[] = [];
   const clangdPath = await install.activate(subscriptions, globalStoragePath);
   if (!clangdPath)
