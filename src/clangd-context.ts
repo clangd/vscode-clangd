@@ -66,7 +66,7 @@ export class ClangdContext implements vscode.Disposable {
     const subscriptions: vscode.Disposable[] = [];
     const clangdPath = await install.activate(subscriptions, globalStoragePath);
     if (!clangdPath)
-    return null;
+      return null;
 
     const clangdArguments = await config.get<string[]>('arguments');
 

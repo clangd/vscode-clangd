@@ -35,8 +35,8 @@ export async function activate(context: vscode.ExtensionContext):
         }
         if (clangdContext)
           clangdContext.dispose();
-        clangdContext =
-            await ClangdContext.create(context.globalStoragePath, outputChannel);
+        clangdContext = await ClangdContext.create(context.globalStoragePath,
+                                                   outputChannel);
         if (clangdContext)
           context.subscriptions.push(clangdContext);
         if (apiInstance) {
