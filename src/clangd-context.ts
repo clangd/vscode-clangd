@@ -68,13 +68,23 @@ export class ClangdContext implements vscode.Disposable {
     if (!clangdPath)
       return null;
 
+    const useScriptAsExecutable =
+        await config.get<boolean>('useScriptAsExecutable');
     const clangdArguments = await config.get<string[]>('arguments');
 
-    return new ClangdContext(clangdPath, clangdArguments, outputChannel);
+    return new ClangdContext(clangdPath, clangdArguments, outputChannel,
+                             useScriptAsExecutable);
   }
 
   private constructor(clangdPath: string, clangdArguments: string[],
-                      outputChannel: vscode.OutputChannel) {
+                      outputChannel: vscode.OutputChannel,
+                      useScriptAsExecutable: boolean) {
+    if (useScriptAsExecutable) {
+      let quote = (str: string) => { return `"${str}"`; };
+      clangdPath = quote(clangdPath)
+      for (var i = 0; i < clangdArguments.length; i++)
+      clangdArguments[i] = quote(clangdArguments[i]);
+    }
     const clangd: vscodelc.Executable = {
       command: clangdPath,
       args: clangdArguments,
