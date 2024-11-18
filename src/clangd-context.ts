@@ -58,17 +58,26 @@ class EnableEditsNearCursorFeature implements vscodelc.StaticFeature {
 
 export class ClangdContext implements vscode.Disposable {
   subscriptions: vscode.Disposable[] = [];
-  client!: ClangdLanguageClient;
+  client: ClangdLanguageClient;
 
-  async activate(globalStoragePath: string,
-                 outputChannel: vscode.OutputChannel) {
-    const clangdPath = await install.activate(this, globalStoragePath);
+  static async create(globalStoragePath: string,
+                      outputChannel: vscode.OutputChannel):
+      Promise<ClangdContext|null> {
+    const subscriptions: vscode.Disposable[] = [];
+    const clangdPath = await install.activate(subscriptions, globalStoragePath);
     if (!clangdPath)
-      return;
+      return null;
 
+    const clangdArguments = await config.get<string[]>('arguments');
+
+    return new ClangdContext(clangdPath, clangdArguments, outputChannel);
+  }
+
+  private constructor(clangdPath: string, clangdArguments: string[],
+                      outputChannel: vscode.OutputChannel) {
     const clangd: vscodelc.Executable = {
       command: clangdPath,
-      args: await config.get<string[]>('arguments'),
+      args: clangdArguments,
       options: {cwd: vscode.workspace.rootPath || process.cwd()}
     };
     const traceFile = config.get<string>('trace');
@@ -111,7 +120,8 @@ export class ClangdContext implements vscode.Disposable {
           let list = await next(document, position, context, token);
           if (!config.get<boolean>('serverCompletionRanking'))
             return list;
-          let items = (Array.isArray(list) ? list : list!.items).map(item => {
+          let items = (!list ? [] : Array.isArray(list) ? list : list.items);
+          items = items.map(item => {
             // Gets the prefix used by VSCode when doing fuzzymatch.
             let prefix = document.getText(
                 new vscode.Range((item.range as vscode.Range).start, position))

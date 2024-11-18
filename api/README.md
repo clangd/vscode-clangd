@@ -17,6 +17,11 @@ const provideHover = async (document: vscode.TextDocument, position: vscode.Posi
 
     if (clangdExtension) {
         const api = (await clangdExtension.activate()).getApi(CLANGD_API_VERSION);
+
+        // Extension may be disabled or have failed to initialize
+        if (!api.languageClient) {
+          return undefined;
+        }
  
         const textDocument = api.languageClient.code2ProtocolConverter.asTextDocumentIdentifier(document);
         const range = api.languageClient.code2ProtocolConverter.asRange(new vscode.Range(position, position));

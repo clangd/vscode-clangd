@@ -6,23 +6,23 @@ import AbortController from 'abort-controller';
 import * as path from 'path';
 import * as vscode from 'vscode';
 
-import {ClangdContext} from './clangd-context';
 import * as config from './config';
 
 // Returns the clangd path to be used, or null if clangd is not installed.
-export async function activate(
-    context: ClangdContext, globalStoragePath: string): Promise<string|null> {
-  const ui = new UI(context, globalStoragePath);
-  context.subscriptions.push(vscode.commands.registerCommand(
+export async function activate(disposables: vscode.Disposable[],
+                               globalStoragePath: string):
+    Promise<string|null> {
+  const ui = new UI(disposables, globalStoragePath);
+  disposables.push(vscode.commands.registerCommand(
       'clangd.install', async () => common.installLatest(ui)));
-  context.subscriptions.push(vscode.commands.registerCommand(
+  disposables.push(vscode.commands.registerCommand(
       'clangd.update', async () => common.checkUpdates(true, ui)));
   const status = await common.prepare(ui, config.get<boolean>('checkUpdates'));
   return status.clangdPath;
 }
 
 class UI {
-  constructor(private context: ClangdContext,
+  constructor(private disposables: vscode.Disposable[],
               private globalStoragePath: string) {}
 
   get storagePath(): string { return this.globalStoragePath; }
@@ -60,8 +60,7 @@ class UI {
   error(s: string) { vscode.window.showErrorMessage(s); }
   info(s: string) { vscode.window.showInformationMessage(s); }
   command(name: string, body: () => any) {
-    this.context.subscriptions.push(
-        vscode.commands.registerCommand(name, body));
+    this.disposables.push(vscode.commands.registerCommand(name, body));
   }
 
   async shouldReuse(release: string): Promise<boolean|undefined> {
@@ -121,7 +120,7 @@ class UI {
   }
 
   get clangdPath(): string {
-    let p = config.get<string>('path')!;
+    let p = config.get<string>('path');
     // Backwards compatibility: if it's a relative path with a slash, interpret
     // relative to project root.
     if (!path.isAbsolute(p) && p.includes(path.sep) &&
