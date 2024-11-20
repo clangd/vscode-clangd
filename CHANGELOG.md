@@ -1,5 +1,11 @@
 # Change Log
 
+## Version 0.1.32: November 2, 2024
+
+* Allow "clangd.path" to point to a shell script (restoring behavior from VS Code 1.91), behind option "clangd.useScriptAsExecutable" [#730](https://github.com/clangd/vscode-clangd/pull/730)
+* Handle language client being null if clangd is disabled or failed to initialize [#728](https://github.com/clangd/vscode-clangd/pull/728), [#731](https://github.com/clangd/vscode-clangd/pull/731)
+
+
 ## Version 0.1.31: November 13, 2024
 
 * Reverted [#708](https://github.com/clangd/vscode-clangd/pull/708) and [#715](https://github.com/clangd/vscode-clangd/pull/715) for causing [#722](https://github.com/clangd/vscode-clangd/issues/722)
