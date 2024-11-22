@@ -48,7 +48,7 @@ recommend to run `npm run format` before sending a patch.
 
 To create a new release, create a commit that:
 
-- increases the version number in `package.json` and `package-lock.json`
+- increases the version number in `package.json`
 - updates `CHANGELOG.md` to cover changes since the last release
 
 Our CI will recognize the commit and publish new versions to the VSCode
