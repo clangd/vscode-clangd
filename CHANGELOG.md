@@ -1,5 +1,10 @@
 # Change Log
 
+## Version 0.1.33: November 21, 2024
+
+* Reverted [#730](https://github.com/clangd/vscode-clangd/pull/730) for causing [#734](https://github.com/clangd/vscode-clangd/issues/734)
+
+
 ## Version 0.1.32: November 21, 2024
 
 * Allow "clangd.path" to point to a shell script (restoring behavior from VS Code 1.91), behind option "clangd.useScriptAsExecutable" [#730](https://github.com/clangd/vscode-clangd/pull/730)
