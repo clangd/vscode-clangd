@@ -65,19 +65,18 @@ export class ClangdContext implements vscode.Disposable {
       Promise<ClangdContext|null> {
     const subscriptions: vscode.Disposable[] = [];
     const clangdPath = await install.activate(subscriptions, globalStoragePath);
-    if (!clangdPath)
+    if (!clangdPath) {
+      subscriptions.forEach((d) => { d.dispose(); });
       return null;
+    }
 
-    const clangdArguments = await config.get<string[]>('arguments');
-
-    return new ClangdContext(subscriptions, clangdPath, clangdArguments,
-                             outputChannel);
+    return new ClangdContext(subscriptions, clangdPath, outputChannel);
   }
 
   private constructor(subscriptions: vscode.Disposable[], clangdPath: string,
-                      clangdArguments: string[],
                       outputChannel: vscode.OutputChannel) {
     this.subscriptions = subscriptions;
+    const clangdArguments = config.get<string[]>('arguments');
     const clangd: vscodelc.Executable = {
       command: clangdPath,
       args: clangdArguments,
