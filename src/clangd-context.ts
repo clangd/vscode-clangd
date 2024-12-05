@@ -108,9 +108,8 @@ export class ClangdContext implements vscode.Disposable {
             function fix_windows_drive_letter_casing(uri: vscode.Uri): string | undefined {
               // We can't just use process.platform === 'win32' because of remote development
 
-              // https://stackoverflow.com/a/64822303/4479969
               // detect windows paths
-              const isWindowsPathRegex = /^(?<drive>[a-z]:)?(?<path>(?:[\\]?(?:[\w !#()-]+|[.]{1,2})+)*[\\])?(?<filename>(?:[.]?[\w !#()-]+)+)?[.]?$/i;
+              const isWindowsPathRegex = /^(?<drive_letter>[a-zA-Z]):[\\\/](?<remainingPath>.*)/i;
 
               // Fix lower case drive letters on Windows
               const fsPath = uri.fsPath
@@ -123,17 +122,16 @@ export class ClangdContext implements vscode.Disposable {
               }
 
               // change the drive letter to uppercase
-              const drive = windowsPathMatch.groups?.drive?.toUpperCase() ?? '';
-              const path = windowsPathMatch.groups?.path ?? '';
-              const filename = windowsPathMatch.groups?.filename ?? '';
+              const drive_letter = windowsPathMatch.groups?.drive_letter?.toUpperCase() ?? '';
+              const remainingPath = windowsPathMatch.groups?.remainingPath ?? '';
 
-              if (!drive) {
+              if (!drive_letter) {
                 // no drive letter so there is nothing to fix
                 return undefined;
               }
 
               // Reconstruct the path
-              const fixed_uri = `file:///${drive}${path}${filename}`;
+              const fixed_uri = `file:///${drive_letter}:\\${remainingPath}`;
               return fixed_uri;
             }
 
