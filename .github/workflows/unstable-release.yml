@@ -35,4 +35,5 @@ jobs:
         artifacts: "vscode-clangd-unstable-${{ steps.commit_id.outputs.commit_id }}.vsix"
         tag: ${{ github.event.inputs.tag }}
         commit: master
+        prerelease: true
         token: ${{ secrets.GITHUB_TOKEN }}
