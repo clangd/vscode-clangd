@@ -81,9 +81,13 @@ class UI {
     }
   }
 
+  private _pathUpdated: Promise<void>|null = null;
+
   async promptReload(message: string) {
-    if (await vscode.window.showInformationMessage(message, 'Reload window'))
-      vscode.commands.executeCommand('workbench.action.reloadWindow');
+    vscode.window.showInformationMessage(message);
+    await this._pathUpdated;
+    this._pathUpdated = null;
+    vscode.commands.executeCommand('clangd.restart');
   }
 
   async showHelp(message: string, url: string) {
@@ -129,6 +133,8 @@ class UI {
     return p;
   }
   set clangdPath(p: string) {
-    config.update('path', p, vscode.ConfigurationTarget.Global);
+    this._pathUpdated = new Promise(resolve => {
+      config.update('path', p, vscode.ConfigurationTarget.Global).then(resolve);
+    });
   }
 }
