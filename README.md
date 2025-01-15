@@ -98,6 +98,9 @@ clangd to format the old line and semantically reindent.
 The style used for formatting (and certain other operations) is controlled by the project's
 [.clang-format file](https://clang.llvm.org/docs/ClangFormatStyleOptions.html).
 
+Note that if you prefer to use something other than clangd for formatting, you can
+choose a different formatter with the `"editor.defaultFormatter"` setting.
+
 ### Refactoring
 
 clangd supports some local refactorings. When you select an expression or
