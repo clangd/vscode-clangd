@@ -185,6 +185,11 @@ export class ClangdContext implements vscode.Disposable {
             if (query.includes('::')) {
               if (symbol.containerName)
                 symbol.name = `${symbol.containerName}::${symbol.name}`;
+              // results from clangd strip the leading '::', so vscode fuzzy
+              // match will filter out all results unless we add prefix back in
+              if (query.startsWith('::')) {
+                symbol.name = `::${symbol.name}`;
+              }
               // Clean the containerName to avoid displaying it twice.
               symbol.containerName = '';
             }
