@@ -18,12 +18,26 @@ jobs:
       with:
         diff-search: true # seach the diff content with version
     - if: steps.check.outputs.changed == 'true'
+      id: is_preview
+      run: |
+        IFS=', ' read -r -a array <<< "${{ steps.check.outputs.version }}"
+        if [ $((array[1]%2)) -eq 0 ];
+        then
+          echo ::set-output name=is_preview"false"
+        else
+          echo ::set-output name=is_preview"true"
+        fi
+      shell: bash
+    - if: steps.check.outputs.changed == 'true'
       run: npm ci
     - if: steps.check.outputs.changed == 'true'
       run: npm test
     - name: package
-      if: steps.check.outputs.changed == 'true'
+      if: steps.check.outputs.changed == 'true' && steps.is_preview.outputs.is_preview == 'false'
       run: npm run package
+    - name: package
+      if: steps.check.outputs.changed == 'true' && steps.is_preview.outputs.is_preview == 'true'
+      run: npm run package-pre-release
     - name: publish to Github
       uses: ncipollo/release-action@v1
       if: steps.check.outputs.changed == 'true'
@@ -33,10 +47,13 @@ jobs:
         commit: ${{ steps.check.outputs.commit }}
         token: ${{ secrets.GITHUB_TOKEN }}
     - name: publish to VSCode Marketplace
-      if: steps.check.outputs.changed == 'true'
+      if: steps.check.outputs.changed == 'true' && steps.is_preview.outputs.is_preview == 'false'
       # The token will expire. Regenerate it at:
       # https://llvm-vs-code-extensions.visualstudio.com/_usersSettings/tokens.
       run: npm run publish -- -p "${{ secrets.VSCODE_MARKETPLACE_TOKEN }}"
+    - name: publish to VSCode Marketplace
+      if: steps.check.outputs.changed == 'true' && steps.is_preview.outputs.is_preview == 'true'
+      run: npm run publish-pre-release -- -p "${{ secrets.VSCODE_MARKETPLACE_TOKEN }}"
     - name: publish to OpenVSX
       if: steps.check.outputs.changed == 'true'
       # The token will expire. Regenerate it at:
