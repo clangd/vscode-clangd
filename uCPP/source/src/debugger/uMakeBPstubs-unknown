@@ -1,0 +1,8 @@
+#!/bin/sh
+echo "//###################### uLocalDebuggerHandler #########################"
+echo "// generated automatically => do not change !"
+echo
+echo "class uLocalDebuggerHandler {"
+echo "public:"
+echo "    uLocalDebuggerHandler() {}"
+echo "};"

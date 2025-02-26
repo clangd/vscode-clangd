@@ -1,0 +1,326 @@
+\setlength{\textheight}{9in}
+%\oddsidemargin 0.0in
+\renewcommand{\topfraction}{0.8}	% float must be greater than X of the page before it is forced onto its own page
+\renewcommand{\bottomfraction}{0.8}	% float must be greater than X of the page before it is forced onto its own page
+\renewcommand{\floatpagefraction}{0.8}	% float must be greater than X of the page before it is forced onto its own page
+\renewcommand{\textfraction}{0.0}	% the entire page maybe devoted to floats with no text on the page at all
+\usepackage{pslatex}			% reduce size of san serif font
+
+%       ****************************************
+%       *              PAGESTYLE               *
+%       ****************************************
+
+\renewcommand{\pagestyle}[1]{
+  \@ifundefined{ps@#1}%
+    \undefinedpagestyle
+    {\def\@tempa{#1}\def\@tempb{headings}\def\@tempc{myheadings}%
+     \ifx\@tempa\@tempb\setlength{\topmargin}{-0.5in}\setlength{\headsep}{0.5in}%
+     \else\ifx\@tempa\@tempc\setlength{\topmargin}{-0.5in}\setlength{\headsep}{0.5in}\fi\fi%
+     \@nameuse{ps@#1}}}% pagestyle
+
+%       ****************************************
+%       *         COLOUR HIGHLIGHTING          *
+%       ****************************************
+
+\usepackage[usenames]{color}
+\newcommand{\Textbf}[2][red]{{\color{#1}{\textbf{#2}}}}
+\newcommand{\Emph}[2][red]{{\color{#1}\textbf{\emph{#2}}}}
+
+%       ****************************************
+%       *           ABBREVIATIONS              *
+%       ****************************************
+
+\usepackage{xspace}
+\newcommand{\CC}{C\kern-.1em\hbox{+\kern-.25em+}\xspace}
+\newcommand{\uC}{$\mu$\CC}
+\newcommand{\uS}{$\mu$System\xspace}
+
+%       ****************************************
+%       *            MAKETITLE                 *
+%       ****************************************
+
+\def\@maketitle{%
+    \newpage
+    \null
+%   \vskip 2em%
+    \begin{center}%
+	\let \footnote \thanks
+        {\LARGE\bf \@title \par}%
+        \@ifundefined{@author}{}
+        {
+            \ifx\@empty\@author
+            \else
+                \vskip 1.5em%
+		{\large
+                    \lineskip .5em%
+                    \begin{tabular}[t]{c}%
+                        \@author
+                    \end{tabular}%
+                    \par
+		}%
+	    \fi
+        }%
+        \ifx\@empty\@date
+        \else
+            \vskip 1em%
+	    {\large \@date}%
+        \fi
+    \end{center}%
+    \par
+%   \vskip 1.5em
+}%maketitle
+
+%       ****************************************
+%       *          SECTION TITLES              *
+%       ****************************************
+%
+%  Reduce size of section titles
+
+\renewcommand\section{\@startsection{section}{1}{\z@}{-3.0ex \@plus -1ex \@minus -.2ex}{1.0ex \@plus .2ex}{\normalfont\large\bfseries}}
+\renewcommand\subsection{\@startsection{subsection}{2}{\z@}{-2.5ex \@plus -1ex \@minus -.2ex}{1.0ex \@plus .2ex}{\normalfont\normalsize\bfseries}}
+\renewcommand\subsubsection{\@startsection{subsubsection}{3}{\z@}{-2.0ex \@plus -1ex \@minus -.2ex}{1.0ex \@plus .2ex}{\normalfont\normalsize\bfseries}}
+\renewcommand\paragraph{\@startsection{paragraph}{4}{\z@}{-2.0ex \@plus -1ex \@minus -.2ex}{-1em}{\normalfont\normalsize\bfseries}}
+
+%       ****************************************
+%       *                LABEL                 *
+%       ****************************************
+
+\renewcommand{\label}[2][\@currentlabel]{\@bsphack
+  \protected@write\@auxout{}%
+         {\string\newlabel{#2}{{#1}{\thepage}}}%
+  \@esphack}
+
+%       ****************************************
+%       *          PREFIX ITEMIZE              *
+%       ****************************************
+
+\def\prefixlabel#1{\hspace\labelsep {\em #1}}
+\def\prefix{
+    \list{}{
+        \ifdim\parindent < 1em \leftmargin=1.5em \else \leftmargin\parindent \fi % Indent the code the same amount as a paragraph
+        \labelwidth=\leftmargin
+        \multiply \leftmargin by 2
+        \let\makelabel\prefixlabel
+        \itemsep=2pt
+        \parsep=0pt
+    }
+}
+\let\endprefix\endlist
+
+%       ****************************************
+%       *      CONTINUOUS COUNTING ITEM        *
+%       ****************************************
+
+\newcounter{enumi_saved}
+\newenvironment{cenumerate}{
+    \begin{enumerate}\setcounter{enumi}{\value{enumi_saved}}
+}{
+    \setcounter{enumi_saved}{\value{enumi}}\end{enumerate}
+}% newenvironment
+
+%       ****************************************
+%       *         CONDITIONAL EXECUTE          *
+%       ****************************************
+
+\def\condexec#1{\ifdim \f@size pt > 12pt #1 \fi}
+\def\notcondexec#1{\ifdim \f@size pt < 13pt #1 \fi}
+
+%       ****************************************
+%       *               INDEXING               *
+%       ****************************************
+
+\newcommand{\newtermFontInline}{\textbf}
+% \newcommand{\newterm}[2][\@empty]{{\newtermFontInline{#2}}\ifx#1\@empty\index{#2@{\lowercase{#2}}}\else\index{#1@{\lowercase{#2}}}\fi}
+% \newcommand{\Index}[2][\@empty]{#2\ifx#1\@empty\index{#2@{\lowercase{#2}}}\else\index{#1@{\lowercase{#2}}}\fi}
+\newcommand{\Index}{\@ifstar\@sIndex\@Index}
+\newcommand{\@Index}[2][\@empty]{\lowercase{\def\temp{#2}}#2\ifx#1\@empty\index{\temp}\else\index{#1@{\protect#2}}\fi}
+\newcommand{\@sIndex}[2][\@empty]{#2\ifx#1\@empty\index{#2}\else\index{#1@{\protect#2}}\fi}
+\newcommand{\newterm}{\@ifstar\@snewterm\@newterm}
+\newcommand{\@newterm}[2][\@empty]{\lowercase{\def\temp{#2}}{\newtermFontInline{#2}}\ifx#1\@empty\index{\temp}\else\index{#1@{\protect#2}}\fi}
+\newcommand{\@snewterm}[2][\@empty]{{\newtermFontInline{#2}}\ifx#1\@empty\index{#2}\else\index{#1@{\protect#2}}\fi}
+
+%       ****************************************
+%       *              REF MACRO               *
+%       ****************************************
+
+\usepackage{varioref}
+\renewcommand{\reftextfaceafter}{\unskip}
+\renewcommand{\reftextfacebefore}{\unskip}
+\renewcommand{\reftextafter}{\unskip}
+\renewcommand{\reftextbefore}{\unskip}
+\renewcommand{\reftextfaraway}[1]{\unskip, p.~\pageref{#1}}
+\renewcommand{\reftextpagerange}[2]{\unskip, pp.~\pageref{#1}--\pageref{#2}}
+\newcommand{\VRef}[2][Section]{\ifx#1\@empty\else{#1}\nobreakspace\fi\vref{#2}}
+\newcommand{\VPageref}[2][page]{\ifx#1\@empty\else{#1}\nobreakspace\fi\pageref{#2}}
+
+%       ****************************************
+%       *         ANNOTATION MACRO             *
+%       ****************************************
+
+\newenvironment{annotation}{
+	\begin{quotation}
+	\noindent$\Box$\enspace
+}{
+	\hfill\enspace$\Box$\end{quotation}
+}% newenvironment
+
+%       ****************************************
+%       *           GRAMMAR MACRO              *
+%       ****************************************
+
+\newenvironment{grammar}{
+	\begin{quote}
+	\begin{description}
+}{
+	\end{description}
+	\end{quote}
+}% grammar
+\newcommand{\lhs}[1]{\item[{\it #1\ :}]~}
+\newcommand{\rhs}{\newline}
+\newcommand{\nterminal}[1]{\textit{#1}}
+\newcommand{\terminal}[1]{\ ``\texttt{#1}''}
+\newcommand{\opt}{$_{opt}$\ }
+\newcommand{\alt}{\ $|$\ }
+
+
+\@ifundefined{intgrind}{}{
+%       ****************************************
+%       *           INTGRIND MACRO             *
+%       ****************************************
+
+\newenvironment{intgrind}{
+    \begin{list}{}{
+	\singlespace
+	\partopsep=0pt		% No extra space is code is preceded by a blank line
+%	\parsep=\baselineskip	% Blank lines separate paragraphs.
+	\ifdim\parindent < 1em \leftmargin=1.5em \else \leftmargin\parindent \fi % Indent the code the same amount as a paragraph
+    }
+    \item[]			% Produce an empty label.
+    \begin{minipage}{\columnwidth}
+    \begin{tgrind}
+	\linenext=999						% remove numbering
+	\let\CF=\codefont
+	\def\C{\sl\global\let\CF=\sl\global\commenttrue\relax}	% Comment Start
+	\def\CE{\codefont\global\let\CF=\codefont\global\commentfalse\relax}	% Comment End
+	\def\S{\tt\global\let\CF=\tt\global\stringtrue\relax}	% String Start
+	\def\SE{\codefont\global\let\CF=\codefont\global\stringfalse\relax}	% String End
+}{
+    \end{tgrind}
+    \end{minipage}
+    \end{list}
+}% intgrind
+
+%       ****************************************
+%       *           MODIFY TGRINDFILE          *
+%       ****************************************
+
+\def\tgrindfile#1{%
+    \par
+%    \addvspace{0.1in}
+%    \hrule
+    \vskip .5\baselineskip
+    \begin{small}
+	\singlespace
+	\begin{tgrind}
+	    \linenext=9999					    	% remove numbering
+	    \let\CF=\codefont
+	    \def\C{\sl\global\let\CF=\sl\global\commenttrue\relax}	% Comment Start
+	    \def\CE{\codefont\global\let\CF=\codefont\global\commentfalse\relax}	% Comment End
+	    \def\S{\tt\global\let\CF=\tt\global\stringtrue\relax}	% String Start
+	    \def\SE{\codefont\global\let\CF=\codefont\global\stringfalse\relax}	% String End
+	    \input #1\relax%
+	\end{tgrind}
+    \end{small}
+    \vskip .5\baselineskip
+%    \hrule
+%    \addvspace{0.1in}
+}% tgrindfile
+}% ifundefined{intgrind}
+
+
+\@ifundefined{lgrind}{}{
+%       ****************************************
+%       *            MODIFY LGRIND             *
+%       ****************************************
+
+\LGnuminterval=0 % remove numbering
+%\LGindent=\parindent
+
+}% ifundefined{lgrind}
+
+%       ****************************************
+%       *              CODE QUOTE              *
+%       ****************************************
+
+\newenvironment{cquote}{%
+	\list{}{\topsep=1pt\parskip=0pt\partopsep=0pt\itemsep=0pt\parsep=0pt\listparindent=0pt\leftmargin=0pt\rightmargin=0pt}%
+	\item\relax
+}{%
+	\endlist
+}% cquote
+
+%       ****************************************
+%       *         MODIFY BIBLIOGRAPHY          *
+%       ****************************************
+%
+% add a table of contents entry
+
+\renewenvironment{thebibliography}[1]{
+    \@ifundefined{thechapter}{
+	\section*{\refname
+		\@mkboth{\MakeUppercase\refname}{\MakeUppercase\refname}}%
+    	\addcontentsline{toc}{section}{\refname}
+    }{
+	\chapter*{\bibname
+		\@mkboth{\MakeUppercase\bibname}{\MakeUppercase\bibname}}%
+	\addcontentsline{toc}{chapter}{\bibname}
+    }
+    \list{\@biblabel{\@arabic\c@enumiv}}%
+	{\settowidth\labelwidth{\@biblabel{#1}}%
+	\leftmargin\labelwidth
+	\advance\leftmargin\labelsep
+	\@openbib@code
+	\usecounter{enumiv}%
+	\let\p@enumiv\@empty
+	\renewcommand\theenumiv{\@arabic\c@enumiv}}%
+    \sloppy
+    \clubpenalty4000
+    \@clubpenalty \clubpenalty
+    \widowpenalty4000%
+    \sfcode`\.\@m}
+   {\def\@noitemerr
+    {\@latex@warning{Empty `thebibliography' environment}}%
+    \endlist}
+
+%       ****************************************
+%       *            MODIFY INDEX              *
+%       ****************************************
+%
+% add a table of contents entry
+
+\renewenvironment{theindex}{
+    \if@twocolumn
+	\@restonecolfalse
+    \else
+	\@restonecoltrue
+    \fi
+    \columnseprule \z@
+    \columnsep 35\p@
+    \@ifundefined{thechapter}{
+	\twocolumn[\section*{\indexname}]%
+	\@mkboth{\MakeUppercase\indexname}%
+		{\MakeUppercase\indexname}%
+	\addcontentsline{toc}{section}{\indexname}
+    }{
+%	\twocolumn[\@makeschapterhead{\indexname}]%
+%	\@mkboth{\MakeUppercase\indexname}%
+%		{\MakeUppercase\indexname}%
+	\twocolumn
+	\chapter*{\indexname
+		\@mkboth{\MakeUppercase\indexname}{\MakeUppercase\indexname}}%
+	\addcontentsline{toc}{chapter}{\indexname}
+    }
+%   \thispagestyle{plain}
+    \parskip\z@ \@plus .3\p@\relax
+    \let\item\@idxitem}
+   {\if@restonecol\onecolumn\else\clearpage\fi}

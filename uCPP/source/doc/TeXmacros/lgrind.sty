@@ -1,0 +1,296 @@
+%%
+%% This is file `lgrind.sty' generated
+%% on <1991/9/13> with the docstrip utility (v1.1l test).
+%%
+%% The original source file was `lgrind.doc'.
+%%
+%%
+%% lgrind is a minor adaptation of Jerry Leichter's tgrind for LaTeX,
+%% which was a notable improvement upon Van Jacobsen's tgrind for
+%% plain TeX, which was adapted from vgrind, a troff prettyprinter.
+%%
+%% LaTeX lgrind environment
+
+\NeedsTeXFormat{LaTeX2e}[1995/5/01]
+
+\newif\ifc@mment % True when setting a comment
+\newif\ifstr@ng % True when setting a string constant
+\newif\ifright@ % In comments, \" => '' (else ``) ''
+\newcount\lc@unt % Line counter
+\newcount\ln@xt % Next line to get numbered
+\newbox\ls@far % Stores lines so far for tabbing
+\newdimen\TBw@d % Tabwidth when tabbing
+\newbox\tb@x % Tab positioning
+\newdimen\@ts % Width of listing space
+
+\def\BGfont{\sffamily\upshape} % Background font
+\def\CMfont{\sffamily\itshape} % Comment font
+\def\KWfont{\sffamily\bfseries\upshape} % Keyword font
+\def\STfont{\ttfamily\upshape} % String font
+\def\VRfont{\sffamily\upshape} % Variable name font
+
+\def\LGsinglespace{\renewcommand{\baselinestretch}{0.85}}
+
+\usepackage[dvips]{graphics}% rotatebox
+\usepackage{amssymb}% \backprime for backquote
+
+%\usepackage{relsize}
+%\def\LGsize{\relsize{0}}  %Size to use in displayed code
+%\def\LGisize{\relsize{0}} %Size to use in inline code
+%\def\LGfsize{\relsize{-1}} %Size to use in \lgrindfile
+\def\LGsize{}  %Size to use in displayed code
+\def\LGisize{} %Size to use in inline code
+\def\LGfsize{\small} %Size to use in \lgrindfile
+\def\LGspacing{\LGsinglespace} % Spacing to use in displayed code
+\def\LGfspacing{\LGsinglespace} % Spacing to use in \lgrindfile
+
+\newif\ifLGinline % True for in-line code
+\newif\ifLGleftnum % Put line numbers on the left
+\LGleftnumtrue
+\newif\ifLGcont % Reset line number
+\LGconttrue
+\newcount\LGnuminterval % Line numbering interval
+\LGnuminterval=10
+\newskip\LGindent % Indentation for displayed lines
+%\LGindent=1.6667\parindent
+\LGindent=\parindent
+\def\LGtab{\hspace*{1ex}} % size of a tab character
+\newskip\LGbeginspacing % spacing at beginning of display code
+\LGbeginspacing=0pt
+\newskip\LGendspacing % spacing at ending of display code
+\LGendspacing=0pt
+\def\LGlcsep{\qquad} % separation after line counter
+\def\LGispace{\hspace*{0.8ex}} % width of inline space
+\def\LGspace{\LGispace} % width of display space
+
+\def\LGbegin{%
+	\ifLGinline%
+		\leavevmode%
+		\hbox%
+		\bgroup%
+	\else%
+		\par%
+		\noindent%
+		\begin{minipage}[t]{\wd0}%
+		\vspace{-6pt plus 1pt minus 1pt}%
+	\fi%
+}% \LGbegin
+
+\def\LGend{%
+	\ifLGinline%
+		\egroup%
+	\else%
+		\vspace{3pt plus 1pt minus 1pt}
+		\end{minipage}
+		\par%
+		\noindent%
+	\fi%
+}% \LGend
+
+\def\lgrind{%
+	\def\Line##1{\L{\LB{##1}}}% For use with %=
+	\let\Head=\@gobble% Header information (-h)
+	\def\File##1,##2,##3{}% File specification information
+	\let\Proc=\@gobble% Marks procedure def beginning
+	\let\ProcCont=\@gobble% Marks end of nested procedure def
+	\def\NewPage{\filbreak\bigskip}%
+	\ifLGinline%
+		\def\L##1{%
+			\setbox\ls@far\null%
+			\CF%
+			\strut##1%
+			\ignorespaces%
+		}% \L
+	\else%
+		\let\r@ghtlno\relax\let\l@ftlno\relax%
+		\ifnum\LGnuminterval>\z@%
+			\ifLGleftnum%
+				\def\l@ftlno{%
+					\ifnum\lc@unt>\ln@xt%
+						\global\advance\ln@xt by\LGnuminterval%
+						\llap{{\scriptsize\the\lc@unt\LGlcsep}}%
+					\fi%
+				}% \l@ftlno
+			\else%
+				\def\r@ghtlno{%
+					\ifnum\lc@unt>\ln@xt%
+						\global\advance\ln@xt by\LGnuminterval%
+						\rlap{{\scriptsize\enspace\the\lc@unt}}%
+					\fi%
+				}% \r@ghtlno
+			\fi%
+		\fi%
+		\def\L##1{%
+			\setbox\ls@far=\null
+			\CF%
+			\def\@currentlabel{\the\lc@unt}%
+			\global\advance\lc@unt by1%
+			\hbox{\strut\hskip\LGindent\l@ftlno ##1\hfil\r@ghtlno}%
+			\ignorespaces%
+		}% \L
+	\fi%
+	\ifLGcont%
+		\lc@unt=0%
+	\fi%
+	\ln@xt=\LGnuminterval\advance\ln@xt by-1%
+	\def\LB{%
+		\CF\hbox\bgroup\box\ls@far\let\next=%
+	}% \LB
+	\def\Tab##1{%
+		\setbox\tb@x=\lastbox\TBw@d=\wd\tb@x\advance\TBw@d by 1\@ts%
+		\ifdim\TBw@d>##1\@ts%
+			\setbox\ls@far=\hbox{\box\ls@far \box\tb@x \sp@ce}%
+		\else%
+			\setbox\ls@far=\hbox to ##1\@ts{\box\ls@far \box\tb@x \hfil}%
+		\fi%
+		\LB%
+	}% \Tab
+	\ifLGinline%
+		\def\sp@ce{\LGispace}%
+	\else%
+		\setbox\tb@x=\hbox{\LGtab}%
+		\@ts=\wd\tb@x%
+		\def\sp@ce{\LGspace}%
+	\fi%
+	%
+	\def\myCHarFont{\fontencoding{T1}\selectfont}%
+	%
+	\let\CF=\BGfont%
+	\def\K##1{{\KWfont ##1}\global\futurelet\next\ic@r}% Keyword
+	\def\V##1{{\VRfont ##1}\global\futurelet\next\ic@r}% Variable
+	\def\ic@r{\let\@tempa\/\ifx.\next\let\@tempa\relax% Optional \/
+		\else\ifx,\next\let\@tempa\relax\fi\fi\@tempa}%
+	\def\C{\CMfont \global\let\CF\CMfont \global\c@mmenttrue \global\right@false}%
+	\def\CE{\BGfont \global\let\CF\BGfont \global\c@mmentfalse}%
+	\def\S{\STfont \global\let\CF\STfont \global\str@ngtrue}%
+	\def\SE{\BGfont \global\let\CF\BGfont \global\str@ngfalse}%
+	\def\,{\relax \ifmmode\mskip\thinmuskip \else\thinspace \fi}%
+	\def\!{\relax \ifmmode\mskip-\thinmuskip \else\negthinspace \fi}%
+	\def\CH##1##2##3{\relax\ifmmode ##1\relax%
+	\else\ifstr@ng ##2\relax\else$##3$\fi\fi }%
+	\def\0{{\sp@ce}}%
+	\def\1{{\myCHarFont \char`\/}}%
+	\def\2{{\myCHarFont \char`\\}}%
+	\def\{{{\myCHarFont \char`\{}}%
+	\def\}{{\myCHarFont \char`\}}}%
+	\def\[{{\myCHarFont \char`\[}\,}%
+	\def\]{\,{\myCHarFont \char`\]}}%
+	\def\|{{\myCHarFont \char`\|}}%
+	\def\<{{\myCHarFont \char`\<}}%
+	\def\>{{\myCHarFont \char`\>}}%
+	\def\*{\raisebox{-0.55ex}{{\myCHarFont \char`\*}}}%
+%	\def\-{\makebox[1ex]{\rule[0.43ex]{0.75ex}{0.1ex}}}%
+	\def\-{\raisebox{-0.1ex}{{\ttfamily \char`\-}}}%
+%	\def\_{\makebox[1.2ex]{{\myCHarFont \char`\_}}}%
+%	\def\_{\makebox[1.2ex][r]{\rule{1ex}{0.1ex}}}%
+	\def\_{{\myCHarFont \char`\_}}%
+	\def\&{{\myCHarFont \char`\&}}%
+	\def\#{{\myCHarFont \char`\#}}%
+	\def\%{{\myCHarFont \char`\%}}%
+	\def\~{{\myCHarFont \char`\~}}%
+	\def\^{{\myCHarFont \char`\^}}%
+	\def\${{\myCHarFont \char`\$}}%
+	\def\"{\ifc@mment\ifright@ ''\global\right@false \else``\global\right@true \fi \else{\raisebox{.1ex}{\ttfamily\upshape \char`\"}}\fi}%
+%	\def\'{\raisebox{1ex}{{\rotatebox{-15}{\scriptsize $\prime$}}}}%
+	\def\'{{\ttfamily\upshape \char`\'}}%
+	\def\`{\raisebox{0.85ex}{{\rotatebox{10}{\scriptsize $\backprime$}}}}%
+	%
+	% \def\{{\CH\lbrace {\char'173}\lbrace }%
+	% \def\}{\CH\rbrace {\char'175}\rbrace }%
+	% \def\1{\CH///}% %/
+	% \def\2{\CH\backslash {\char'134}\backslash }% %\
+	% \def\|{\CH|{\char'174}|}%
+	% \def\<{\CH<<<}%
+	% \def\>{\CH>>>}%
+	% \def\*{\CH***}\relax %\relax for DOCSTY
+	% \def\-{\CH---}%
+	% \def\_{\ifstr@ng {\char'137}\else
+	%   \leavevmode \kern.06em \vbox{\hrule width.35em}%
+	%   \ifdim\fontdimen\@ne\font=\z@ \kern.06em \fi\fi }%
+	% \def\&{{\sf \char'046}}%
+	% \def\#{{\STfont \char'043}}%
+	% \def\%{{\char'045}}%
+	% \def\~{{\char'176}}%
+	% \def\^{{\tt \char'136}}%
+	% \def\${{\ifmmode\sl\else\ifdim\fontdimen\@ne\font>\z@\sl\fi\fi\char'044}}% %No $ in \it, use \sl
+	\parindent\z@\parskip\z@ plus 1pt\hsize\linewidth%
+}% \lgrind
+\def\endlgrind{}
+\def\lgrinde{\ifLGinline\LGisize\else\LGsize\LGspacing\vspace{\LGbeginspacing}\fi\begin{lgrind}}
+\def\endlgrinde{\end{lgrind}\vspace{\LGendspacing}}
+
+\def\lagrind{\@ifstar{\@slagrind}{\@lagrind}}
+
+\def\@lagrind{\@ifnextchar[{\@@lagrind}{\@@lagrind[t]}}
+\def\@slagrind{\@ifnextchar[{\@@slagrind}{\@@slagrind[t]}}
+
+\def\@@lagrind[#1]#2#3#4{%
+\begin{figure}[#1]
+\hrule
+\vskip .5\baselineskip
+\begin{minipage}\columnwidth\LGinlinefalse\LGsize\LGspacing
+\begin{lgrind}
+\input #2\relax
+\end{lgrind}
+\end{minipage}
+\vskip .5\baselineskip plus .5\baselineskip
+\begingroup
+\setbox\z@=\hbox{#4}%
+\ifdim\wd\z@>\z@
+\caption{#3}%
+\label{#4}%
+\else
+\captcont{#3}%
+\fi
+\endgroup
+\vskip 2pt
+\hrule
+\end{figure}
+}
+
+\def\@@slagrind[#1]#2#3#4{%
+\begin{figure*}[#1]
+\hrule
+\vskip .5\baselineskip
+\begin{minipage}\textwidth\LGinlinefalse\LGsize\LGspacing
+\begin{lgrind}
+\input #2\relax
+\end{lgrind}
+\end{minipage}
+\vskip .5\baselineskip plus .5\baselineskip
+\begingroup
+\setbox\z@=\hbox{#4}%
+\ifdim\wd\z@>\z@
+\caption{#3}%
+\label{#4}%
+\else
+\captcont{#3}%
+\fi
+\endgroup
+\vskip 2pt
+\hrule
+\end{figure*}
+}
+
+\def\lgrindfile#1{%
+%\par\addvspace{0.1in}
+%\hrule
+\vskip .5\baselineskip
+\begingroup\LGinlinefalse\LGfsize\LGindent\z@
+\begin{lgrind}
+\input #1\relax%
+\end{lgrind}
+\endgroup
+\vskip .5\baselineskip
+%\hrule
+%\addvspace{0.1in}
+}
+
+\endinput
+%% 
+%% End of file `lgrind.sty'.
+
+
+% Local Variables: %
+% tab-width: 4 %
+% End: %

@@ -1,0 +1,432 @@
+\providecommand{\etalchar}[1]{$^{#1}$}
+\begin{thebibliography}{TvRvS{\etalchar{+}}90}
+
+\bibitem[Ada83]{Ada}
+Ada.
+\newblock {\em The Programming Language {Ada}: Reference Manual}.
+\newblock United States Department of Defense, Springer, New York,
+  {ANSI/MIL-STD-1815A-1983} edition, February 1983.
+
+\bibitem[Agh86]{Actors}
+Gul~A. Agha.
+\newblock {\em Actors: A Model of Concurrent Computation in Distributed
+  Systems}.
+\newblock MIT Press, Cambridge, 1986.
+
+\bibitem[AGMK94]{Adelberg94}
+B.~Adelberg, H.~Garcia-Molina, and B.~Kao.
+\newblock Emulating Soft Real-Time Scheduling Using Traditional Operating
+  System Schedulers.
+\newblock In {\em Proc. IEEE Real-Time Systems Symposium}, pages 292--298,
+  1994.
+
+\bibitem[Ale01]{Alexandrescu01}
+Andrei Alexandrescu.
+\newblock {\em Modern C++ Design: Generic Programming and Design Patterns
+  Applied}.
+\newblock Addison-Wesley Professional, Boston, February 2001.
+
+\bibitem[Amd67]{Amdahl67}
+Gene~M. Amdahl.
+\newblock Validity of the Single Processor Approach to Achieving Large Scale
+  Computing Capabilities.
+\newblock In {\em Proceedings of the April 18-20, 1967, Spring Joint Computer
+  Conference}, AFIPS '67 (Spring), pages 483--485, New York, NY, USA, 1967.
+  ACM.
+
+\bibitem[AOC{\etalchar{+}}88]{SR}
+Gregory~R. Andrews, Ronald~A. Olsson, Michael Coffin, Irving Elshoff, Kelvin
+  Nilsen, Titus Purdin, and Gregg Townsend.
+\newblock An Overview of the {SR} Language and Implementation.
+\newblock {\em Transactions on Programming Languages and Systems},
+  10(1):51--86, January 1988.
+
+\bibitem[BD92]{Buhr92c}
+Peter~A. Buhr and Glen Ditchfield.
+\newblock Adding Concurrency to a Programming Language.
+\newblock In {\em USENIX {C}{\kern-.1em\hbox{\large\texttt{+\kern-.25em+}}}
+  Technical Conference Proceedings}, pages 207--224, Portland, Oregon, U.S.A.,
+  August 1992. USENIX Association.
+
+\bibitem[BDS{\etalchar{+}}92]{Buhr92a}
+P.~A. Buhr, Glen Ditchfield, R.~A. Stroobosscher, B.~M. Younger, and C.~R.
+  Zarnke.
+\newblock $\mu${C}{\kern-.1em\hbox{\large\texttt{+\kern-.25em+}}}: Concurrency
+  in the Object-Oriented Language
+  {C}{\kern-.1em\hbox{\large\texttt{+\kern-.25em+}}}.
+\newblock {\em Softw. Pract. Exper.}, 22(2):137--172, February 1992.
+
+\bibitem[BDZ89]{Buhr89b}
+P.~A. Buhr, Glen Ditchfield, and C.~R. Zarnke.
+\newblock Adding Concurrency to a Statically Type-Safe Object-Oriented
+  Programming Language.
+\newblock {\em SIGPLAN Not.}, 24(4):18--21, April 1989.
+\newblock Proceedings of the ACM SIGPLAN Workshop on Object-Based Concurrent
+  Programming, Sept. 26--27, 1988, San Diego, California, U.S.A.
+
+\bibitem[BFC95]{Buhr95b}
+Peter~A. Buhr, Michel Fortier, and Michael~H. Coffin.
+\newblock Monitor Classification.
+\newblock {\em ACM Computing Surveys}, 27(1):63--107, March 1995.
+
+\bibitem[BLL88]{PRESTO}
+B.~N. Bershad, E.~D. Lazowska, and H.~M. Levy.
+\newblock {PRESTO}: A System for Object-oriented Parallel Programming.
+\newblock {\em Softw. Pract. Exper.}, 18(8):713--732, August 1988.
+
+\bibitem[BMZ92]{Buhr92b}
+Peter~A. Buhr, Hamish~I. Macdonald, and C.~Robert Zarnke.
+\newblock Synchronous and Asynchronous Handling of Abnormal Events in the
+  $\mu${S}ystem.
+\newblock {\em Softw. Pract. Exper.}, 22(9):735--776, September 1992.
+
+\bibitem[BP91]{Baker91a}
+T.~Baker and O.~Pazy.
+\newblock Real-Time Features of {A}da 9X.
+\newblock In {\em Proc. IEEE Real-Time Systems Symposium}, pages 172--180,
+  1991.
+
+\bibitem[BP15]{Bauer15}
+Andrej Bauer and Matija Pretnar.
+\newblock Programming with Algebraic Effects and Handlers.
+\newblock {\em Journal of Logical and Algebraic Methods in Programming},
+  84(1):108--123, January 2015.
+
+\bibitem[{Bri}75]{ConcurrentPascal}
+Per {Brinch Hansen}.
+\newblock The Programming Language Concurrent Pascal.
+\newblock {\em IEEE Trans. Softw. Eng.}, SE-1(2):199--207, June 1975.
+
+\bibitem[Buh85]{Buhr85}
+P.~A. Buhr.
+\newblock A Case for Teaching Multi-exit Loops to Beginning Programmers.
+\newblock {\em SIGPLAN Not.}, 20(11):14--22, November 1985.
+
+\bibitem[Buh95]{Buhr95a}
+Peter~A. Buhr.
+\newblock Are Safe Concurrency Libraries Possible?
+\newblock {\em Communications of the ACM}, 38(2):117--120, February 1995.
+
+\bibitem[But97]{Butenhof97}
+David~R. Butenhof.
+\newblock {\em Programming with {POSIX} Threads}.
+\newblock Professional Computing. Addison-Wesley, Boston, 1997.
+
+\bibitem[BW90]{Burns90}
+Alan Burns and A.~J. Wellings.
+\newblock The Notion of Priority in Real-Time Programming Languages.
+\newblock {\em Computer Language}, 15(3):153--162, 1990.
+
+\bibitem[C++98]{ANSI98:C++}
+International Standard Organization, Geneva, Switzerland.
+\newblock {\em {C}{\kern-.1em\hbox{\large\texttt{+\kern-.25em+}}} Programming
+  Language ISO/IEC 14882:1998}, 1st edition, 1998.
+\newblock \url{https://www.iso.org/standard/25845.html}.
+
+\bibitem[Car90]{Cargill90}
+Tom~A. Cargill.
+\newblock Does {C}{\kern-.1em\hbox{\large\texttt{+\kern-.25em+}}} Really Need
+  Multiple Inheritance?
+\newblock In {\em USENIX {C}{\kern-.1em\hbox{\large\texttt{+\kern-.25em+}}}
+  Conference Proceedings}, pages 315--323, San Francisco, California, U.S.A.,
+  April 1990. USENIX Association.
+
+\bibitem[CD95]{Chung95}
+Tai~M. Chung and Hank~G. Dietz.
+\newblock Language Constructs and Transformation for Hard Real-time Systems.
+\newblock In {\em Proc. Second ACM SIGPLAN Workshop on Languages, Compilers,
+  and Tools for Real-Time Systems}, June 1995.
+
+\bibitem[CG89]{Linda}
+Nicholas Carriero and David Gelernter.
+\newblock Linda in Context.
+\newblock {\em Communications of the ACM}, 32(4):444--458, April 1989.
+
+\bibitem[CHS14]{CAF}
+Dominik Charousset, Raphael Hiesgen, and Thomas~C. Schmidt.
+\newblock {CAF} -- the {C}++ Actor Framework for Scalable and
+  Resource-Efficient Applications.
+\newblock AGERE'14, pages 15--28, New York, NY, USA, 2014. Proceedings of the
+  4th International Workshop on Programming Based on Actors Agents \&
+  Decentralized Control, ACM.
+
+\bibitem[CKL{\etalchar{+}}88]{LOGLAN88}
+Boleslaw Ciesielski, Antoni Kreczmar, Marek Lao, Andrzej Litwiniuk, Teresa
+  Przytycka, Andrzej Salwicki, Jolanta Warpechowska, Marek Warpechowski,
+  Andrzej Szalas, and Danuta Szczepanska-Wasersztrum.
+\newblock Report on the Programming Language LOGLAN'88.
+\newblock Technical report, Institute of Informatics, University of Warsaw,
+  Pkin 8th Floor, 00-901 Warsaw, Poland, December 1988.
+
+\bibitem[DG87]{Doeppner87}
+Thomas~W. Doeppner and Alan~J. Gebele.
+\newblock {C}{\kern-.1em\hbox{\large\texttt{+\kern-.25em+}}} on a Parallel
+  Machine.
+\newblock In {\em Proceedings and Additional Papers
+  {C}{\kern-.1em\hbox{\large\texttt{+\kern-.25em+}}} Workshop}, pages 94--107,
+  Santa Fe, New Mexico, U.S.A, November 1987. USENIX Association.
+
+\bibitem[Dij65]{Dijkstra65}
+Edsger~W. Dijkstra.
+\newblock Cooperating Sequential Processes.
+\newblock Technical report, Technological University, Eindhoven, Neth., 1965.
+\newblock \url{https://pure.tue.nl/ws/files/4279816/344354178746665.pdf}.
+
+\bibitem[Geh92]{ExceptionalC}
+N.~H. Gehani.
+\newblock Exceptional {C} or {C} with Exceptions.
+\newblock {\em Softw. Pract. Exper.}, 22(10):827--848, October 1992.
+
+\bibitem[Gen81]{Gentleman81}
+W.~Morven Gentleman.
+\newblock Message Passing between Sequential Processes: the Reply Primitive and
+  the Administrator Concept.
+\newblock {\em Softw. Pract. Exper.}, 11(5):435--466, May 1981.
+
+\bibitem[GJSB00]{Java}
+James Gosling, Bill Joy, Guy Steele, and Gilad Bracha.
+\newblock {\em The {Java} Language Specification}.
+\newblock Addison-Wesley, Reading, 2nd edition, 2000.
+
+\bibitem[Gol94]{Golub94}
+David~B. Golub.
+\newblock Operating System Support for Coexistence of Real-Time and
+  Conventional Scheduling.
+\newblock Technical report, Carnegie Mellon University, November 1994.
+
+\bibitem[GR88]{ConcurrentC++}
+N.~H. Gehani and W.~D. Roome.
+\newblock Concurrent {C}{\kern-.1em\hbox{\large\texttt{+\kern-.25em+}}}:
+  Concurrent Programming with Class(es).
+\newblock {\em Softw. Pract. Exper.}, 18(12):1157--1177, December 1988.
+
+\bibitem[GR91]{Gehani91}
+N.~Gehani and K.~Ramamritham.
+\newblock Real-Time {C}oncurrent {C}: A Language for Programming Dynamic
+  Real-Time Systems.
+\newblock {\em Journal of Real-Time Systems}, 3(4):377--405, December 1991.
+
+\bibitem[Hal85]{multilisp}
+Robert~H. Halstead, Jr.
+\newblock Multilisp: A Language for Concurrent Symbolic Programming.
+\newblock {\em Transactions on Programming Languages and Systems},
+  7(4):501--538, October 1985.
+
+\bibitem[HBS73]{Hewitt73}
+Carl Hewitt, Peter Bishop, and Richard Steiger.
+\newblock A Universal Modular {ACTOR} Formalism for Artificial Intelligence.
+\newblock IJCAI'73, pages 235--245, Standford, California, U.S.A., August 1973.
+  Proceedings of the 3rd International Joint Conference on Artificial
+  Intelligence.
+
+\bibitem[HM92]{Halang92a}
+W.A. Halang and K.~Mangold.
+\newblock Real-Time Programming Languages.
+\newblock In Michael Schiebe and Saskia Pferrer, editors, {\em Real-Time
+  Systems Engineering and Applications}, chapter~4, pages 141--200. Kluwer
+  Academic Publishers, 1992.
+
+\bibitem[Hoa74]{Hoare74}
+C.~A.~R. Hoare.
+\newblock Monitors: An Operating System Structuring Concept.
+\newblock {\em Communications of the ACM}, 17(10):549--557, October 1974.
+
+\bibitem[Hol92]{Turing}
+R.~C. Holt.
+\newblock {\em Turing Reference Manual}.
+\newblock Holt Software Associates Inc., 3rd edition, 1992.
+
+\bibitem[Int95]{adaref}
+International Standard ISO/IEC.
+\newblock {\em Ada Reference Manual}, 6.0 edition, 1995.
+
+\bibitem[ITM90]{Ishikawa90}
+Y.~Ishikawa, H.~Tokuda, and C.W. Mercer.
+\newblock Object-Oriented Real-Time Language Design: Constructs for Timing
+  Constraints.
+\newblock In {\em Proc. ECOOP/OOPSLA}, pages 289--298, October 1990.
+
+\bibitem[KK91]{Kenny91}
+K.B. Kenny and K.J.Lin.
+\newblock Building Flexible Real-Time Systems using the {F}lex Language.
+\newblock {\em IEEE Computer}, 24(5):70--78, May 1991.
+
+\bibitem[KS86]{Klingerman86}
+E.~Klingerman and A.D. Stoyenko.
+\newblock Real-Time {E}uclid: A Language for Reliable Real-Time Systems.
+\newblock {\em IEEE Transactions on Software Engineering}, pages 941--949,
+  September 1986.
+
+\bibitem[Lab90]{Labreche90}
+Pierre Labr{\`{e}}che.
+\newblock Interactors: A Real-Time Executive with Multiparty Interactions in
+  {C}{\kern-.1em\hbox{\large\texttt{+\kern-.25em+}}}.
+\newblock {\em SIGPLAN Not.}, 25(4):20--32, April 1990.
+
+\bibitem[Lig16]{Akka}
+Lightbend Inc.
+\newblock {\em {A}kka {S}cala Documentation, Release 2.4.11}, September 2016.
+\newblock \url{http://doc.akka.io/docs/akka/2.4/AkkaScala.pdf}.
+
+\bibitem[LN88]{Lin88}
+K.J. Lin and S.~Natarajan.
+\newblock Expressing and Maintaining Timing Constratins in {FLEX}.
+\newblock In {\em Proc. IEEE Real-Time Systems Symposium}, pages 96--105, 1988.
+
+\bibitem[Mac77]{MacLaren77}
+M.~Donald MacLaren.
+\newblock Exception Handling in {PL/I}.
+\newblock {\em SIGPLAN Not.}, 12(3):101--104, March 1977.
+\newblock Proceedings of an ACM Conference on Language Design for Reliable
+  Software, March 28--30, 1977, Raleigh, North Carolina, U.S.A.
+
+\bibitem[Mar78]{Martin78}
+T.~Martin.
+\newblock Real-Time Programming Language {PEARL} -- Concept and
+  Characteristics.
+\newblock In {\em IEEE Computer Society 2nd International Computer Software and
+  Applications Conference}, pages 301--306, 1978.
+
+\bibitem[Mar80]{Marlin80}
+Christopher~D. Marlin.
+\newblock {\em Coroutines: A Programming Methodology, a Language Design and an
+  Implementation}, volume~95 of {\em Lecture Notes in Computer Science, Ed. by
+  G. Goos and J. Hartmanis}.
+\newblock Springer, New York, 1980.
+
+\bibitem[Mey92]{Eiffel}
+Bertrand Meyer.
+\newblock {\em Eiffel: The Language}.
+\newblock Prentice-Hall Object-Oriented Series. Prentice-Hall, Englewood
+  Cliffs, 1992.
+
+\bibitem[MMPN93]{Beta}
+Ole~Lehrmann Madsen, Birger M{\o}ller-Pedersen, and Kristen Nygaard.
+\newblock {\em Object-oriented Programming in the {BETA} Programming Language}.
+\newblock Addison-Wesley, Boston, 1993.
+
+\bibitem[MMS79]{Mesa}
+James~G. Mitchell, William Maybury, and Richard Sweet.
+\newblock Mesa Language Manual.
+\newblock Technical Report CSL--79--3, Xerox Palo Alto Research Center, Palo
+  Alto, California, U.S.A., April 1979.
+
+\bibitem[Ope15]{OpenMP}
+{\em OpenMP Application Program Interface, Version 4.5}, November 2015.
+\newblock \url{https://www.openmp.org/wp-content/uploads/openmp-4.5.pdf}.
+
+\bibitem[POS08]{POSIX08}
+IEEE and The Open Group.
+\newblock {\em 1003.1 Standard for Information Technology -- Portable Operating
+  System Interface (POSIX), Base Specifications, Issue 7}, 2008.
+
+\bibitem[RAA{\etalchar{+}}88]{Rozier88}
+M.~Rozier, V.~Abrossimov, F.~Armand, I.~Boule, M.~Gien, M.~Guillemont,
+  F.~Hermann, C.~Kaiser, S.~Langlois, P.~Leonard, and W.~Neuhauser.
+\newblock Chorus Distributed Operating Systems.
+\newblock {\em Computing Systems}, 1(4):305--370, 1988.
+
+\bibitem[Raj91]{Rajkumar91}
+Ragunathan Rajkumar.
+\newblock {\em Synchronization in Real-Time Systems: A Priority Inheritance
+  Approach}.
+\newblock Kluwer Academic Publishers, 1991.
+
+\bibitem[RH87]{Rizk87}
+A.~Rizk and F.~Halsall.
+\newblock Design and Implementation of a {C}-based Language for Distributed
+  Real-time Systems.
+\newblock {\em SIGPLAN Notices}, 22(6):83--100, June 1987.
+
+\bibitem[Rip90]{Ripps90}
+David Ripps.
+\newblock {\em An Implementaion Guide to Real-Time Programming}.
+\newblock Yourdon Press, 1990.
+
+\bibitem[RSL88]{Rajkumar88}
+Ragunathan Rajkumar, Lui Sha, and John~P. Lehoczky.
+\newblock Real-Time Synchronization Protocols for Multiprocessors.
+\newblock In {\em Proc. IEEE Real-Time Systems Symposium}, pages 259--269,
+  1988.
+
+\bibitem[SBG{\etalchar{+}}90]{Hermes90}
+Robert~E. Strom, David~F. Bacon, Arthur~P. Goldberg, Andy Lowry, Daniel~M.
+  Yellin, and Shaula~Alexander Yemini.
+\newblock Hermes: A Language for Distributed Computing.
+\newblock Technical report, IBM T. J. Watson Research Center, Yorktown Heights,
+  New York, U.S.A., 10598, October 1990.
+
+\bibitem[SD92]{Sahraoui92}
+A.E.K. Sahraoui and D.~Delfieu.
+\newblock {ZAMAN}, A Simple Language for Expressing Timing Constraints.
+\newblock In {\em Real-Time Programming, IFAC Workshop}, pages 19--24, 1992.
+
+\bibitem[Sho87]{Shopiro87}
+Jonathan~E. Shopiro.
+\newblock Extending the {C}{\kern-.1em\hbox{\large\texttt{+\kern-.25em+}}} Task
+  System for Real-Time Control.
+\newblock In {\em Proceedings and Additional Papers
+  {C}{\kern-.1em\hbox{\large\texttt{+\kern-.25em+}}} Workshop}, pages 77--94,
+  Santa Fe, New Mexico, U.S.A, November 1987. USENIX Association.
+
+\bibitem[SRL90]{Sha90b}
+L.~Sha, R.~Rajkumar, and J.~P. Lehoczky.
+\newblock Priority Inheritance Protocols: An Approach to Real-Time
+  Synchronization.
+\newblock {\em IEEE Transactions on Computers}, 39(9):1175--1185, September
+  1990.
+
+\bibitem[Sta87]{Simula87}
+Standardiseringskommissionen i Sverige.
+\newblock {\em Databehandling -- Programspr{\aa}k -- {SIMULA}}, 1987.
+\newblock Svensk Standard SS 63 61 14.
+
+\bibitem[Str97]{C++:V3}
+Bjarne Stroustrup.
+\newblock {\em The {C}{\kern-.1em\hbox{\large\texttt{+\kern-.25em+}}}
+  Programming Language}.
+\newblock Addison Wesley Longman, 3rd edition, 1997.
+
+\bibitem[Tie88]{Tiemann88}
+Michael~D. Tiemann.
+\newblock Solving the RPC problem in GNU
+  {C}{\kern-.1em\hbox{\large\texttt{+\kern-.25em+}}}.
+\newblock In {\em Proceedings of the USENIX
+  {C}{\kern-.1em\hbox{\large\texttt{+\kern-.25em+}}} Conference}, pages
+  343--361, Denver, Colorado, U.S.A, October 1988. USENIX Association.
+
+\bibitem[Tie90]{GNU-C++}
+Michael~D. Tiemann.
+\newblock User's Guide to GNU
+  {C}{\kern-.1em\hbox{\large\texttt{+\kern-.25em+}}}.
+\newblock Free Software Foundation, 1000 Mass Ave., Cambridge, MA, U.S.A.,
+  02138, March 1990.
+
+\bibitem[TvRvS{\etalchar{+}}90]{Tanenbaum90}
+Andrew~S. Tanenbaum, Robbert van Renesse, Hans van Staveren, Gregory~J. Sharp,
+  Sape~J. Mullender, Jack Jansen, and Guido van Rossum.
+\newblock Experiences with the {A}moeba Distributed Operating System.
+\newblock {\em Communications of the ACM}, 33(12):46--63, December 1990.
+
+\bibitem[Yea91]{Yeager91}
+Dorian~P. Yeager.
+\newblock Teaching Concurrency in the Programming Languages Course.
+\newblock {\em SIGCSE BULLETIN}, 23(1):155--161, March 1991.
+\newblock The Papers of the Twenty-Second SIGCSE Technical Symposium on
+  Computer Science Education, March. 7--8, 1991, San Antonio, Texas, U.S.A.
+
+\bibitem[Yok92]{Yokote92}
+Yasuhiko Yokote.
+\newblock The {A}pertos Reflective Operating System: The Concept and Its
+  Implementation.
+\newblock In {\em Proc. Object-Oriented Programming Systems, Languages, and
+  Applications}, pages 414--434, 1992.
+
+\bibitem[You91]{Younger91}
+Brian~M. Younger.
+\newblock Adding Concurrency to
+  {C}{\kern-.1em\hbox{\large\texttt{+\kern-.25em+}}}.
+\newblock Master's thesis, University of Waterloo, Waterloo, Ontario, Canada,
+  N2L 3G1, 1991.
+
+\end{thebibliography}

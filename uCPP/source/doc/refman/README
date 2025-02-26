@@ -1,0 +1,3 @@
+
+To build the reference manual for uC++ type "gmake" in this directory.  This
+constructs a postscript ".ps" file that can be printed.

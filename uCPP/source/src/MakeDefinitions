@@ -1,0 +1,110 @@
+
+## Define the tmp directories.
+
+OBJDIR = ${SRCDIR}/obj-${TOS}-${TCPU}
+LIBDIR = ${SRCDIR}/lib-${TOS}-${TCPU}
+BINDIR = ${SRCDIR}/bin-${TOS}-${TCPU}
+
+
+## Define the library object files based on the library source files.
+
+ifdef LIBSRC
+	LIBOBJ = ${addprefix ${OBJDIR}/, ${addsuffix .o, ${basename ${notdir ${LIBSRC}}}}}
+	DEPEND = ${addprefix ${OBJDIR}/, ${addsuffix .d, ${basename ${notdir ${LIBSRC}}}}}
+endif
+
+ifdef LIBSRC-D
+	LIBOBJ-D = ${addprefix ${OBJDIR}/, ${addsuffix -d.o, ${basename ${notdir ${LIBSRC-D}}}}}
+	DEPEND-D = ${addprefix ${OBJDIR}/, ${addsuffix -d.d, ${basename ${notdir ${LIBSRC-D}}}}}
+endif
+
+ifdef LIBSRC-M
+	LIBOBJ-M = ${addprefix ${OBJDIR}/, ${addsuffix -m.o, ${basename ${notdir ${LIBSRC-M}}}}}
+	DEPEND-M = ${addprefix ${OBJDIR}/, ${addsuffix -m.d, ${basename ${notdir ${LIBSRC-M}}}}}
+endif
+
+ifdef LIBSRC-M-D
+	LIBOBJ-M-D = ${addprefix ${OBJDIR}/, ${addsuffix -m-d.o, ${basename ${notdir ${LIBSRC-M-D}}}}}
+	DEPEND-M-D = ${addprefix ${OBJDIR}/, ${addsuffix -m-d.d, ${basename ${notdir ${LIBSRC-M-D}}}}}
+endif
+
+
+## Define the library object files based on the library assembly files.
+
+ifdef LIBASM
+	LIBOBJ += ${addprefix ${OBJDIR}/, ${addsuffix .o, ${basename ${notdir ${LIBASM}}}}}
+endif
+
+ifdef LIBASM-D
+	LIBOBJ-D += ${addprefix ${OBJDIR}/, ${addsuffix -d.o, ${basename ${notdir ${LIBASM-D}}}}}
+endif
+
+ifdef LIBASM-M
+	LIBOBJ-M += ${addprefix ${OBJDIR}/, ${addsuffix -m.o, ${basename ${notdir ${LIBASM-M}}}}}
+endif
+
+ifdef LIBASM-M-D
+	LIBOBJ-M-D += ${addprefix ${OBJDIR}/, ${addsuffix -m-d.o, ${basename ${notdir ${LIBASM-M-D}}}}}
+endif
+
+
+## Define the module object files based on the module source files.
+
+ifdef MODSRC
+	MODOBJ = ${addprefix ${OBJDIR}/, ${addsuffix .o, ${basename ${notdir ${MODSRC}}}}}
+	DEPEND += ${addprefix ${OBJDIR}/, ${addsuffix .d, ${basename ${notdir ${MODSRC}}}}}
+endif
+
+ifdef MODSRC-D
+	MODOBJ-D = ${addprefix ${OBJDIR}/, ${addsuffix -d.o, ${basename ${notdir ${MODSRC-D}}}}}
+	DEPEND-D += ${addprefix ${OBJDIR}/, ${addsuffix -d.d, ${basename ${notdir ${MODSRC-D}}}}}
+endif
+
+ifdef MODSRC-M
+	MODOBJ-M = ${addprefix ${OBJDIR}/, ${addsuffix -m.o, ${basename ${notdir ${MODSRC-M}}}}}
+	DEPEND-M += ${addprefix ${OBJDIR}/, ${addsuffix -m.d, ${basename ${notdir ${MODSRC-M}}}}}
+endif
+
+ifdef MODSRC-M-D
+	MODOBJ-M-D = ${addprefix ${OBJDIR}/, ${addsuffix -m-d.o, ${basename ${notdir ${MODSRC-M-D}}}}}
+	DEPEND-M-D += ${addprefix ${OBJDIR}/, ${addsuffix -m-d.d, ${basename ${notdir ${MODSRC-M-D}}}}}
+endif
+
+
+## Define the module object files based on the module assembly files.
+
+ifdef MODASM
+	MODOBJ = ${addprefix ${OBJDIR}/, ${addsuffix .o, ${basename ${notdir ${MODASM}}}}}
+endif
+
+ifdef MODASM-D
+	MODOBJ-D = ${addprefix ${OBJDIR}/, ${addsuffix -d.o, ${basename ${notdir ${MODASM-D}}}}}
+endif
+
+ifdef MODASM-M
+	MODOBJ-M = ${addprefix ${OBJDIR}/, ${addsuffix -m.o, ${basename ${notdir ${MODASM-M}}}}}
+endif
+
+ifdef MODASM-M-D
+	MODOBJ-M-D = ${addprefix ${OBJDIR}/, ${addsuffix -m-d.o, ${basename ${notdir ${MODASM-M-D}}}}}
+endif
+
+
+## Define the module files.
+
+MODULES = ${MODOBJ} ${MODOBJ-D} ${MODOBJ-M} ${MODOBJ-M-D}
+
+
+## Define the library files.
+
+LIBRARIES = ${LIB} ${LIB-D} ${LIB-M} ${LIB-M-D} ${LIB1} ${LIB1-D} ${LIB1-M} ${LIB1-M-D}
+
+
+## Define the dependence files.
+
+DEPENDS = ${DEPEND} ${DEPEND-D} ${DEPEND-M} ${DEPEND-M-D}
+
+
+## Define the files that normally get cleaned.
+
+CLEAN = ${OBJDIR} ${LIBDIR} ${BINDIR} fstream ostream

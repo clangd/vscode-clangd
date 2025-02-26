@@ -1,0 +1,131 @@
+## Define how to clean things.
+
+clean :
+	${RM} ${CLEAN}
+
+uninstall :
+	${RM} ${INSTALLFILES}
+
+
+## Define default dependencies and recipes for making object files.
+
+${OBJDIR}/%.o : ${SRCDIR}/%.c
+	${CC} ${CCFLAGS} -MD $< -c -o $@
+
+${OBJDIR}/%.o : ${SRCDIR}/%.cc # no multi, no debug
+	${CC} -nomulti -nodebug -DNDEBUG ${CCFLAGS} -MD $< -c -o $@
+
+${OBJDIR}/%-d.o : ${SRCDIR}/%.cc # no multi, debug
+	${CC} -nomulti -debug ${CCFLAGS} -MD $< -c -o $@
+
+${OBJDIR}/%-m.o : ${SRCDIR}/%.cc # multi, no debug
+	${CC} -multi -nodebug -DNDEBUG ${CCFLAGS} -MD $< -c -o $@
+
+${OBJDIR}/%-m-d.o : ${SRCDIR}/%.cc # multi, debug
+	${CC} -multi -debug ${CCFLAGS} -MD $< -c -o $@
+
+
+## Define default dependencies and recipes for making object files.
+
+${OBJDIR}/%.o : ${SRCDIR}/%.S
+	${CC} ${CCFLAGS} ${ASFLAGS} $< -c -o $@
+
+${OBJDIR}/%-d.o : ${SRCDIR}/%.S
+	${CC} ${CCFLAGS} ${ASFLAGS} $< -c -o $@
+
+${OBJDIR}/%-m.o : ${SRCDIR}/%.S
+	${CC} ${CCFLAGS} ${ASFLAGS} $< -c -o $@
+
+${OBJDIR}/%-m-d.o : ${SRCDIR}/%.S
+	${CC} ${CCFLAGS} ${ASFLAGS} $< -c -o $@
+
+
+## Define default dependencies and recipes for making libraries.
+
+ifdef LIB
+${LIB} : ${LIBOBJ}
+	${RM} $@
+	${AR} $@ ${LIBOBJ}
+	${RL} $@
+endif
+
+ifdef LIB-D
+${LIB-D} : ${LIBOBJ-D}
+	${RM} $@
+	${AR} $@ ${LIBOBJ-D}
+	${RL} $@
+endif
+
+ifdef LIB-M
+${LIB-M} : ${LIBOBJ-M}
+	${RM} $@
+	${AR} $@ ${LIBOBJ-M}
+	${RL} $@
+endif
+
+ifdef LIB-M-D
+${LIB-M-D} : ${LIBOBJ-M-D}
+	${RM} $@
+	${AR} $@ ${LIBOBJ-M-D}
+	${RL} $@
+endif
+
+
+## Everything depends on the make file.
+
+
+ifdef LIBOBJ
+${LIBOBJ} : Makefile
+endif
+
+ifdef LIBOBJ-D
+${LIBOBJ-D} : Makefile
+endif
+
+ifdef LIBOBJ-M
+${LIBOBJ-M} : Makefile
+endif
+
+ifdef LIBOBJ-M-D
+${LIBOBJ-M-D} : Makefile
+endif
+
+ifdef MODOBJ
+${MODOBJ} : Makefile
+endif
+
+ifdef MODOBJ-D
+${MODOBJ-D} : Makefile
+endif
+
+ifdef MODOBJ-M
+${MODOBJ-M} : Makefile
+endif
+
+ifdef MODOBJ-M-D
+${MODOBJ-M-D} : Makefile
+endif
+
+
+## Define how to make final executables and libraries.
+
+ifdef INSTALLBINDIR
+${INSTALLBINDIR}/% : ${BINDIR}/%
+	${INSTALL} $< $@
+	${CHMODEXEC} $@
+endif
+
+ifdef INSTALLLIBDIR
+${INSTALLLIBDIR}/% : ${LIBDIR}/%
+	${INSTALL} $< $@ && ${RL} $@
+	${CHMODDATA} $@
+${INSTALLLIBDIR}/% : ${OBJDIR}/%
+	${INSTALL} $< $@
+	${CHMODDATA} $@
+endif
+
+ifdef INSTALLINCDIR
+${INSTALLINCDIR}/% : ${SRCDIR}/%
+	${INSTALL} $< $@
+	${CHMODDATA} $@
+endif

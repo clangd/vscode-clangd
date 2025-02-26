@@ -1,0 +1,38 @@
+## Define some of the tools that are used by the make process.
+
+# The u++ translator is used to build the kernel and library support code to allow uC++ keywords, like _Coroutine,
+# _Task, _Mutex, etc. However, the translator does not need to make available the uC++ includes during kernel build
+# because the include directory (inc) is being created, so these directories and special includes are turned off using
+# flag "-no-u++-include".
+
+CC = ${PACKAGE}/src/translator/bin-${OS}-${CPU}/${UPP}
+
+CCFLAGS = -std=c++17 -B${PACKAGE}/src/translator/lib-${OS}-${CPU} -I. -I${PACKAGE}/src/collection -I${PACKAGE}/src/kernel -I${PACKAGE}/src/scheduler -I${PACKAGE}/src/library -I${PACKAGE}/src/debugger -I${PACKAGE}/src/profiler -DPACKAGE=\"${PACKAGE}\" -DVERSION=\"${VERSION}\" -DTMPDIR=\"${TMPDIR}\" -no-u++-include
+
+ifeq (${TCPU} ${TCPU}, i386 x86_64)
+    CCFLAGS += -m${WORDSIZE}
+endif
+
+#CCFLAGS += -D__U_PROFILER__
+#CCFLAGS += -profile -D__U_PROFILEABLE_ONLY__
+
+#CCFLAGS += -I/home/pabuhr/include/x86_64-linux -DKNOT -DBIGGER_FD_SETSIZE2 # -DBIGGER_FD_SETSIZE uKnot/Linux
+#CCFLAGS += -DFD_SETSIZE=65536 -DKNOT	# uKnot
+
+HOSTNAME = ${shell hostname}
+ifeq (${HOSTNAME},plg2)			# development machine
+    # When -O2/3 is specified, compilers can generate additional warning messages.
+    CCFLAGS += -Wall -Wextra -g -O3 #
+else
+    CCFLAGS += -Wall -Wextra -g -O3 #
+endif
+
+AR = ar cr
+
+RL = ${shell if [ -f /usr/bin/ranlib -o -f /bin/ranlib ]; then echo "ranlib"; else echo "echo"; fi}
+
+RM = rm -rf
+
+INSTALL = cp
+CHMODEXEC = chmod 0755
+CHMODDATA = chmod 0644

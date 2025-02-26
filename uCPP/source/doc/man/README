@@ -1,0 +1,5 @@
+There are two troff variables at the beginning of the source files that define
+the home path to u++ and the version number.  The version variable should be set
+properly (we sometimes forget); change the path for the home variable to the
+location where u++ is installed. There is a command at the beginning of the
+source file to format the manual entry.

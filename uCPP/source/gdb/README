@@ -1,0 +1,19 @@
+These instructions assume the install <prefix> for uC++ is /usr/local/u++-7.0.0.
+If installed elsewhere, change <prefix>.
+
+Copy <prefix>/.gdbinit to your home directory. If installed elsewhere, change
+the <prefix> within .gdbinit. Thereafter, gdb automatically loads the .gdbinit
+file from the home directory making the following new gdb commands available.
+
+New commands:
+
+    info clusters                   : print list of clusters
+    info vprocessors                : print virtual processors in userCluster
+    info vprocessors <clusterName>  : print virtual processors in cluster <clusterName>
+    task                            : print tasks (ids) in userCluster, application tasks only
+    task <clusterName>              : print tasks (ids) in  clusterName, application tasks only
+    task all                        : print all clusters, all tasks
+    task <id>                       : switch debugging stack to task id on userCluster
+    task 0x<address>	            : switch debugging stack to task 0x<address> on any cluster
+    task <id> <clusterName>         : switch debugging stack to task id on cluster clusterName
+
