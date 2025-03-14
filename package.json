@@ -46,7 +46,7 @@
         "publish-openvsx": "ovsx publish --baseImagesUrl https://raw.githubusercontent.com/clangd/vscode-clangd/master/",
         "package-pre-release": "vsce package --pre-release --baseImagesUrl https://raw.githubusercontent.com/clangd/vscode-clangd/master/",
         "publish-pre-release": "vsce publish --pre-release --baseImagesUrl https://raw.githubusercontent.com/clangd/vscode-clangd/master/",
-        "publish-openvsx-pre-release": "ovsx publish --preRelease --baseImagesUrl https://raw.githubusercontent.com/clangd/vscode-clangd/master/",
+        "publish-openvsx-pre-release": "ovsx publish --pre-release --baseImagesUrl https://raw.githubusercontent.com/clangd/vscode-clangd/master/",
         "git-clang-format": "git-clang-format --extensions=ts"
     },
     "dependencies": {
