@@ -1,5 +1,17 @@
 # Change Log
 
+## Version 0.1.34: March 15, 2025
+
+* Create pre-release flows [#748](https://github.com/clangd/vscode-clangd/issues/748) [#753](https://github.com/clangd/vscode-clangd/issues/753) [#765](https://github.com/clangd/vscode-clangd/issues/765)
+* Clean up disposables in early-return path of ClangdContext.create() [#743](https://github.com/clangd/vscode-clangd/issues/743)
+* Publish API package to the default registry [#746](https://github.com/clangd/vscode-clangd/issues/746)
+* Documentation
+  * Mention the clangd config file in the README [#752](https://github.com/clangd/vscode-clangd/issues/752)
+  * Mention the editor.defaultFormatter setting [#768](https://github.com/clangd/vscode-clangd/issues/768)
+* Add an option to allow "clangd.path" to point to a shell script [#683](https://github.com/clangd/vscode-clangd/issues/683)
+* Automatically restart clangd language server after it is installed [#749](https://github.com/clangd/vscode-clangd/issues/749)
+* Handle workspace symbols searches with a '::' prefix [#769](https://github.com/clangd/vscode-clangd/issues/769)
+
 ## Version 0.1.33: November 21, 2024
 
 * Reverted [#730](https://github.com/clangd/vscode-clangd/pull/730) for causing [#734](https://github.com/clangd/vscode-clangd/issues/734)

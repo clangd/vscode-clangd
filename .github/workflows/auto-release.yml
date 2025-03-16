@@ -18,12 +18,26 @@ jobs:
       with:
         diff-search: true # seach the diff content with version
     - if: steps.check.outputs.changed == 'true'
+      id: is_preview
+      run: |
+        IFS='.' read -r -a array <<< "${{ steps.check.outputs.version }}"
+        if [ $((array[1]%2)) -eq 0 ];
+        then
+          echo is_preview="false" >> "$GITHUB_OUTPUT"
+        else
+          echo is_preview="true" >> "$GITHUB_OUTPUT"
+        fi
+      shell: bash
+    - if: steps.check.outputs.changed == 'true'
       run: npm ci
     - if: steps.check.outputs.changed == 'true'
       run: npm test
     - name: package
-      if: steps.check.outputs.changed == 'true'
+      if: steps.check.outputs.changed == 'true' && steps.is_preview.outputs.is_preview == 'false'
       run: npm run package
+    - name: package
+      if: steps.check.outputs.changed == 'true' && steps.is_preview.outputs.is_preview == 'true'
+      run: npm run package-pre-release
     - name: publish to Github
       uses: ncipollo/release-action@v1
       if: steps.check.outputs.changed == 'true'
@@ -31,14 +45,23 @@ jobs:
         artifacts: "vscode-clangd-*.vsix"
         tag: ${{ steps.check.outputs.version }}
         commit: ${{ steps.check.outputs.commit }}
+        prerelease: ${{ steps.is_preview.outputs.is_preview }}
         token: ${{ secrets.GITHUB_TOKEN }}
     - name: publish to VSCode Marketplace
-      if: steps.check.outputs.changed == 'true'
+      if: steps.check.outputs.changed == 'true' && steps.is_preview.outputs.is_preview == 'false'
       # The token will expire. Regenerate it at:
       # https://llvm-vs-code-extensions.visualstudio.com/_usersSettings/tokens.
       run: npm run publish -- -p "${{ secrets.VSCODE_MARKETPLACE_TOKEN }}"
+    - name: publish to VSCode Marketplace
+      if: steps.check.outputs.changed == 'true' && steps.is_preview.outputs.is_preview == 'true'
+      run: npm run publish-pre-release -- -p "${{ secrets.VSCODE_MARKETPLACE_TOKEN }}"
     - name: publish to OpenVSX
-      if: steps.check.outputs.changed == 'true'
+      if: steps.check.outputs.changed == 'true' && steps.is_preview.outputs.is_preview == 'false'
       # The token will expire. Regenerate it at:
       # https://open-vsx.org/user-settings/tokens
       run: npm run publish-openvsx -- -p "${{ secrets.OPENVSX_TOKEN }}"
+    - name: publish to OpenVSX
+      if: steps.check.outputs.changed == 'true' && steps.is_preview.outputs.is_preview == 'true'
+      # The token will expire. Regenerate it at:
+      # https://open-vsx.org/user-settings/tokens
+      run: npm run publish-openvsx-pre-release -- -p "${{ secrets.OPENVSX_TOKEN }}"
