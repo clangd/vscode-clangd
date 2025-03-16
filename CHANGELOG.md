@@ -1,6 +1,6 @@
 # Change Log
 
-## Version 0.1.34: Februari 19, 2025
+## Version 0.1.34: March 15, 2025
 
 * Create pre-release flows [#748](https://github.com/clangd/vscode-clangd/issues/748) [#753](https://github.com/clangd/vscode-clangd/issues/753) [#765](https://github.com/clangd/vscode-clangd/issues/765)
 * Clean up disposables in early-return path of ClangdContext.create() [#743](https://github.com/clangd/vscode-clangd/issues/743)
