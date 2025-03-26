@@ -27,10 +27,7 @@
         "onLanguage:cpp",
         "onLanguage:cuda-cpp",
         "onLanguage:objective-c",
-        "onLanguage:objective-cpp",
-        "onCommand:clangd.activate",
-        "onCommand:clangd.install",
-        "onCommand:clangd.update"
+        "onLanguage:objective-cpp"
     ],
     "main": "./out/bundle",
     "scripts": {
