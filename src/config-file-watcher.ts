@@ -27,12 +27,12 @@ class ConfigFileWatcherFeature implements vscodelc.StaticFeature {
     this.context.subscriptions.push(new ConfigFileWatcher(this.context));
   }
   getState(): vscodelc.FeatureState { return {kind: 'static'}; }
-  dispose() {}
+  clear() {}
 }
 
 class ConfigFileWatcher implements vscode.Disposable {
   private databaseWatcher?: vscode.FileSystemWatcher;
-  private debounceTimer?: NodeJS.Timer;
+  private debounceTimer?: NodeJS.Timeout;
 
   dispose() {
     if (this.databaseWatcher)
