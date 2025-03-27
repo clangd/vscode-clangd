@@ -4,6 +4,7 @@ import {ClangdExtension} from '../api/vscode-clangd';
 
 import {ClangdExtensionImpl} from './api';
 import {ClangdContext} from './clangd-context';
+import {get, update} from './config';
 
 let apiInstance: ClangdExtensionImpl|undefined;
 
@@ -30,6 +31,20 @@ export async function activate(context: vscode.ExtensionContext):
         // stop/start cycle in this situation is pointless, and doesn't work
         // anyways because the client can't be stop()-ped when it's still in the
         // Starting state).
+        if (!get<boolean>('enable')) {
+          vscode.window
+              .showInformationMessage(
+                  'Language features from Clangd are currently disabled. Would you like to enable them?',
+                  'Enable', 'Close')
+              .then(async (choice) => {
+                if (choice === 'Enable') {
+                  await update<boolean>('enable', true);
+                  vscode.commands.executeCommand('clangd.restart');
+                }
+              });
+          return;
+        }
+
         if (clangdContext && clangdContext.clientIsStarting()) {
           return;
         }
