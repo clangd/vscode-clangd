@@ -3,8 +3,8 @@ import * as path from 'path';
 import * as vscode from 'vscode';
 
 // Gets the config value `clangd.<key>`. Applies ${variable} substitutions.
-export function get<T>(key: string): T {
-  return substitute(vscode.workspace.getConfiguration('clangd').get<T>(key)!);
+export async function get<T>(key: string): Promise<T> {
+  return await substitute(vscode.workspace.getConfiguration('clangd').get<T>(key)!);
 }
 
 // Sets the config value `clangd.<key>`. Does not apply substitutions.
@@ -14,12 +14,16 @@ export function update<T>(key: string, value: T,
 }
 
 // Traverse a JSON value, replacing placeholders in all strings.
-function substitute<T>(val: T): T {
+async function substitute<T>(val: T): Promise<T> {
   if (typeof val === 'string') {
-    val = val.replace(/\$\{(.*?)\}/g, (match, name) => {
-      // If there's no replacement available, keep the placeholder.
-      return replacement(name) ?? match;
-    }) as unknown as T;
+    const replacementPattern = /\$\{(.*?)\}/g;
+    const replacementPromises: Promise<any>[] = [];
+    val.replace(replacementPattern, (match, name) => {
+      replacementPromises.push(replacement(name));
+      return match;
+    });
+    const replacements = await Promise.all(replacementPromises);
+    val = val.replace(/\$\{(.*?)\}/g, () => replacements.shift()) as unknown as T;
   } else if (Array.isArray(val)) {
     val = val.map((x) => substitute(x)) as unknown as T;
   } else if (typeof val === 'object') {
@@ -35,7 +39,7 @@ function substitute<T>(val: T): T {
 
 // Subset of substitution variables that are most likely to be useful.
 // https://code.visualstudio.com/docs/editor/variables-reference
-function replacement(name: string): string|undefined {
+async function replacement(name: string): Promise<string|undefined> {
   if (name === 'userHome') {
     return homedir();
   }
@@ -59,6 +63,14 @@ function replacement(name: string): string|undefined {
     const config = vscode.workspace.getConfiguration().get(
         name.substr(configPrefix.length));
     return (typeof config === 'string') ? config : undefined;
+  }
+  const commandPrefix = 'command:';
+  if (name.startsWith(commandPrefix)) {
+    try {
+      return await vscode.commands.executeCommand(name.substr(commandPrefix.length));
+    } catch {
+      return undefined;
+    }
   }
 
   return undefined;
