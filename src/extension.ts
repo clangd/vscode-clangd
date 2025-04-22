@@ -25,12 +25,6 @@ export async function activate(context: vscode.ExtensionContext):
       vscode.commands.registerCommand('clangd.activate', async () => {}));
   context.subscriptions.push(
       vscode.commands.registerCommand('clangd.restart', async () => {
-        // clangd.restart can be called when the extension is not yet activated.
-        // In such a case, vscode will activate the extension and then run this
-        // handler. Detect this situation and bail out (doing an extra
-        // stop/start cycle in this situation is pointless, and doesn't work
-        // anyways because the client can't be stop()-ped when it's still in the
-        // Starting state).
         if (!get<boolean>('enable')) {
           vscode.window
               .showInformationMessage(
@@ -44,7 +38,13 @@ export async function activate(context: vscode.ExtensionContext):
               });
           return;
         }
-
+        
+        // clangd.restart can be called when the extension is not yet activated.
+        // In such a case, vscode will activate the extension and then run this
+        // handler. Detect this situation and bail out (doing an extra
+        // stop/start cycle in this situation is pointless, and doesn't work
+        // anyways because the client can't be stop()-ped when it's still in the
+        // Starting state).
         if (clangdContext && clangdContext.clientIsStarting()) {
           return;
         }
