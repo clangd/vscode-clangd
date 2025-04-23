@@ -38,7 +38,7 @@ export async function activate(context: vscode.ExtensionContext):
               });
           return;
         }
-        
+
         // clangd.restart can be called when the extension is not yet activated.
         // In such a case, vscode will activate the extension and then run this
         // handler. Detect this situation and bail out (doing an extra
