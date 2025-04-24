@@ -4,6 +4,7 @@ import {ClangdExtension} from '../api/vscode-clangd';
 
 import {ClangdExtensionImpl} from './api';
 import {ClangdContext} from './clangd-context';
+import {get, update} from './config';
 
 let apiInstance: ClangdExtensionImpl|undefined;
 
@@ -24,6 +25,20 @@ export async function activate(context: vscode.ExtensionContext):
       vscode.commands.registerCommand('clangd.activate', async () => {}));
   context.subscriptions.push(
       vscode.commands.registerCommand('clangd.restart', async () => {
+        if (!get<boolean>('enable')) {
+          vscode.window
+              .showInformationMessage(
+                  'Language features from Clangd are currently disabled. Would you like to enable them?',
+                  'Enable', 'Close')
+              .then(async (choice) => {
+                if (choice === 'Enable') {
+                  await update<boolean>('enable', true);
+                  vscode.commands.executeCommand('clangd.restart');
+                }
+              });
+          return;
+        }
+
         // clangd.restart can be called when the extension is not yet activated.
         // In such a case, vscode will activate the extension and then run this
         // handler. Detect this situation and bail out (doing an extra
