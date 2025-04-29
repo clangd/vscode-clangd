@@ -17,20 +17,20 @@ export function update<T>(key: string, value: T,
 async function substitute<T>(val: T): Promise<T> {
   if (typeof val === 'string') {
     const replacementPattern = /\$\{(.*?)\}/g;
-    const replacementPromises: Promise<any>[] = [];
+    const replacementPromises: Promise<string | undefined>[] = [];
     val.replace(replacementPattern, (match, name) => {
       replacementPromises.push(replacement(name));
       return match;
     });
     const replacements = await Promise.all(replacementPromises);
-    val = val.replace(/\$\{(.*?)\}/g, () => replacements.shift()) as unknown as T;
+    val = val.replace(/\$\{(.*?)\}/g, (match, _) => replacements.shift() ?? match) as unknown as T;
   } else if (Array.isArray(val)) {
-    val = val.map((x) => substitute(x)) as unknown as T;
+    val = await Promise.all(val.map(substitute)) as T;
   } else if (typeof val === 'object') {
     // Substitute values but not keys, so we don't deal with collisions.
     const result = {} as {[k: string]: any};
     for (const key in val) {
-      result[key] = substitute(val[key]);
+      result[key] = await substitute(val[key]);
     }
     val = result as T;
   }
