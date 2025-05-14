@@ -153,7 +153,7 @@
                 "clangd.onConfigChanged": {
                     "type": "string",
                     "default": "prompt",
-                    "description": "What to do when clangd configuration files are changed. Ignored for clangd 12+, which can reload such files itself.",
+                    "description": "What to do when clangd configuration files are changed. Ignored for clangd 12+, which can reload such files itself; however, this can be overridden with clangd.onConfigChanged.forceEnable.",
                     "enum": [
                         "prompt",
                         "restart",
@@ -164,6 +164,11 @@
                         "Automatically restart the server",
                         "Do nothing"
                     ]
+                },
+                "clangd.onConfigChanged.forceEnable": {
+                    "type": "boolean",
+                    "default": false,
+                    "description": "Force enable of \"On Config Changed\" option regardless of clangd version."
                 },
                 "clangd.detectExtensionConflicts": {
                     "type": "boolean",

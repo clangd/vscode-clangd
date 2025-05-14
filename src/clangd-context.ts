@@ -212,11 +212,11 @@ export class ClangdContext implements vscode.Disposable {
     ast.activate(this);
     openConfig.activate(this);
     inactiveRegions.activate(this);
+    configFileWatcher.activate(this);
     this.client.start();
     console.log('Clang Language Server is now active!');
     fileStatus.activate(this);
     switchSourceHeader.activate(this);
-    configFileWatcher.activate(this);
   }
 
   get visibleClangdEditors(): vscode.TextEditor[] {
