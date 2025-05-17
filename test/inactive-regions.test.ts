@@ -28,7 +28,7 @@ suite('InactiveRegionsFeature', () => {
     sandbox = sinon.createSandbox();
     sandbox.stub(config, 'get')
         .withArgs('inactiveRegions.opacity')
-        .returns(0.55);
+        .returns(Promise.resolve(0.55));
   });
 
   teardown(() => { sandbox.restore(); });
