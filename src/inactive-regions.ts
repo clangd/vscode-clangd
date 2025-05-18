@@ -1,7 +1,7 @@
 import * as vscode from 'vscode';
 import * as vscodelc from 'vscode-languageclient/node';
 
-import {ClangdContext} from './clangd-context';
+import {ClangdLanguageClient} from './clangd-context';
 import * as config from './config';
 
 // Parameters for the inactive regions (server-side) push notification.
@@ -19,19 +19,14 @@ export const NotificationType =
     new vscodelc.NotificationType<InactiveRegionsParams>(
         'textDocument/inactiveRegions');
 
-export function activate(context: ClangdContext) {
-  const feature = new InactiveRegionsFeature(context);
-  context.client.registerFeature(feature);
-  context.client.onNotification(NotificationType,
-                                feature.handleNotification.bind(feature));
-}
-
 export class InactiveRegionsFeature implements vscodelc.StaticFeature {
   private decorationType?: vscode.TextEditorDecorationType;
   private files: Map<string, vscode.Range[]> = new Map();
-  private context: ClangdContext;
 
-  constructor(context: ClangdContext) { this.context = context; }
+  constructor(private readonly client: ClangdLanguageClient) {
+    client.registerFeature(this);
+    client.subscriptions.push(client.onNotification(NotificationType, this.handleNotification.bind(this)));
+  }
 
   fillClientCapabilities(capabilities: vscodelc.ClientCapabilities) {
     // Extend the ClientCapabilities type and add inactive regions
@@ -51,11 +46,11 @@ export class InactiveRegionsFeature implements vscodelc.StaticFeature {
         {inactiveRegionsProvider?: any} = capabilities;
     if (serverCapabilities.inactiveRegionsProvider) {
       this.updateDecorationType();
-      this.context.subscriptions.push(
+      this.client.subscriptions.push(
           vscode.window.onDidChangeVisibleTextEditors(
-              (editors) => editors.forEach(
+              () => this.client.visibleEditors().forEach(
                   (e) => this.applyHighlights(e.document.fileName))));
-      this.context.subscriptions.push(
+      this.client.subscriptions.push(
           vscode.workspace.onDidChangeConfiguration((conf) => {
             const inactiveSettingsChanged =
                 conf.affectsConfiguration(
@@ -82,14 +77,14 @@ export class InactiveRegionsFeature implements vscodelc.StaticFeature {
   handleNotification(params: InactiveRegionsParams) {
     const filePath = vscode.Uri.parse(params.textDocument.uri, true).fsPath;
     const ranges: vscode.Range[] = params.regions.map(
-        (r) => this.context.client.protocol2CodeConverter.asRange(r));
+        (r) => this.client.protocol2CodeConverter.asRange(r));
     this.files.set(filePath, ranges);
     this.applyHighlights(filePath);
   }
 
   updateDecorationType() {
     this.decorationType?.dispose();
-    if (config.get<boolean>('inactiveRegions.useBackgroundHighlight')) {
+    if (config.get<boolean>('inactiveRegions.useBackgroundHighlight', this.client.clientOptions.workspaceFolder)) {
       this.decorationType = vscode.window.createTextEditorDecorationType({
         isWholeLine: true,
         backgroundColor:
@@ -98,7 +93,7 @@ export class InactiveRegionsFeature implements vscodelc.StaticFeature {
     } else {
       this.decorationType = vscode.window.createTextEditorDecorationType({
         isWholeLine: true,
-        opacity: config.get<number>('inactiveRegions.opacity').toString()
+        opacity: config.get<number>('inactiveRegions.opacity', this.client.clientOptions.workspaceFolder).toString()
       });
     }
   }
@@ -107,7 +102,7 @@ export class InactiveRegionsFeature implements vscodelc.StaticFeature {
     const ranges = this.files.get(filePath);
     if (!ranges)
       return;
-    this.context.visibleClangdEditors.forEach((e) => {
+    this.client.visibleEditors().forEach((e) => {
       if (!this.decorationType)
         return;
       if (e.document.fileName !== filePath)
