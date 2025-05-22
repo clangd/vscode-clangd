@@ -73,13 +73,8 @@
     "qna": "marketplace",
     "capabilities": {
         "untrustedWorkspaces": {
-            "supported": "limited",
-            "description": "In restricted mode clangd.path and clangd.arguments are not respected.",
-            "restrictedConfigurations": [
-                "clangd.path",
-                "clangd.useScriptAsExecutable",
-                "clangd.arguments"
-            ]
+            "supported": false,
+            "description": "Clangd isn't safe to run on untrusted code as it embeds clang as a parser. Parsing source files as one navigates a code base, carries the risk of being exploited."
         }
     },
     "contributes": {
