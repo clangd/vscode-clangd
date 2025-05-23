@@ -31,7 +31,7 @@
     ],
     "main": "./out/bundle",
     "scripts": {
-        "esbuild": "esbuild ./src/extension.ts --bundle --outfile=out/bundle.js --external:@aws-sdk/client-s3 --external:vscode --format=cjs --platform=node",
+        "esbuild": "esbuild ./src/extension.ts --bundle --outfile=out/bundle.js --external:vscode --format=cjs --platform=node",
         "vscode:prepublish": "npm run check-ts && npm run esbuild -- --minify --keep-names",
         "compile": "npm run esbuild -- --sourcemap",
         "check-ts": "tsc -noEmit -p ./",
