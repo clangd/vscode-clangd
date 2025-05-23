@@ -1,5 +1,10 @@
 # Change Log
 
+## Version 0.1.35: May 23, 2025
+
+* On config changed watcher can be force enabled [#300](https://github.com/clangd/vscode-clangd/issues/300).
+* Extension is only enabled in trusted workspaces [#812](https://github.com/clangd/vscode-clangd/pull/812).
+
 ## Version 0.1.34: March 15, 2025
 
 * Create pre-release flows [#748](https://github.com/clangd/vscode-clangd/issues/748) [#753](https://github.com/clangd/vscode-clangd/issues/753) [#765](https://github.com/clangd/vscode-clangd/issues/765)
