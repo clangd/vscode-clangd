@@ -8,12 +8,7 @@
 import * as vscode from 'vscode';
 import * as vscodelc from 'vscode-languageclient/node';
 
-import {ClangdContext} from './clangd-context';
-
-export function activate(context: ClangdContext) {
-  const feature = new MemoryUsageFeature(context);
-  context.client.registerFeature(feature);
-}
+import {ClangdContext, ClangdLanguageClient} from './clangd-context';
 
 // LSP wire format for this clangd feature.
 interface NoParams {}
@@ -48,22 +43,9 @@ function convert(m: WireTree, title: string): InternalTree {
   };
 }
 
-class MemoryUsageFeature implements vscodelc.StaticFeature {
-  constructor(private context: ClangdContext) {
-    const adapter = new TreeAdapter();
-    adapter.onDidChangeTreeData((e) => vscode.commands.executeCommand(
-                                    'setContext', 'clangd.memoryUsage.hasData',
-                                    adapter.root !== undefined));
-    this.context.subscriptions.push(
-        vscode.window.registerTreeDataProvider('clangd.memoryUsage', adapter));
-    this.context.subscriptions.push(
-        vscode.commands.registerCommand('clangd.memoryUsage', async () => {
-          const usage =
-              await this.context.client.sendRequest(MemoryUsageRequest, {});
-          adapter.root = convert(usage, '<root>');
-        }));
-    this.context.subscriptions.push(vscode.commands.registerCommand(
-        'clangd.memoryUsage.close', () => adapter.root = undefined));
+export class MemoryUsageFeature implements vscodelc.StaticFeature {
+  constructor(client: ClangdLanguageClient) {
+    client.registerFeature(this);
   }
 
   fillClientCapabilities(capabilities: vscodelc.ClientCapabilities) {}
@@ -71,15 +53,32 @@ class MemoryUsageFeature implements vscodelc.StaticFeature {
 
   initialize(capabilities: vscodelc.ServerCapabilities,
              _documentSelector: vscodelc.DocumentSelector|undefined) {
-    vscode.commands.executeCommand('setContext', 'clangd.memoryUsage.supported',
-                                   'memoryUsageProvider' in capabilities);
+    if ('memoryUsageProvider' in capabilities)
+      vscode.commands.executeCommand('setContext', 'clangd.memoryUsage.supported', true);
   }
   getState(): vscodelc.FeatureState { return {kind: 'static'}; }
   clear() {}
 }
 
-class TreeAdapter implements vscode.TreeDataProvider<InternalTree> {
+export class MemoryUsageProvider implements vscode.TreeDataProvider<InternalTree> {
   private root_?: InternalTree;
+
+  constructor(context: ClangdContext) {
+    context.subscriptions.push(this.onDidChangeTreeData((e) => vscode.commands.executeCommand(
+      'setContext', 'clangd.memoryUsage.hasData',
+      this.root !== undefined)));
+    context.subscriptions.push(
+        vscode.window.registerTreeDataProvider('clangd.memoryUsage', this));
+    context.subscriptions.push(
+        vscode.commands.registerCommand('clangd.memoryUsage', async () => {
+          const usage =
+              await context.getActiveClient()?.sendRequest(MemoryUsageRequest, {});
+          if (usage !== undefined)
+            this.root = convert(usage, '<root>');
+        }));
+    context.subscriptions.push(vscode.commands.registerCommand(
+        'clangd.memoryUsage.close', () => this.root = undefined));
+  }
 
   get root(): InternalTree|undefined { return this.root_; }
   set root(n: InternalTree|undefined) {

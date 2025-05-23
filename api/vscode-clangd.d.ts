@@ -11,8 +11,19 @@ export interface ClangdApiV1 {
   languageClient: BaseLanguageClient|undefined
 }
 
+export interface ClangdApiV2 {
+  // vscode-clangd's language clients keyed by workspace folder which can be used to send requests to the
+  // clangd language server(s)
+  // Standard requests:
+  // https://microsoft.github.io/language-server-protocol/specifications/specification-current
+  // clangd custom requests:
+  // https://clangd.llvm.org/extensions
+  languageClients: Map<string, BaseLanguageClient>
+}
+
 export interface ClangdExtension {
   getApi(version: 1): ClangdApiV1;
+  getApi(version: 2): ClangdApiV2;
 }
 
 // clangd custom request types
