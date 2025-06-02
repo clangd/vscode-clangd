@@ -1,5 +1,9 @@
 # Change Log
 
+## Version 0.2.0: June 1, 2025
+
+* Stable release of changes in versions 0.1.34 and 0.1.35.
+
 ## Version 0.1.35: May 23, 2025
 
 * On config changed watcher can be force enabled [#300](https://github.com/clangd/vscode-clangd/issues/300).
