@@ -1,5 +1,9 @@
 # Change Log
 
+## Version 0.2.1: June 2, 2025
+
+* Support commands in config [#796](https://github.com/clangd/vscode-clangd/pull/796) [#48](https://github.com/clangd/vscode-clangd/issues/48)
+
 ## Version 0.1.34: March 15, 2025
 
 * Create pre-release flows [#748](https://github.com/clangd/vscode-clangd/issues/748) [#753](https://github.com/clangd/vscode-clangd/issues/753) [#765](https://github.com/clangd/vscode-clangd/issues/765)
