@@ -3,8 +3,8 @@ import * as path from 'path';
 import * as vscode from 'vscode';
 
 // Gets the config value `clangd.<key>`. Applies ${variable} substitutions.
-export function get<T>(key: string): T {
-  return substitute(vscode.workspace.getConfiguration('clangd').get<T>(key)!);
+export function get<T>(key: string, folder?: vscode.WorkspaceFolder|undefined): T {
+  return substitute(vscode.workspace.getConfiguration('clangd', folder).get<T>(key)!, folder);
 }
 
 // Sets the config value `clangd.<key>`. Does not apply substitutions.
@@ -14,11 +14,11 @@ export function update<T>(key: string, value: T,
 }
 
 // Traverse a JSON value, replacing placeholders in all strings.
-function substitute<T>(val: T): T {
+function substitute<T>(val: T, folder?: vscode.WorkspaceFolder|undefined): T {
   if (typeof val === 'string') {
     val = val.replace(/\$\{(.*?)\}/g, (match, name) => {
       // If there's no replacement available, keep the placeholder.
-      return replacement(name) ?? match;
+      return replacement(name, folder) ?? match;
     }) as unknown as T;
   } else if (Array.isArray(val)) {
     val = val.map((x) => substitute(x)) as unknown as T;
@@ -35,21 +35,20 @@ function substitute<T>(val: T): T {
 
 // Subset of substitution variables that are most likely to be useful.
 // https://code.visualstudio.com/docs/editor/variables-reference
-function replacement(name: string): string|undefined {
+function replacement(name: string, folder?: vscode.WorkspaceFolder|undefined): string|undefined {
   if (name === 'userHome') {
     return homedir();
   }
   if (name === 'workspaceRoot' || name === 'workspaceFolder' ||
       name === 'cwd') {
-    if (vscode.workspace.rootPath !== undefined)
-      return vscode.workspace.rootPath;
+    if (folder !== undefined)
+      return folder.uri.fsPath;
     if (vscode.window.activeTextEditor !== undefined)
       return path.dirname(vscode.window.activeTextEditor.document.uri.fsPath);
     return process.cwd();
   }
-  if (name === 'workspaceFolderBasename' &&
-      vscode.workspace.rootPath !== undefined) {
-    return path.basename(vscode.workspace.rootPath);
+  if (name === 'workspaceFolderBasename' && folder !== undefined) {
+    return path.basename(folder.uri.fsPath);
   }
   const envPrefix = 'env:';
   if (name.startsWith(envPrefix))
