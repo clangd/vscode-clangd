@@ -1,35 +1,19 @@
 import * as vscode from 'vscode';
-import * as vscodelc from 'vscode-languageclient/node';
 
 import {ClangdContext} from './clangd-context';
 
-export function activate(context: ClangdContext) {
-  context.subscriptions.push(vscode.commands.registerCommand(
-      'clangd.openOutputPanel', () => context.client.outputChannel.show()));
-  const status = new FileStatus('clangd.openOutputPanel');
-  context.subscriptions.push(vscode.Disposable.from(status));
-  context.subscriptions.push(vscode.window.onDidChangeActiveTextEditor(
-      () => { status.updateStatus(); }));
-  context.subscriptions.push(context.client.onDidChangeState(({newState}) => {
-    if (newState === vscodelc.State.Running) {
-      // clangd starts or restarts after crash.
-      context.client.onNotification(
-          'textDocument/clangd.fileStatus',
-          (fileStatus) => { status.onFileUpdated(fileStatus); });
-    } else if (newState === vscodelc.State.Stopped) {
-      // Clear all cached statuses when clangd crashes.
-      status.clear();
-    }
-  }));
-}
-
-class FileStatus {
+export class FileStatus {
   private statuses = new Map<string, any>();
-  private readonly statusBarItem =
-      vscode.window.createStatusBarItem(vscode.StatusBarAlignment.Left, 10);
+  private statusBarItem: vscode.StatusBarItem;
 
-  constructor(onClickCommand: string) {
-    this.statusBarItem.command = onClickCommand;
+  constructor(context: ClangdContext) {
+    context.subscriptions.push(vscode.commands.registerCommand(
+      'clangd.openOutputPanel', () => context.getActiveClient()?.outputChannel.show()));
+    this.statusBarItem = vscode.window.createStatusBarItem(vscode.StatusBarAlignment.Left, 10);
+    this.statusBarItem.command = 'clangd.openOutputPanel'
+    context.subscriptions.push(this.statusBarItem);
+    context.subscriptions.push(vscode.window.onDidChangeActiveTextEditor(
+      () => { this.updateStatus(); }));
   }
 
   onFileUpdated(fileStatus: any) {

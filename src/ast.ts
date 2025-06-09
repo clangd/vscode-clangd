@@ -3,61 +3,17 @@
 import * as vscode from 'vscode';
 import * as vscodelc from 'vscode-languageclient/node';
 
-import {ClangdContext} from './clangd-context';
+import {ClangdContext, ClangdLanguageClient} from './clangd-context';
 import type {ASTParams, ASTNode} from '../api/vscode-clangd';
 
 const ASTRequestMethod = 'textDocument/ast';
 
-export function activate(context: ClangdContext) {
-  const feature = new ASTFeature(context);
-  context.client.registerFeature(feature);
-}
-
 const ASTRequestType =
     new vscodelc.RequestType<ASTParams, ASTNode|null, void>(ASTRequestMethod);
 
-class ASTFeature implements vscodelc.StaticFeature {
-  constructor(private context: ClangdContext) {
-    // The adapter holds the currently inspected node.
-    const adapter = new TreeAdapter();
-    // Create the AST view, showing data from the adapter.
-    const tree =
-        vscode.window.createTreeView('clangd.ast', {treeDataProvider: adapter});
-    context.subscriptions.push(
-        tree,
-        // Ensure the AST view is visible exactly when the adapter has a node.
-        // clangd.ast.hasData controls the view visibility (package.json).
-        adapter.onDidChangeTreeData((_) => {
-          vscode.commands.executeCommand('setContext', 'clangd.ast.hasData',
-                                         adapter.hasRoot());
-          // Work around https://github.com/microsoft/vscode/issues/90005
-          // Show the AST tree even if it's been collapsed or closed.
-          // reveal(root) fails here: "Data tree node not found".
-          if (adapter.hasRoot())
-            // @ts-ignore
-            tree.reveal(null);
-        }),
-        // Create the "Show AST" command for the context menu.
-        // It's only shown if the feature is dynamicaly available (package.json)
-        vscode.commands.registerTextEditorCommand(
-            'clangd.ast',
-            async (editor, _edit) => {
-              const converter = this.context.client.code2ProtocolConverter;
-              const item =
-                  await this.context.client.sendRequest(ASTRequestType, {
-                    textDocument:
-                        converter.asTextDocumentIdentifier(editor.document),
-                    range: converter.asRange(editor.selection),
-                  });
-              if (!item)
-                vscode.window.showInformationMessage(
-                    'No AST node at selection');
-              adapter.setRoot(item ?? undefined, editor.document.uri);
-            }),
-        // Clicking "close" will empty the adapter, which in turn hides the
-        // view.
-        vscode.commands.registerCommand(
-            'clangd.ast.close', () => adapter.setRoot(undefined, undefined)));
+export class ASTFeature implements vscodelc.StaticFeature {
+  constructor(client: ClangdLanguageClient) {
+    client.registerFeature(this);
   }
 
   fillClientCapabilities(capabilities: vscodelc.ClientCapabilities) {}
@@ -65,8 +21,8 @@ class ASTFeature implements vscodelc.StaticFeature {
   // The "Show AST" command is enabled if the server advertises the capability.
   initialize(capabilities: vscodelc.ServerCapabilities,
              _documentSelector: vscodelc.DocumentSelector|undefined) {
-    vscode.commands.executeCommand('setContext', 'clangd.ast.supported',
-                                   'astProvider' in capabilities);
+    if ('astProvider' in capabilities)
+      vscode.commands.executeCommand('setContext', 'clangd.ast.supported', true);
   }
   getState(): vscodelc.FeatureState { return {kind: 'static'}; }
   clear() {}
@@ -108,9 +64,54 @@ function describe(role: string, kind: string): string {
 }
 
 // Map a root ASTNode onto a VSCode tree.
-class TreeAdapter implements vscode.TreeDataProvider<ASTNode> {
+export class ASTProvider implements vscode.TreeDataProvider<ASTNode> {
   private root?: ASTNode;
   private doc?: vscode.Uri;
+
+  constructor(context: ClangdContext) {
+    // Create the AST view, showing data from the adapter.
+    const tree =
+        vscode.window.createTreeView('clangd.ast', {treeDataProvider: this});
+    context.subscriptions.push(
+        tree,
+        // Ensure the AST view is visible exactly when the adapter has a node.
+        // clangd.ast.hasData controls the view visibility (package.json).
+        this.onDidChangeTreeData((_) => {
+          vscode.commands.executeCommand('setContext', 'clangd.ast.hasData',
+                                         this.hasRoot());
+          // Work around https://github.com/microsoft/vscode/issues/90005
+          // Show the AST tree even if it's been collapsed or closed.
+          // reveal(root) fails here: "Data tree node not found".
+          if (this.hasRoot())
+            // @ts-ignore
+            tree.reveal(null);
+        }),
+        // Create the "Show AST" command for the context menu.
+        // It's only shown if the feature is dynamicaly available (package.json)
+        vscode.commands.registerTextEditorCommand(
+            'clangd.ast',
+            async (editor, _edit) => {
+              const client = context.getActiveClient();
+              if (client === undefined)
+                  return;
+
+              const converter = client.code2ProtocolConverter;
+              const item =
+                  await client.sendRequest(ASTRequestType, {
+                    textDocument:
+                        converter.asTextDocumentIdentifier(editor.document),
+                    range: converter.asRange(editor.selection),
+                  });
+              if (!item)
+                vscode.window.showInformationMessage(
+                    'No AST node at selection');
+              this.setRoot(item ?? undefined, editor.document.uri);
+            }),
+        // Clicking "close" will empty the adapter, which in turn hides the
+        // view.
+        vscode.commands.registerCommand(
+            'clangd.ast.close', () => this.setRoot(undefined, undefined)));
+  }
 
   hasRoot(): boolean { return this.root !== undefined; }
 
