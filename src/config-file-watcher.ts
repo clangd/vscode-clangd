@@ -1,22 +1,16 @@
 import * as vscode from 'vscode';
 import * as vscodelc from 'vscode-languageclient/node';
 
-import {ClangdContext} from './clangd-context';
+import {ClangdContext, ClangdLanguageClient} from './clangd-context';
 import * as config from './config';
-
-export function activate(context: ClangdContext) {
-  if (config.get<string>('onConfigChanged') !== 'ignore') {
-    context.client.registerFeature(new ConfigFileWatcherFeature(context));
-  }
-}
 
 // Clangd extension capabilities.
 interface ClangdClientCapabilities {
   compilationDatabase?: {automaticReload?: boolean;},
 }
 
-class ConfigFileWatcherFeature implements vscodelc.StaticFeature {
-  constructor(private context: ClangdContext) {}
+export class ConfigFileWatcherFeature implements vscodelc.StaticFeature {
+  constructor(private client: ClangdLanguageClient) {}
   fillClientCapabilities(capabilities: vscodelc.ClientCapabilities) {}
 
   initialize(capabilities: vscodelc.ServerCapabilities,
@@ -26,20 +20,16 @@ class ConfigFileWatcherFeature implements vscodelc.StaticFeature {
             .compilationDatabase?.automaticReload) {
       return;
     }
-    this.context.subscriptions.push(new ConfigFileWatcher(this.context));
+    if (this.client.context.configFileWatcher !== undefined)
+      this.client.context.configFileWatcher = new ConfigFileWatcher(this.client.context);
   }
   getState(): vscodelc.FeatureState { return {kind: 'static'}; }
   clear() {}
 }
 
-class ConfigFileWatcher implements vscode.Disposable {
+export class ConfigFileWatcher {
   private databaseWatcher?: vscode.FileSystemWatcher;
   private debounceTimer?: NodeJS.Timeout;
-
-  dispose() {
-    if (this.databaseWatcher)
-      this.databaseWatcher.dispose();
-  }
 
   constructor(private context: ClangdContext) {
     this.createFileSystemWatcher();
@@ -55,6 +45,7 @@ class ConfigFileWatcher implements vscode.Disposable {
           '{' +
           vscode.workspace.workspaceFolders.map(f => f.uri.fsPath).join(',') +
           '}/{build/compile_commands.json,compile_commands.json,compile_flags.txt}');
+      this.context.subscriptions.push(this.databaseWatcher);
       this.context.subscriptions.push(this.databaseWatcher.onDidChange(
           this.debouncedHandleConfigFilesChanged.bind(this)));
       this.context.subscriptions.push(this.databaseWatcher.onDidCreate(
