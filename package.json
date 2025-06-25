@@ -230,6 +230,11 @@
                 "title": "Manually activate extension"
             },
             {
+                "command": "clangd.shutdown",
+                "category": "clangd",
+                "title": "Manually shutdown extension"
+            },
+            {
                 "command": "clangd.restart",
                 "category": "clangd",
                 "title": "Restart language server"
