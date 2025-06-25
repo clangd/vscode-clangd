@@ -13,7 +13,7 @@ jobs:
         echo "DISPLAY=:99" >> $GITHUB_ENV
     - uses: actions/checkout@v4
     - name: detect version
-      uses: EndBug/version-check@v1
+      uses: EndBug/version-check@v2
       id: check
       with:
         diff-search: true # seach the diff content with version
