@@ -17,3 +17,8 @@ updates:
       npm-packages:
         patterns:
           - "*"
+    ignore:
+      - dependency-name: "@types/vscode"
+        update-types:
+          - "version-update:semver-major"
+          - "version-update:semver-minor"
