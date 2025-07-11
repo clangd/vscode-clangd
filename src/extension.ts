@@ -58,6 +58,14 @@ export async function activate(context: vscode.ExtensionContext):
           apiInstance.client = clangdContext?.client;
         }
       }));
+  context.subscriptions.push(vscode.commands.registerCommand(
+      'clangd.shutdown', async () => {
+        if (clangdContext && clangdContext.clientIsStarting()) {
+          return;
+        }
+        if (clangdContext)
+          clangdContext.dispose();
+      }));
 
   let shouldCheck = false;
 
