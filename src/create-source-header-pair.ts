@@ -171,23 +171,16 @@ class PairCreator implements vscode.Disposable {
       desiredOrder = ['cpp_empty', 'cpp_class', 'cpp_struct', 'c_empty', 'c_struct'];
     }
 
-    const choices = [...TEMPLATE_RULES].sort((a, b) => desiredOrder.indexOf(a.key) - desiredOrder.indexOf(b.key));
+    const choices = [...TEMPLATE_RULES]
+      .sort((a, b) => desiredOrder.indexOf(a.key) - desiredOrder.indexOf(b.key))
+      .map(rule => ({ ...rule, label: `$(file-code) ${rule.label}` }));
 
-    // Attach the QuickPickItem properties directly to our rule objects
-    const quickPickItems = choices.map(rule => ({ ...rule, label: `$(file-code) ${rule.label}` })); // Example to ensure it's a QuickPickItem
-
-    // Find the default choice and mark it as picked
-    if (quickPickItems.length > 0) {
-      (quickPickItems[0] as any).picked = true;
-    }
-
-    const result = await vscode.window.showQuickPick(quickPickItems, {
+    const result = await vscode.window.showQuickPick(choices, {
       placeHolder: 'Please select the type of file pair to create.',
-      title: 'Create Pair: Step 1 of 2'
+      title: 'Create Pair - Step 1 of 2'
     });
 
-    // The result itself is one of our enriched QuickPickItem objects, which is a PairingRule.
-    return result as PairingRule | undefined;
+    return result;
   }
   // --- END: The Refined, Simplified promptForPairingRule Method ---
 
@@ -201,39 +194,120 @@ class PairCreator implements vscode.Disposable {
       prompt,
       placeHolder: this.getPlaceholder(rule),
       validateInput: (text) => VALIDATION_PATTERNS.IDENTIFIER.test(text?.trim() || '') ? null : 'Invalid C/C++ identifier.',
-      title: 'Create Pair: Step 2 of 2'
+      title: 'Create Pair - Step 2 of 2'
     });
   }
 
   private generateFileContent(fileName: string, eol: string, rule: PairingRule): { headerContent: string, sourceContent: string } {
-    const headerGuard = `${fileName.toUpperCase()}_H_`;
-    const includeLine = `#include "${fileName}${rule.headerExt}"`;
-    const headerGuardBlock = `#ifndef ${headerGuard}\n#define ${headerGuard}`;
-    const endifLine = `\n#endif  // ${headerGuard}\n`;
+    const templates = this.getTemplatesByRule(rule);
+    const context = {
+      fileName,
+      headerGuard: `${fileName.toUpperCase()}_H_`,
+      includeLine: `#include "${fileName}${rule.headerExt}"`
+    };
 
-    let headerTemplate: string, sourceTemplate: string;
-
-    if (rule.isClass) {
-      headerTemplate = `${headerGuardBlock}\n\nclass ${fileName} {\npublic:\n  ${fileName}();\n  ~${fileName}();\n\nprivate:\n  // Add private members here\n};\n${endifLine}`;
-      sourceTemplate = `${includeLine}\n\n${fileName}::${fileName}() {\n  // Constructor implementation\n}\n\n${fileName}::~${fileName}() {\n  // Destructor implementation\n}\n`;
-    } else if (rule.isStruct && rule.language === 'cpp') {
-      headerTemplate = `${headerGuardBlock}\n\nstruct ${fileName} {\n  // Struct members\n};\n${endifLine}`;
-      sourceTemplate = includeLine;
-    } else if (rule.isStruct && rule.language === 'c') {
-      headerTemplate = `${headerGuardBlock}\n\ntypedef struct {\n  // Struct members\n} ${fileName};\n${endifLine}`;
-      sourceTemplate = includeLine;
-    } else if (rule.language === 'c') {
-      headerTemplate = `${headerGuardBlock}\n\n// Declarations for ${fileName}.c\n${endifLine}`;
-      sourceTemplate = `${includeLine}\n\n// Implementations for ${fileName}.c\n`;
-    } else { // C++ Empty
-      headerTemplate = `${headerGuardBlock}\n\n// Declarations for ${fileName}.cpp\n${endifLine}`;
-      sourceTemplate = includeLine;
-    }
+    const headerContent = this.applyTemplate(templates.header, context);
+    const sourceContent = this.applyTemplate(templates.source, context);
 
     return {
-      headerContent: headerTemplate.replace(/\n/g, eol),
-      sourceContent: sourceTemplate.replace(/\n/g, eol)
+      headerContent: headerContent.replace(/\n/g, eol),
+      sourceContent: sourceContent.replace(/\n/g, eol)
     };
+  }
+
+  private getTemplatesByRule(rule: PairingRule): { header: string, source: string } {
+    if (rule.isClass) {
+      return {
+        header: `#ifndef {{headerGuard}}
+#define {{headerGuard}}
+
+class {{fileName}} {
+public:
+  {{fileName}}();
+  ~{{fileName}}();
+
+private:
+  // Add private members here
+};
+
+#endif  // {{headerGuard}}
+`,
+        source: `{{includeLine}}
+
+{{fileName}}::{{fileName}}() {
+  // Constructor implementation
+}
+
+{{fileName}}::~{{fileName}}() {
+  // Destructor implementation
+}
+`
+      };
+    }
+
+    if (rule.isStruct && rule.language === 'cpp') {
+      return {
+        header: `#ifndef {{headerGuard}}
+#define {{headerGuard}}
+
+struct {{fileName}} {
+  // Struct members
+};
+
+#endif  // {{headerGuard}}
+`,
+        source: '{{includeLine}}'
+      };
+    }
+
+    if (rule.isStruct && rule.language === 'c') {
+      return {
+        header: `#ifndef {{headerGuard}}
+#define {{headerGuard}}
+
+typedef struct {
+  // Struct members
+} {{fileName}};
+
+#endif  // {{headerGuard}}
+`,
+        source: '{{includeLine}}'
+      };
+    }
+
+    if (rule.language === 'c') {
+      return {
+        header: `#ifndef {{headerGuard}}
+#define {{headerGuard}}
+
+// Declarations for {{fileName}}.c
+
+#endif  // {{headerGuard}}
+`,
+        source: `{{includeLine}}
+
+// Implementations for {{fileName}}.c
+`
+      };
+    }
+
+    // C++ Empty (default)
+    return {
+      header: `#ifndef {{headerGuard}}
+#define {{headerGuard}}
+
+// Declarations for {{fileName}}.cpp
+
+#endif  // {{headerGuard}}
+`,
+      source: '{{includeLine}}'
+    };
+  }
+
+  private applyTemplate(template: string, context: Record<string, string>): string {
+    return template.replace(/\{\{(\w+)\}\}/g, (match, key) => {
+      return context[key] || match; // If key exists in context, replace it. Otherwise, keep the original placeholder.
+    });
   }
 
   private async checkFileExistence(headerPath: vscode.Uri, sourcePath: vscode.Uri): Promise<string | null> {
