@@ -6,39 +6,35 @@ import { ClangdContext } from './clangd-context';
 
 // --- Constants and Types ---
 
-const FILE_EXTENSIONS = {
-  HEADER: '.h',
-  C_SOURCE: '.c',
-  CPP_SOURCE: '.cpp'
-} as const;
-
 const VALIDATION_PATTERNS = {
   IDENTIFIER: /^[a-zA-Z_][a-zA-Z0-9_]*$/
 } as const;
 
 const DEFAULT_PLACEHOLDERS = {
-  C_FILES: 'my_c_functions',
+  C_EMPTY: 'my_c_functions',
   C_STRUCT: 'MyStruct',
-  CPP_FILES: 'utils',
+  CPP_EMPTY: 'utils',
   CPP_CLASS: 'MyClass',
   CPP_STRUCT: 'MyStruct'
 } as const;
 
-const TEMPLATE_KEYS = {
-  CPP_FILES: 'cpp_files',
-  CPP_CLASS: 'cpp_class',
-  CPP_STRUCT: 'cpp_struct',
-  C_FILES: 'c_files',
-  C_STRUCT: 'c_struct'
-} as const;
-type TemplateType = typeof TEMPLATE_KEYS[keyof typeof TEMPLATE_KEYS];
+interface PairingRule {
+  key: string;
+  label: string;
+  description: string;
+  language: 'c' | 'cpp';
+  headerExt: string;
+  sourceExt: string;
+  isClass?: boolean;
+  isStruct?: boolean;
+}
 
-const TEMPLATE_CHOICES: ReadonlyArray<vscode.QuickPickItem & { key: TemplateType }> = [
-  { label: '$(new-file) C++ Source Pair', description: 'Creates a C++ header/source pair with header guards.', key: TEMPLATE_KEYS.CPP_FILES },
-  { label: '$(symbol-class) C++ Class Pair', description: 'Creates a C++ header/source pair with a class definition.', key: TEMPLATE_KEYS.CPP_CLASS },
-  { label: '$(symbol-struct) C++ Struct Pair', description: 'Creates a C++ header/source pair with a struct definition.', key: TEMPLATE_KEYS.CPP_STRUCT },
-  { label: '$(file-code) C Files Pair', description: 'Creates a standard C header/source pair for functions.', key: TEMPLATE_KEYS.C_FILES },
-  { label: '$(symbol-struct) C Struct Pair', description: 'Creates a standard C header/source pair with a struct definition.', key: TEMPLATE_KEYS.C_STRUCT }
+const TEMPLATE_RULES: ReadonlyArray<PairingRule> = [
+  { key: 'cpp_empty', label: 'New Empty C++ Pair', description: 'Creates .h/.cpp files with header guards.', language: 'cpp', headerExt: '.h', sourceExt: '.cpp' },
+  { key: 'cpp_class', label: 'New C++ Class', description: 'Creates .h/.cpp files for a C++ class.', language: 'cpp', headerExt: '.h', sourceExt: '.cpp', isClass: true },
+  { key: 'cpp_struct', label: 'New C++ Struct', description: 'Creates .h/.cpp files for a C++ struct.', language: 'cpp', headerExt: '.h', sourceExt: '.cpp', isStruct: true },
+  { key: 'c_empty', label: 'New Empty C Pair', description: 'Creates .h/.c files for C functions.', language: 'c', headerExt: '.h', sourceExt: '.c' },
+  { key: 'c_struct', label: 'New C Struct', description: 'Creates .h/.c files for a C struct (using typedef).', language: 'c', headerExt: '.h', sourceExt: '.c', isStruct: true }
 ];
 
 // --- Main Class ---
@@ -56,21 +52,22 @@ class PairCreator implements vscode.Disposable {
     try {
       const targetDirectory = await this.getTargetDirectory();
       if (!targetDirectory) {
-        vscode.window.showErrorMessage('Could not determine a target directory. Please open a folder or a file first.');
+        vscode.window.showErrorMessage('Cannot determine target directory. Please open a folder or a file first.');
         return;
       }
 
-      const language = this.detectLanguage();
-      const templateType = await this.promptForTemplateType(language);
-      if (!templateType) return;
+      // Step 2: Perform language detection once to get all context.
+      const { language, uncertain } = await this.detectLanguage();
 
-      const fileName = await this.promptForFileName(templateType);
+      // Step 3: Prompt for the rule, passing all context.
+      const rule = await this.promptForPairingRule(language, uncertain);
+      if (!rule) return;
+
+      const fileName = await this.promptForFileName(rule);
       if (!fileName) return;
 
-      const isC = templateType === TEMPLATE_KEYS.C_FILES || templateType === TEMPLATE_KEYS.C_STRUCT;
-      const sourceExt = isC ? FILE_EXTENSIONS.C_SOURCE : FILE_EXTENSIONS.CPP_SOURCE;
-      const headerPath = vscode.Uri.file(path.join(targetDirectory.fsPath, `${fileName}${FILE_EXTENSIONS.HEADER}`));
-      const sourcePath = vscode.Uri.file(path.join(targetDirectory.fsPath, `${fileName}${sourceExt}`));
+      const headerPath = vscode.Uri.file(path.join(targetDirectory.fsPath, `${fileName}${rule.headerExt}`));
+      const sourcePath = vscode.Uri.file(path.join(targetDirectory.fsPath, `${fileName}${rule.sourceExt}`));
 
       const existingFilePath = await this.checkFileExistence(headerPath, sourcePath);
       if (existingFilePath) {
@@ -79,7 +76,7 @@ class PairCreator implements vscode.Disposable {
       }
 
       const eol = this.getLineEnding();
-      const { headerContent, sourceContent } = this.generateFileContent(fileName, eol, templateType);
+      const { headerContent, sourceContent } = this.generateFileContent(fileName, eol, rule);
 
       await this.writeFiles(headerPath, sourcePath, headerContent, sourceContent);
       await this.finalizeCreation(headerPath, sourcePath);
@@ -96,99 +93,141 @@ class PairCreator implements vscode.Disposable {
     return (eolSetting === '\n' || eolSetting === '\r\n') ? eolSetting : os.EOL;
   }
 
-  private detectLanguage(): 'c' | 'cpp' {
+  // --- START: The Refined, Unified detectLanguage Method ---
+  private async detectLanguage(): Promise<{ language: 'c' | 'cpp', uncertain: boolean }> {
     const activeEditor = vscode.window.activeTextEditor;
-    return (activeEditor && !activeEditor.document.isUntitled && activeEditor.document.languageId === 'c') ? 'c' : 'cpp';
+    if (!activeEditor || activeEditor.document.isUntitled) {
+      return { language: 'cpp', uncertain: true };
+    }
+
+    const document = activeEditor.document;
+    const langId = document.languageId;
+    const filePath = document.uri.fsPath;
+    const ext = path.extname(filePath);
+
+    // Strategy 1: Trust definitive source file language IDs
+    if (ext === '.c') return { language: 'c', uncertain: false };
+    if (ext === '.cpp' || ext === '.cc' || ext === '.cxx') return { language: 'cpp', uncertain: false };
+
+    // Strategy 2: For header files, infer from companion files
+    if (ext === '.h') {
+      const baseName = path.basename(filePath, '.h');
+      const dirPath = path.dirname(filePath);
+
+      const companionChecks = [
+        path.join(dirPath, `${baseName}.c`),
+        path.join(dirPath, `${baseName}.cpp`),
+        path.join(dirPath, `${baseName}.cc`),
+        path.join(dirPath, `${baseName}.cxx`)
+      ];
+
+      const results = await Promise.allSettled(
+        companionChecks.map(file => vscode.workspace.fs.stat(vscode.Uri.file(file)))
+      );
+
+      if (results[0].status === 'fulfilled') return { language: 'c', uncertain: false };
+      if (results.slice(1).some(r => r.status === 'fulfilled')) return { language: 'cpp', uncertain: false };
+
+      // If we are in a header file with no companion, the context is uncertain.
+      return { language: 'cpp', uncertain: true };
+    }
+
+    // Strategy 3: Fallback using the potentially unreliable language ID
+    return { language: (langId === 'c' ? 'c' : 'cpp'), uncertain: true };
   }
+  // --- END: The Refined, Unified detectLanguage Method ---
 
   private toPascalCase(input: string): string {
     return input.split(/[-_]/).map(word => word.charAt(0).toUpperCase() + word.slice(1)).join('');
   }
 
-  private getPlaceholder(templateType: TemplateType): string {
+  private getPlaceholder(rule: PairingRule): string {
     const activeEditor = vscode.window.activeTextEditor;
     if (activeEditor && !activeEditor.document.isUntitled) {
       const currentFileName = path.basename(activeEditor.document.fileName, path.extname(activeEditor.document.fileName));
-      if (templateType === TEMPLATE_KEYS.C_FILES || templateType === TEMPLATE_KEYS.C_STRUCT) {
-        return currentFileName;
-      }
+      if (rule.language === 'c') return currentFileName;
       return this.toPascalCase(currentFileName);
     }
 
-    switch (templateType) {
-      case TEMPLATE_KEYS.C_FILES: return DEFAULT_PLACEHOLDERS.C_FILES;
-      case TEMPLATE_KEYS.C_STRUCT: return DEFAULT_PLACEHOLDERS.C_STRUCT;
-      case TEMPLATE_KEYS.CPP_CLASS: return DEFAULT_PLACEHOLDERS.CPP_CLASS;
-      case TEMPLATE_KEYS.CPP_STRUCT: return DEFAULT_PLACEHOLDERS.CPP_STRUCT;
-      default: return DEFAULT_PLACEHOLDERS.CPP_FILES;
-    }
+    if (rule.isClass) return DEFAULT_PLACEHOLDERS.CPP_CLASS;
+    if (rule.isStruct && rule.language === 'cpp') return DEFAULT_PLACEHOLDERS.CPP_STRUCT;
+    if (rule.isStruct && rule.language === 'c') return DEFAULT_PLACEHOLDERS.C_STRUCT;
+    if (rule.language === 'c') return DEFAULT_PLACEHOLDERS.C_EMPTY;
+    return DEFAULT_PLACEHOLDERS.CPP_EMPTY;
   }
 
-  private async promptForTemplateType(language: 'c' | 'cpp'): Promise<TemplateType | undefined> {
-    const cppOrder: TemplateType[] = [TEMPLATE_KEYS.CPP_FILES, TEMPLATE_KEYS.CPP_CLASS, TEMPLATE_KEYS.CPP_STRUCT, TEMPLATE_KEYS.C_FILES, TEMPLATE_KEYS.C_STRUCT];
-    const cOrder: TemplateType[] = [TEMPLATE_KEYS.C_FILES, TEMPLATE_KEYS.C_STRUCT, TEMPLATE_KEYS.CPP_FILES, TEMPLATE_KEYS.CPP_CLASS, TEMPLATE_KEYS.CPP_STRUCT];
-    const desiredOrder = language === 'c' ? cOrder : cppOrder;
+  // --- START: The Refined, Simplified promptForPairingRule Method ---
+  private async promptForPairingRule(language: 'c' | 'cpp', uncertain: boolean): Promise<PairingRule | undefined> {
+    let desiredOrder: string[];
 
-    const orderedChoices = [...TEMPLATE_CHOICES].sort((a, b) => desiredOrder.indexOf(a.key) - desiredOrder.indexOf(b.key));
-    orderedChoices.forEach((choice, index) => choice.picked = index === 0);
+    if (uncertain) {
+      // For orphan headers, present a neutral, user-friendly order.
+      desiredOrder = ['cpp_empty', 'c_empty', 'cpp_class', 'cpp_struct', 'c_struct'];
+    } else if (language === 'c') {
+      // For C context, prioritize C options.
+      desiredOrder = ['c_empty', 'c_struct', 'cpp_empty', 'cpp_class', 'cpp_struct'];
+    } else {
+      // For C++ context, prioritize C++ options.
+      desiredOrder = ['cpp_empty', 'cpp_class', 'cpp_struct', 'c_empty', 'c_struct'];
+    }
 
-    const result = await vscode.window.showQuickPick(orderedChoices, {
-      placeHolder: 'Please select the type of files to create.',
+    const choices = [...TEMPLATE_RULES].sort((a, b) => desiredOrder.indexOf(a.key) - desiredOrder.indexOf(b.key));
+
+    // Attach the QuickPickItem properties directly to our rule objects
+    const quickPickItems = choices.map(rule => ({ ...rule, label: `$(file-code) ${rule.label}` })); // Example to ensure it's a QuickPickItem
+
+    // Find the default choice and mark it as picked
+    if (quickPickItems.length > 0) {
+      (quickPickItems[0] as any).picked = true;
+    }
+
+    const result = await vscode.window.showQuickPick(quickPickItems, {
+      placeHolder: 'Please select the type of file pair to create.',
       title: 'Create Pair: Step 1 of 2'
     });
-    return result?.key;
-  }
 
-  private validateIdentifier(text: string): string | null {
-    if (!text?.trim()) return 'Name cannot be empty.';
-    if (!VALIDATION_PATTERNS.IDENTIFIER.test(text)) return 'Invalid C/C++ identifier.';
-    return null;
+    // The result itself is one of our enriched QuickPickItem objects, which is a PairingRule.
+    return result as PairingRule | undefined;
   }
+  // --- END: The Refined, Simplified promptForPairingRule Method ---
 
-  private async promptForFileName(templateType: TemplateType): Promise<string | undefined> {
-    let prompt: string;
-    switch (templateType) {
-      case TEMPLATE_KEYS.C_FILES: prompt = 'Please enter the name for the new C files.'; break;
-      case TEMPLATE_KEYS.C_STRUCT: prompt = 'Please enter the struct name for the new C files.'; break;
-      case TEMPLATE_KEYS.CPP_CLASS: prompt = 'Please enter the class name.'; break;
-      case TEMPLATE_KEYS.CPP_STRUCT: prompt = 'Please enter the struct name.'; break;
-      default: prompt = 'Please enter the base name for the new C++ files.'; break;
-    }
+  private async promptForFileName(rule: PairingRule): Promise<string | undefined> {
+    let prompt = 'Please enter a name.';
+    if (rule.isClass) prompt = 'Please enter the name for the new C++ class.';
+    else if (rule.isStruct) prompt = `Please enter the name for the new ${rule.language.toUpperCase()} struct.`;
+    else prompt = `Please enter the base name for the new ${rule.language.toUpperCase()} file pair.`;
 
     return vscode.window.showInputBox({
       prompt,
-      placeHolder: this.getPlaceholder(templateType),
-      validateInput: this.validateIdentifier,
+      placeHolder: this.getPlaceholder(rule),
+      validateInput: (text) => VALIDATION_PATTERNS.IDENTIFIER.test(text?.trim() || '') ? null : 'Invalid C/C++ identifier.',
       title: 'Create Pair: Step 2 of 2'
     });
   }
 
-  private generateFileContent(fileName: string, eol: string, templateType: TemplateType): { headerContent: string, sourceContent: string } {
+  private generateFileContent(fileName: string, eol: string, rule: PairingRule): { headerContent: string, sourceContent: string } {
     const headerGuard = `${fileName.toUpperCase()}_H_`;
-    const includeLine = `#include "${fileName}.h"`;
+    const includeLine = `#include "${fileName}${rule.headerExt}"`;
     const headerGuardBlock = `#ifndef ${headerGuard}\n#define ${headerGuard}`;
     const endifLine = `\n#endif  // ${headerGuard}\n`;
 
     let headerTemplate: string, sourceTemplate: string;
 
-    switch (templateType) {
-      case TEMPLATE_KEYS.C_FILES:
-        headerTemplate = `${headerGuardBlock}\n\n// Function declarations for ${fileName}.c\n${endifLine}`;
-        sourceTemplate = `${includeLine}\n\n// Function implementations for ${fileName}.c\n`;
-        break;
-      case TEMPLATE_KEYS.C_STRUCT:
-      case TEMPLATE_KEYS.CPP_STRUCT:
-        headerTemplate = `${headerGuardBlock}\n\nstruct ${fileName} {\n  // Struct members\n};\n${endifLine}`;
-        sourceTemplate = includeLine;
-        break;
-      case TEMPLATE_KEYS.CPP_CLASS:
-        headerTemplate = `${headerGuardBlock}\n\nclass ${fileName} {\npublic:\n  ${fileName}();\n  ~${fileName}();\n\nprivate:\n  // Add private members here\n};\n${endifLine}`;
-        sourceTemplate = `${includeLine}\n\n${fileName}::${fileName}() {\n  // Constructor implementation\n}\n\n${fileName}::~${fileName}() {\n  // Destructor implementation\n}\n`;
-        break;
-      default: // CPP_FILES
-        headerTemplate = `${headerGuardBlock}\n\n// Declarations for ${fileName}\n${endifLine}`;
-        sourceTemplate = includeLine;
-        break;
+    if (rule.isClass) {
+      headerTemplate = `${headerGuardBlock}\n\nclass ${fileName} {\npublic:\n  ${fileName}();\n  ~${fileName}();\n\nprivate:\n  // Add private members here\n};\n${endifLine}`;
+      sourceTemplate = `${includeLine}\n\n${fileName}::${fileName}() {\n  // Constructor implementation\n}\n\n${fileName}::~${fileName}() {\n  // Destructor implementation\n}\n`;
+    } else if (rule.isStruct && rule.language === 'cpp') {
+      headerTemplate = `${headerGuardBlock}\n\nstruct ${fileName} {\n  // Struct members\n};\n${endifLine}`;
+      sourceTemplate = includeLine;
+    } else if (rule.isStruct && rule.language === 'c') {
+      headerTemplate = `${headerGuardBlock}\n\ntypedef struct {\n  // Struct members\n} ${fileName};\n${endifLine}`;
+      sourceTemplate = includeLine;
+    } else if (rule.language === 'c') {
+      headerTemplate = `${headerGuardBlock}\n\n// Declarations for ${fileName}.c\n${endifLine}`;
+      sourceTemplate = `${includeLine}\n\n// Implementations for ${fileName}.c\n`;
+    } else { // C++ Empty
+      headerTemplate = `${headerGuardBlock}\n\n// Declarations for ${fileName}.cpp\n${endifLine}`;
+      sourceTemplate = includeLine;
     }
 
     return {
@@ -198,13 +237,13 @@ class PairCreator implements vscode.Disposable {
   }
 
   private async checkFileExistence(headerPath: vscode.Uri, sourcePath: vscode.Uri): Promise<string | null> {
-    const checks = await Promise.allSettled([
-      vscode.workspace.fs.stat(headerPath),
-      vscode.workspace.fs.stat(sourcePath)
-    ]);
-
-    if (checks[0].status === 'fulfilled') return headerPath.fsPath;
-    if (checks[1].status === 'fulfilled') return sourcePath.fsPath;
+    const pathsToCheck = [headerPath, sourcePath];
+    for (const filePath of pathsToCheck) {
+      try {
+        await vscode.workspace.fs.stat(filePath);
+        return filePath.fsPath;
+      } catch { }
+    }
     return null;
   }
 
@@ -229,17 +268,12 @@ class PairCreator implements vscode.Disposable {
     if (activeEditor && !activeEditor.document.isUntitled) {
       return vscode.Uri.file(path.dirname(activeEditor.document.uri.fsPath));
     }
-
     const workspaceFolders = vscode.workspace.workspaceFolders;
-    if (workspaceFolders?.length === 1) {
-      return workspaceFolders[0].uri;
-    }
-
+    if (workspaceFolders?.length === 1) return workspaceFolders[0].uri;
     if (workspaceFolders && workspaceFolders.length > 1) {
-      const picked = await vscode.window.showWorkspaceFolderPick({ placeHolder: 'Please select a workspace folder to create the files in.' });
-      return picked?.uri;
+      const selectedFolder = await vscode.window.showWorkspaceFolderPick({ placeHolder: 'Please select a workspace folder for the new files.' });
+      return selectedFolder?.uri;
     }
-
     return undefined;
   }
 }
