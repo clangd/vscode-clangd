@@ -4,309 +4,246 @@ import * as os from 'os';
 
 import { ClangdContext } from './clangd-context';
 
-// Constants for file extensions and validation
+// --- Constants and Types ---
+
 const FILE_EXTENSIONS = {
   HEADER: '.h',
   C_SOURCE: '.c',
   CPP_SOURCE: '.cpp'
 } as const;
 
-const LANGUAGE_TYPES = {
-  C: 'c',
-  CPP: 'cpp'
-} as const;
-
 const VALIDATION_PATTERNS = {
   IDENTIFIER: /^[a-zA-Z_][a-zA-Z0-9_]*$/
 } as const;
 
-// Interface for template configuration
-interface TemplateConfig {
-  fileName: string;
-  headerGuard: string;
-  eol: string;
-  isC: boolean;
-}
+const DEFAULT_PLACEHOLDERS = {
+  C_FILES: 'my_c_functions',
+  C_STRUCT: 'MyStruct',
+  CPP_FILES: 'utils',
+  CPP_CLASS: 'MyClass',
+  CPP_STRUCT: 'MyStruct'
+} as const;
 
-// Interface for file generation result
-interface FileGenerationResult {
-  headerPath: vscode.Uri;
-  sourcePath: vscode.Uri;
-  headerContent: string;
-  sourceContent: string;
-}
+const TEMPLATE_KEYS = {
+  CPP_FILES: 'cpp_files',
+  CPP_CLASS: 'cpp_class',
+  CPP_STRUCT: 'cpp_struct',
+  C_FILES: 'c_files',
+  C_STRUCT: 'c_struct'
+} as const;
+type TemplateType = typeof TEMPLATE_KEYS[keyof typeof TEMPLATE_KEYS];
 
-// Handles the "Create Source/Header Pair" command.
+const TEMPLATE_CHOICES: ReadonlyArray<vscode.QuickPickItem & { key: TemplateType }> = [
+  { label: '$(new-file) C++ Files', description: 'Create an empty C++ header/source pair.', key: TEMPLATE_KEYS.CPP_FILES },
+  { label: '$(symbol-class) C++ Class', description: 'Create a C++ header/source pair with a class definition.', key: TEMPLATE_KEYS.CPP_CLASS },
+  { label: '$(symbol-struct) C++ Struct', description: 'Create a C++ header/source pair with a struct definition.', key: TEMPLATE_KEYS.CPP_STRUCT },
+  { label: '$(file-code) C Files', description: 'Create a standard C header/source pair for functions.', key: TEMPLATE_KEYS.C_FILES },
+  { label: '$(symbol-struct) C Struct', description: 'Create a standard C header/source pair with a struct definition.', key: TEMPLATE_KEYS.C_STRUCT }
+];
+
+// --- Main Class ---
+
 class PairCreator implements vscode.Disposable {
   private command: vscode.Disposable;
 
   constructor() {
-    this.command = vscode.commands.registerCommand(
-      'clangd.createSourceHeaderPair', this.create, this);
+    this.command = vscode.commands.registerCommand('clangd.createSourceHeaderPair', this.create, this);
   }
 
-  // Implements vscode.Disposable to clean up resources.
   dispose() { this.command.dispose(); }
 
-
-  // Helper method to get platform-appropriate line ending
-  private getLineEnding(): string {
-    const eolSetting = vscode.workspace.getConfiguration('files').get<string>('eol');
-    if (eolSetting === '\n' || eolSetting === '\r\n') {
-      return eolSetting;
-    }
-    return os.EOL;
-  }
-
-  // Detects the language type based on the active editor
-  private detectLanguage(): 'c' | 'cpp' {
-    const activeEditor = vscode.window.activeTextEditor;
-    if (activeEditor && !activeEditor.document.isUntitled) {
-      const langId = activeEditor.document.languageId;
-      return langId === LANGUAGE_TYPES.C ? LANGUAGE_TYPES.C : LANGUAGE_TYPES.CPP;
-    }
-    return LANGUAGE_TYPES.CPP; // Default to C++
-  }
-
-  // Validates user input for file name
-  private validateFileName(text: string): string | null {
-    if (!text || text.trim().length === 0) {
-      return 'Name cannot be empty.';
-    }
-    if (!VALIDATION_PATTERNS.IDENTIFIER.test(text)) {
-      return 'Name must start with a letter or underscore and contain only letters, numbers, and underscores.';
-    }
-    return null;
-  }
-
-  // Prompts user for file name input
-  private async promptForFileName(isC: boolean): Promise<string | undefined> {
-    return vscode.window.showInputBox({
-      prompt: isC
-        ? 'Please enter the name for the new C files.'
-        : 'Please enter the name for the new C++ class.',
-      placeHolder: isC ? 'my_c_functions' : 'MyClass',
-      validateInput: this.validateFileName
-    });
-  }
-
-  // Checks if files already exist
-  private async checkFileExistence(headerPath: vscode.Uri, sourcePath: vscode.Uri): Promise<boolean> {
-    const [headerExists, sourceExists] = await Promise.allSettled([
-      vscode.workspace.fs.stat(headerPath),
-      vscode.workspace.fs.stat(sourcePath)
-    ]);
-
-    if (headerExists.status === 'fulfilled') {
-      vscode.window.showErrorMessage(`File already exists: ${headerPath.fsPath}`);
-      return true;
-    }
-
-    if (sourceExists.status === 'fulfilled') {
-      vscode.window.showErrorMessage(`File already exists: ${sourcePath.fsPath}`);
-      return true;
-    }
-
-    return false;
-  }
-
-  // Generates C language templates
-  private generateCTemplates(config: TemplateConfig): { header: string; source: string } {
-    const headerTemplate = `#ifndef ${config.headerGuard}
-#define ${config.headerGuard}
-
-// Function declarations for ${config.fileName}.c
-
-#endif  // ${config.headerGuard}
-`;
-
-    const sourceTemplate = `#include "${config.fileName}.h"
-
-// Function implementations for ${config.fileName}.c
-`;
-
-    return {
-      header: headerTemplate.replace(/\n/g, config.eol),
-      source: sourceTemplate.replace(/\n/g, config.eol)
-    };
-  }
-
-  // Generates C++ language templates
-  private generateCppTemplates(config: TemplateConfig): { header: string; source: string } {
-    const headerTemplate = `#ifndef ${config.headerGuard}
-#define ${config.headerGuard}
-
-class ${config.fileName} {
-public:
-  ${config.fileName}();
-  ~${config.fileName}();
-
-private:
-  // Add private members here
-};
-
-#endif  // ${config.headerGuard}
-`;
-
-    const sourceTemplate = `#include "${config.fileName}.h"
-
-${config.fileName}::${config.fileName}() {
-  // Constructor implementation
-}
-
-${config.fileName}::~${config.fileName}() {
-  // Destructor implementation
-}
-`;
-
-    return {
-      header: headerTemplate.replace(/\n/g, config.eol),
-      source: sourceTemplate.replace(/\n/g, config.eol)
-    };
-  }
-
-  // Generates file templates based on language type
-  private generateTemplates(config: TemplateConfig): { header: string; source: string } {
-    return config.isC
-      ? this.generateCTemplates(config)
-      : this.generateCppTemplates(config);
-  }
-
-  // Prepares file generation data
-  private prepareFileGeneration(
-    fileName: string,
-    targetDirectory: vscode.Uri,
-    isC: boolean
-  ): FileGenerationResult {
-    const sourceExt = isC ? FILE_EXTENSIONS.C_SOURCE : FILE_EXTENSIONS.CPP_SOURCE;
-    const headerPath = vscode.Uri.file(
-      path.join(targetDirectory.fsPath, `${fileName}${FILE_EXTENSIONS.HEADER}`)
-    );
-    const sourcePath = vscode.Uri.file(
-      path.join(targetDirectory.fsPath, `${fileName}${sourceExt}`)
-    );
-
-    const config: TemplateConfig = {
-      fileName,
-      headerGuard: `${fileName.toUpperCase()}_H_`,
-      eol: this.getLineEnding(),
-      isC
-    };
-
-    const templates = this.generateTemplates(config);
-
-    return {
-      headerPath,
-      sourcePath,
-      headerContent: templates.header,
-      sourceContent: templates.source
-    };
-  }
-
-  // Writes files to the filesystem
-  private async writeFiles(generation: FileGenerationResult): Promise<void> {
-    try {
-      await Promise.all([
-        vscode.workspace.fs.writeFile(
-          generation.headerPath,
-          Buffer.from(generation.headerContent, 'utf8')
-        ),
-        vscode.workspace.fs.writeFile(
-          generation.sourcePath,
-          Buffer.from(generation.sourceContent, 'utf8')
-        )
-      ]);
-    } catch (error: any) {
-      throw new Error(`Failed to create files: ${error.message}`);
-    }
-  }
-
-  // Opens the created header file and shows success message
-  private async finalizeCreation(generation: FileGenerationResult): Promise<void> {
-    const fileName = path.basename(generation.headerPath.fsPath, FILE_EXTENSIONS.HEADER);
-    const sourceExt = path.extname(generation.sourcePath.fsPath);
-
-    await vscode.window.showTextDocument(
-      await vscode.workspace.openTextDocument(generation.headerPath)
-    );
-
-    await vscode.window.showInformationMessage(
-      `Successfully created ${fileName}${FILE_EXTENSIONS.HEADER} and ${fileName}${sourceExt}`
-    );
-  }
-
-  // The core implementation of the command.
-  // It handles user input, file creation, and opening the new file.
   public async create(): Promise<void> {
     try {
-      // Step 1: Get target directory
       const targetDirectory = await this.getTargetDirectory();
       if (!targetDirectory) {
-        vscode.window.showErrorMessage(
-          'Could not determine a target directory. Please open a folder or a file first.'
-        );
+        vscode.window.showErrorMessage('Could not determine a target directory. Please open a folder or a file first.');
         return;
       }
 
-      // Step 2: Detect language
       const language = this.detectLanguage();
-      const isC = language === LANGUAGE_TYPES.C;
+      const templateType = await this.promptForTemplateType(language);
+      if (!templateType) return;
 
-      // Step 3: Get file name from user
-      const fileName = await this.promptForFileName(isC);
-      if (!fileName) {
-        return; // User canceled the input
-      }
+      const fileName = await this.promptForFileName(templateType);
+      if (!fileName) return;
 
-      // Step 4: Prepare file generation data
-      const generation = this.prepareFileGeneration(fileName, targetDirectory, isC);
+      const isC = templateType === TEMPLATE_KEYS.C_FILES || templateType === TEMPLATE_KEYS.C_STRUCT;
+      const sourceExt = isC ? FILE_EXTENSIONS.C_SOURCE : FILE_EXTENSIONS.CPP_SOURCE;
+      const headerPath = vscode.Uri.file(path.join(targetDirectory.fsPath, `${fileName}${FILE_EXTENSIONS.HEADER}`));
+      const sourcePath = vscode.Uri.file(path.join(targetDirectory.fsPath, `${fileName}${sourceExt}`));
 
-      // Step 5: Check if files already exist
-      const filesExist = await this.checkFileExistence(generation.headerPath, generation.sourcePath);
-      if (filesExist) {
+      const existingFilePath = await this.checkFileExistence(headerPath, sourcePath);
+      if (existingFilePath) {
+        vscode.window.showErrorMessage(`File already exists: ${existingFilePath}`);
         return;
       }
 
-      // Step 6: Write files
-      await this.writeFiles(generation);
+      const eol = this.getLineEnding();
+      const { headerContent, sourceContent } = this.generateFileContent(fileName, eol, templateType);
 
-      // Step 7: Finalize creation (open file and show message)
-      await this.finalizeCreation(generation);
+      await this.writeFiles(headerPath, sourcePath, headerContent, sourceContent);
+      await this.finalizeCreation(headerPath, sourcePath);
 
     } catch (error: any) {
       vscode.window.showErrorMessage(error.message || 'An unexpected error occurred.');
     }
   }
 
-  // Helper method to intelligently determine the directory for new files.
+  // --- Helper Methods ---
+
+  private getLineEnding(): string {
+    const eolSetting = vscode.workspace.getConfiguration('files').get<string>('eol');
+    return (eolSetting === '\n' || eolSetting === '\r\n') ? eolSetting : os.EOL;
+  }
+
+  private detectLanguage(): 'c' | 'cpp' {
+    const activeEditor = vscode.window.activeTextEditor;
+    return (activeEditor && !activeEditor.document.isUntitled && activeEditor.document.languageId === 'c') ? 'c' : 'cpp';
+  }
+
+  private toPascalCase(input: string): string {
+    return input.split(/[-_]/).map(word => word.charAt(0).toUpperCase() + word.slice(1)).join('');
+  }
+
+  private getPlaceholder(templateType: TemplateType): string {
+    const activeEditor = vscode.window.activeTextEditor;
+    if (activeEditor && !activeEditor.document.isUntitled) {
+      const currentFileName = path.basename(activeEditor.document.fileName, path.extname(activeEditor.document.fileName));
+      if (templateType === TEMPLATE_KEYS.C_FILES || templateType === TEMPLATE_KEYS.C_STRUCT) {
+        return currentFileName;
+      }
+      return this.toPascalCase(currentFileName);
+    }
+
+    switch (templateType) {
+      case TEMPLATE_KEYS.C_FILES: return DEFAULT_PLACEHOLDERS.C_FILES;
+      case TEMPLATE_KEYS.C_STRUCT: return DEFAULT_PLACEHOLDERS.C_STRUCT;
+      case TEMPLATE_KEYS.CPP_CLASS: return DEFAULT_PLACEHOLDERS.CPP_CLASS;
+      case TEMPLATE_KEYS.CPP_STRUCT: return DEFAULT_PLACEHOLDERS.CPP_STRUCT;
+      default: return DEFAULT_PLACEHOLDERS.CPP_FILES;
+    }
+  }
+
+  private async promptForTemplateType(language: 'c' | 'cpp'): Promise<TemplateType | undefined> {
+    const cppOrder: TemplateType[] = [TEMPLATE_KEYS.CPP_FILES, TEMPLATE_KEYS.CPP_CLASS, TEMPLATE_KEYS.CPP_STRUCT, TEMPLATE_KEYS.C_FILES, TEMPLATE_KEYS.C_STRUCT];
+    const cOrder: TemplateType[] = [TEMPLATE_KEYS.C_FILES, TEMPLATE_KEYS.C_STRUCT, TEMPLATE_KEYS.CPP_FILES, TEMPLATE_KEYS.CPP_CLASS, TEMPLATE_KEYS.CPP_STRUCT];
+    const desiredOrder = language === 'c' ? cOrder : cppOrder;
+
+    const orderedChoices = [...TEMPLATE_CHOICES].sort((a, b) => desiredOrder.indexOf(a.key) - desiredOrder.indexOf(b.key));
+    orderedChoices.forEach((choice, index) => choice.picked = index === 0);
+
+    const result = await vscode.window.showQuickPick(orderedChoices, {
+      placeHolder: 'Please select the type of files to create.',
+      title: 'Create Pair: Step 1 of 2'
+    });
+    return result?.key;
+  }
+
+  private validateIdentifier(text: string): string | null {
+    if (!text?.trim()) return 'Name cannot be empty.';
+    if (!VALIDATION_PATTERNS.IDENTIFIER.test(text)) return 'Invalid C/C++ identifier.';
+    return null;
+  }
+
+  private async promptForFileName(templateType: TemplateType): Promise<string | undefined> {
+    let prompt: string;
+    switch (templateType) {
+      case TEMPLATE_KEYS.C_FILES: prompt = 'Please enter the name for the new C files.'; break;
+      case TEMPLATE_KEYS.C_STRUCT: prompt = 'Please enter the struct name for the new C files.'; break;
+      case TEMPLATE_KEYS.CPP_CLASS: prompt = 'Please enter the class name.'; break;
+      case TEMPLATE_KEYS.CPP_STRUCT: prompt = 'Please enter the struct name.'; break;
+      default: prompt = 'Please enter the base name for the new C++ files.'; break;
+    }
+
+    return vscode.window.showInputBox({
+      prompt,
+      placeHolder: this.getPlaceholder(templateType),
+      validateInput: this.validateIdentifier,
+      title: 'Create Pair: Step 2 of 2'
+    });
+  }
+
+  private generateFileContent(fileName: string, eol: string, templateType: TemplateType): { headerContent: string, sourceContent: string } {
+    const headerGuard = `${fileName.toUpperCase()}_H_`;
+    const includeLine = `#include "${fileName}.h"`;
+    const headerGuardBlock = `#ifndef ${headerGuard}\n#define ${headerGuard}`;
+    const endifLine = `\n#endif  // ${headerGuard}\n`;
+
+    let headerTemplate: string, sourceTemplate: string;
+
+    switch (templateType) {
+      case TEMPLATE_KEYS.C_FILES:
+        headerTemplate = `${headerGuardBlock}\n\n// Function declarations for ${fileName}.c\n${endifLine}`;
+        sourceTemplate = `${includeLine}\n\n// Function implementations for ${fileName}.c\n`;
+        break;
+      case TEMPLATE_KEYS.C_STRUCT:
+      case TEMPLATE_KEYS.CPP_STRUCT:
+        headerTemplate = `${headerGuardBlock}\n\nstruct ${fileName} {\n  // Struct members\n};\n${endifLine}`;
+        sourceTemplate = includeLine;
+        break;
+      case TEMPLATE_KEYS.CPP_CLASS:
+        headerTemplate = `${headerGuardBlock}\n\nclass ${fileName} {\npublic:\n  ${fileName}();\n  ~${fileName}();\n\nprivate:\n  // Add private members here\n};\n${endifLine}`;
+        sourceTemplate = `${includeLine}\n\n${fileName}::${fileName}() {\n  // Constructor implementation\n}\n\n${fileName}::~${fileName}() {\n  // Destructor implementation\n}\n`;
+        break;
+      default: // CPP_FILES
+        headerTemplate = `${headerGuardBlock}\n\n// Declarations for ${fileName}\n${endifLine}`;
+        sourceTemplate = includeLine;
+        break;
+    }
+
+    return {
+      headerContent: headerTemplate.replace(/\n/g, eol),
+      sourceContent: sourceTemplate.replace(/\n/g, eol)
+    };
+  }
+
+  private async checkFileExistence(headerPath: vscode.Uri, sourcePath: vscode.Uri): Promise<string | null> {
+    const checks = await Promise.allSettled([
+      vscode.workspace.fs.stat(headerPath),
+      vscode.workspace.fs.stat(sourcePath)
+    ]);
+
+    if (checks[0].status === 'fulfilled') return headerPath.fsPath;
+    if (checks[1].status === 'fulfilled') return sourcePath.fsPath;
+    return null;
+  }
+
+  private async writeFiles(headerPath: vscode.Uri, sourcePath: vscode.Uri, headerContent: string, sourceContent: string): Promise<void> {
+    try {
+      await Promise.all([
+        vscode.workspace.fs.writeFile(headerPath, Buffer.from(headerContent, 'utf8')),
+        vscode.workspace.fs.writeFile(sourcePath, Buffer.from(sourceContent, 'utf8'))
+      ]);
+    } catch (error: any) {
+      throw new Error(`Failed to create files: ${error.message}.`);
+    }
+  }
+
+  private async finalizeCreation(headerPath: vscode.Uri, sourcePath: vscode.Uri): Promise<void> {
+    await vscode.window.showTextDocument(await vscode.workspace.openTextDocument(headerPath));
+    await vscode.window.showInformationMessage(`Successfully created ${path.basename(headerPath.fsPath)} and ${path.basename(sourcePath.fsPath)}.`);
+  }
+
   private async getTargetDirectory(): Promise<vscode.Uri | undefined> {
-    // Try to use the directory of the currently active file
     const activeEditor = vscode.window.activeTextEditor;
     if (activeEditor && !activeEditor.document.isUntitled) {
       return vscode.Uri.file(path.dirname(activeEditor.document.uri.fsPath));
     }
 
-    // Fall back to workspace folders
     const workspaceFolders = vscode.workspace.workspaceFolders;
-    if (!workspaceFolders || workspaceFolders.length === 0) {
-      return undefined;
-    }
-
-    // If there's only one workspace folder, use it
-    if (workspaceFolders.length === 1) {
+    if (workspaceFolders?.length === 1) {
       return workspaceFolders[0].uri;
     }
 
-    // If there are multiple workspace folders, let the user choose
-    const picked = await vscode.window.showWorkspaceFolderPick({
-      placeHolder: 'Please select a workspace folder to create the files in'
-    });
+    if (workspaceFolders && workspaceFolders.length > 1) {
+      const picked = await vscode.window.showWorkspaceFolderPick({ placeHolder: 'Please select a workspace folder to create the files in.' });
+      return picked?.uri;
+    }
 
-    return picked?.uri;
+    return undefined;
   }
 }
 
-// Registers the command and lifecycle handler for the create pair feature.
 export function registerCreateSourceHeaderPairCommand(context: ClangdContext) {
   context.subscriptions.push(new PairCreator());
 }
