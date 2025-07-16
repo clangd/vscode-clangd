@@ -34,11 +34,11 @@ interface PairingRule {
 
 // Available template rules for creating different types of file pairs
 const TEMPLATE_RULES: ReadonlyArray<PairingRule> = [
-  { key: 'cpp_empty', label: 'New Empty C++ Pair', description: 'Creates .h/.cpp files with header guards.', language: 'cpp', headerExt: '.h', sourceExt: '.cpp' },
-  { key: 'cpp_class', label: 'New C++ Class', description: 'Creates .h/.cpp files for a C++ class.', language: 'cpp', headerExt: '.h', sourceExt: '.cpp', isClass: true },
-  { key: 'cpp_struct', label: 'New C++ Struct', description: 'Creates .h/.cpp files for a C++ struct.', language: 'cpp', headerExt: '.h', sourceExt: '.cpp', isStruct: true },
-  { key: 'c_empty', label: 'New Empty C Pair', description: 'Creates .h/.c files for C functions.', language: 'c', headerExt: '.h', sourceExt: '.c' },
-  { key: 'c_struct', label: 'New C Struct', description: 'Creates .h/.c files for a C struct (using typedef).', language: 'c', headerExt: '.h', sourceExt: '.c', isStruct: true }
+  { key: 'cpp_empty', label: 'New Empty C++ Pair', description: 'Creates .cpp/.h files with header guards.', language: 'cpp', headerExt: '.h', sourceExt: '.cpp' },
+  { key: 'cpp_class', label: 'New C++ Class', description: 'Creates .cpp/.h files for a C++ class.', language: 'cpp', headerExt: '.h', sourceExt: '.cpp', isClass: true },
+  { key: 'cpp_struct', label: 'New C++ Struct', description: 'Creates .cpp/.h files for a C++ struct.', language: 'cpp', headerExt: '.h', sourceExt: '.cpp', isStruct: true },
+  { key: 'c_empty', label: 'New Empty C Pair', description: 'Creates .c/.h files for C functions.', language: 'c', headerExt: '.h', sourceExt: '.c' },
+  { key: 'c_struct', label: 'New C Struct', description: 'Creates .c/.h files for a C struct (using typedef).', language: 'c', headerExt: '.h', sourceExt: '.c', isStruct: true }
 ];
 
 // --- Main Class ---
