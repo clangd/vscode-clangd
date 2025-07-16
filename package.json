@@ -215,6 +215,11 @@
                 "title": "Switch Between Source/Header"
             },
             {
+                "command": "clangd.createSourceHeaderPair",
+                "category": "clangd",
+                "title": "Create Source/Header Pair"
+            },
+            {
                 "command": "clangd.install",
                 "category": "clangd",
                 "title": "Download language server"
@@ -332,6 +337,11 @@
                     "group": "0_navigation@5"
                 },
                 {
+                    "command": "clangd.createSourceHeaderPair",
+                    "when": "resourceLangId == c || resourceLangId == cpp || resourceLangId == cuda-cpp || resourceLangId == objective-c || resourceLangId == objective-cpp",
+                    "group": "1_modification@1"
+                },
+                {
                     "command": "clangd.ast",
                     "when": "(resourceLangId == c || resourceLangId == cpp || resourceLangId == cuda-cpp || resourceLangId == objective-c || resourceLangId == objective-cpp) && clangd.ast.supported"
                 }
@@ -388,17 +398,20 @@
                 {
                     "id": "clangd.typeHierarchyView",
                     "name": "Type Hierarchy",
-                    "when": "clangd.typeHierarchyVisible"
+                    "when": "clangd.typeHierarchyVisible",
+                    "icon": "$(type-hierarchy)"
                 },
                 {
                     "id": "clangd.memoryUsage",
                     "name": "clangd Memory Usage",
-                    "when": "clangd.memoryUsage.hasData"
+                    "when": "clangd.memoryUsage.hasData",
+                    "icon": "$(dashboard)"
                 },
                 {
                     "id": "clangd.ast",
                     "name": "AST",
-                    "when": "clangd.ast.hasData"
+                    "when": "clangd.ast.hasData",
+                    "icon": "$(list-tree)"
                 }
             ]
         }
