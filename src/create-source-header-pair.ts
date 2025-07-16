@@ -34,11 +34,11 @@ const TEMPLATE_KEYS = {
 type TemplateType = typeof TEMPLATE_KEYS[keyof typeof TEMPLATE_KEYS];
 
 const TEMPLATE_CHOICES: ReadonlyArray<vscode.QuickPickItem & { key: TemplateType }> = [
-  { label: '$(new-file) C++ Files', description: 'Create an empty C++ header/source pair.', key: TEMPLATE_KEYS.CPP_FILES },
-  { label: '$(symbol-class) C++ Class', description: 'Create a C++ header/source pair with a class definition.', key: TEMPLATE_KEYS.CPP_CLASS },
-  { label: '$(symbol-struct) C++ Struct', description: 'Create a C++ header/source pair with a struct definition.', key: TEMPLATE_KEYS.CPP_STRUCT },
-  { label: '$(file-code) C Files', description: 'Create a standard C header/source pair for functions.', key: TEMPLATE_KEYS.C_FILES },
-  { label: '$(symbol-struct) C Struct', description: 'Create a standard C header/source pair with a struct definition.', key: TEMPLATE_KEYS.C_STRUCT }
+  { label: '$(new-file) C++ Source Pair', description: 'Creates a C++ header/source pair with header guards.', key: TEMPLATE_KEYS.CPP_FILES },
+  { label: '$(symbol-class) C++ Class Pair', description: 'Creates a C++ header/source pair with a class definition.', key: TEMPLATE_KEYS.CPP_CLASS },
+  { label: '$(symbol-struct) C++ Struct Pair', description: 'Creates a C++ header/source pair with a struct definition.', key: TEMPLATE_KEYS.CPP_STRUCT },
+  { label: '$(file-code) C Files Pair', description: 'Creates a standard C header/source pair for functions.', key: TEMPLATE_KEYS.C_FILES },
+  { label: '$(symbol-struct) C Struct Pair', description: 'Creates a standard C header/source pair with a struct definition.', key: TEMPLATE_KEYS.C_STRUCT }
 ];
 
 // --- Main Class ---
