@@ -34,11 +34,11 @@ interface PairingRule {
 
 // Available template rules for creating different types of file pairs
 const TEMPLATE_RULES: ReadonlyArray<PairingRule> = [
-  { key: 'cpp_empty', label: 'New Empty C++ Pair', description: 'Creates .cpp/.h files with header guards.', language: 'cpp', headerExt: '.h', sourceExt: '.cpp' },
-  { key: 'cpp_class', label: 'New C++ Class', description: 'Creates .cpp/.h files for a C++ class.', language: 'cpp', headerExt: '.h', sourceExt: '.cpp', isClass: true },
-  { key: 'cpp_struct', label: 'New C++ Struct', description: 'Creates .cpp/.h files for a C++ struct.', language: 'cpp', headerExt: '.h', sourceExt: '.cpp', isStruct: true },
-  { key: 'c_empty', label: 'New Empty C Pair', description: 'Creates .c/.h files for C functions.', language: 'c', headerExt: '.h', sourceExt: '.c' },
-  { key: 'c_struct', label: 'New C Struct', description: 'Creates .c/.h files for a C struct (using typedef).', language: 'c', headerExt: '.h', sourceExt: '.c', isStruct: true }
+  { key: 'cpp_empty', label: '$(new-file) Empty C++ Pair', description: 'Creates a basic .h/.cpp file pair with header guards.', language: 'cpp', headerExt: '.h', sourceExt: '.cpp' },
+  { key: 'cpp_class', label: '$(symbol-class) C++ Class', description: 'Creates a .h/.cpp pair with a boilerplate class definition.', language: 'cpp', headerExt: '.h', sourceExt: '.cpp', isClass: true },
+  { key: 'cpp_struct', label: '$(symbol-struct) C++ Struct', description: 'Creates a .h/.cpp pair with a boilerplate struct definition.', language: 'cpp', headerExt: '.h', sourceExt: '.cpp', isStruct: true },
+  { key: 'c_empty', label: '$(file-code) Empty C Pair', description: 'Creates a basic .h/.c file pair for function declarations.', language: 'c', headerExt: '.h', sourceExt: '.c' },
+  { key: 'c_struct', label: '$(symbol-struct) C Struct', description: 'Creates a .h/.c pair with a boilerplate typedef struct.', language: 'c', headerExt: '.h', sourceExt: '.c', isStruct: true }
 ];
 
 // --- Main Class ---
@@ -48,7 +48,7 @@ class PairCreator implements vscode.Disposable {
   private command: vscode.Disposable;
 
   constructor() {
-    this.command = vscode.commands.registerCommand('clangd.createSourceHeaderPair', this.create, this);
+    this.command = vscode.commands.registerCommand('clangd.newSourcePair', this.create, this);
   }
 
   dispose() { this.command.dispose(); }
@@ -174,8 +174,7 @@ class PairCreator implements vscode.Disposable {
     }
 
     const choices = [...TEMPLATE_RULES]
-      .sort((a, b) => desiredOrder.indexOf(a.key) - desiredOrder.indexOf(b.key))
-      .map(rule => ({ ...rule, label: `$(file-code) ${rule.label}` }));
+      .sort((a, b) => desiredOrder.indexOf(a.key) - desiredOrder.indexOf(b.key));
 
     const result = await vscode.window.showQuickPick(choices, {
       placeHolder: 'Please select the type of file pair to create.',

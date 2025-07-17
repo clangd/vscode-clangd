@@ -212,12 +212,17 @@
             {
                 "command": "clangd.switchheadersource",
                 "category": "clangd",
-                "title": "Switch Between Source/Header"
+                "title": "Switch Between Source/Header Pair"
             },
             {
-                "command": "clangd.createSourceHeaderPair",
+                "command": "clangd.newSourcePair",
                 "category": "clangd",
-                "title": "Create Source/Header Pair"
+                "title": "New Source/Header Pair"
+            },
+            {
+                "command": "clangd.newSourcePair.configureRules",
+                "category": "clangd",
+                "title": "Configure Source/Header Pairing Rules"
             },
             {
                 "command": "clangd.install",
@@ -337,7 +342,7 @@
                     "group": "0_navigation@5"
                 },
                 {
-                    "command": "clangd.createSourceHeaderPair",
+                    "command": "clangd.newSourcePair",
                     "when": "resourceLangId == c || resourceLangId == cpp || resourceLangId == cuda-cpp || resourceLangId == objective-c || resourceLangId == objective-cpp",
                     "group": "1_modification@1"
                 },
