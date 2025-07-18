@@ -512,13 +512,17 @@ export class PairCreatorUI {
                 }
             }, 100);
 
-            // Make success message non-blocking by not awaiting it
-            vscode.window.showInformationMessage(
-                `Successfully created ${path.basename(headerPath.fsPath)} and ${path.basename(sourcePath.fsPath)}.`);
+            // Show success message with slight delay to allow other dialogs to appear
+            setTimeout(() => {
+                vscode.window.showInformationMessage(
+                    `Successfully created ${path.basename(headerPath.fsPath)} and ${path.basename(sourcePath.fsPath)}.`);
+            }, 50);
         } catch (error) {
             // Still show success message even if file opening fails
-            vscode.window.showInformationMessage(
-                `Successfully created ${path.basename(headerPath.fsPath)} and ${path.basename(sourcePath.fsPath)}.`);
+            setTimeout(() => {
+                vscode.window.showInformationMessage(
+                    `Successfully created ${path.basename(headerPath.fsPath)} and ${path.basename(sourcePath.fsPath)}.`);
+            }, 50);
         }
     }
 }
