@@ -14,6 +14,17 @@ import { PairingRule, PairingRuleService, PairingRuleUI } from '../pairing-rule-
 import { PairCreatorService } from './service';
 import { Language, VALIDATION_PATTERNS, TEMPLATE_RULES } from './templates';
 
+// Type to clearly express user intent when selecting custom rules
+type CustomRuleSelection =
+    | { type: 'rule', rule: PairingRule }      // User selected a specific rule
+    | { type: 'use_default' }                 // User wants to use default templates  
+    | { type: 'cancelled' };                  // User cancelled the operation
+
+// This type clearly expresses three distinct user intents:
+// - 'rule': User selected a specific pairing rule and it should be used
+// - 'use_default': User explicitly chose to use default templates and should proceed to the default template selection flow
+// - 'cancelled': User pressed ESC to cancel and the entire flow should be terminated
+
 // PairCreatorUI handles all user interface interactions for file pair creation.
 // It manages dialogs, input validation, and user choices.
 export class PairCreatorUI {
@@ -21,11 +32,6 @@ export class PairCreatorUI {
 
     constructor(service: PairCreatorService) { this.service = service; }
 
-    // ===============================
-    // UI ADAPTERS - Data to View Conversion
-    // ===============================
-
-    // Converts a PairingRule to a QuickPickItem for template selection
     private adaptRuleForTemplateDisplay(rule: PairingRule): vscode.QuickPickItem & PairingRule {
         const categoryDesc = rule.isClass ? 'Includes constructor, destructor, and basic structure'
             : rule.isStruct ? 'Simple data structure with member variables'
@@ -63,10 +69,6 @@ export class PairCreatorUI {
             isSpecial: true
         };
     }
-
-    // ===============================
-    // DATA PREPARATION - Small, Focused Functions
-    // ===============================
 
     // Gets custom rules for the specified language
     private getCustomRulesForLanguage(allRules: PairingRule[], language: 'c' | 'cpp'): PairingRule[] {
@@ -220,44 +222,10 @@ export class PairCreatorUI {
         };
     }
 
-    // Checks for existing custom pairing rules and offers to create them if not found
-    // For C++, presents options to use custom rules or create new ones.
-    // For C, always uses default templates.
-    // Returns selected rule, null if cancelled, undefined for defaults, or 'use_default' flag
-    public async checkAndOfferCustomRules(language: 'c' | 'cpp',
-        uncertain: boolean):
-        Promise<PairingRule | null | undefined | 'use_default'> {
-        if (language === 'c')
-            return undefined; // Always use default C templates
-
-        const allRules = this.service.getAllPairingRules();
-        const languageRules =
-            allRules.filter((rule: PairingRule) => rule.language === language);
-
-        if (languageRules.length > 0) {
-            const result = await this.selectFromCustomRules(allRules, language);
-            return result === undefined ? null : result;
-        }
-
-        if (!uncertain) {
-            const shouldCreateRules = await this.offerToCreateCustomRules(language);
-            if (shouldCreateRules === null)
-                return null;
-            if (shouldCreateRules) {
-                const result = await this.createCustomRules(language);
-                return result === undefined ? null : result;
-            }
-        }
-
-        return undefined;
-    }
-
-    // ===============================
-    // SIMPLIFIED UI CONTROLLERS
-    // ===============================
-
-    // Simplified version with clear intent: either returns a rule or indicates cancellation
-    public async selectFromCustomRules(allRules: PairingRule[], language: 'c' | 'cpp'): Promise<PairingRule | null> {
+    // - Returns 'cancelled' if the user presses ESC to cancel, and the operation should be terminated
+    // - Returns 'use_default' if the user selects "Use Default Templates", and should proceed to the default template flow
+    // - Returns 'rule' if the user selects a specific rule, and that rule should be used directly
+    public async selectFromCustomRules(allRules: PairingRule[], language: 'c' | 'cpp'): Promise<CustomRuleSelection> {
         const {
             cleanedCustomRules,
             adaptedDefaultTemplates,
@@ -279,14 +247,14 @@ export class PairCreatorUI {
             matchOnDetail: true
         });
 
-        if (!result) return null; // User cancelled
-        if ('isSpecial' in result && result.isSpecial) return null; // User chose "Use Default Templates"
-        return result as PairingRule;
+        if (!result) return { type: 'cancelled' }; // User pressed ESC or cancelled
+        if ('isSpecial' in result && result.isSpecial) return { type: 'use_default' }; // User chose "Use Default Templates"
+        return { type: 'rule', rule: result as PairingRule }; // User selected a specific rule
     }
 
-    // Shows a dialog offering to create custom pairing rules for C++
-    // Only applicable for C++ since C uses standard .c/.h extensions
-    // Returns true to create rules, false to dismiss, null if cancelled
+    // Shows a dialog offering to create custom pairing rules for C++.
+    // Only applicable for C++ since C uses standard .c/.h extensions.
+    // Returns true to create rules, false to dismiss, or null if cancelled.
     public async offerToCreateCustomRules(language: 'c' |
         'cpp'): Promise<boolean | null> {
         if (language === 'c')
@@ -426,10 +394,14 @@ export class PairCreatorUI {
             const languageRules = allRules.filter((rule: PairingRule) => rule.language === language);
 
             if (languageRules.length > 0) {
-                // Use existing flow for custom rules
+                // Use existing flow for custom rules with clear intent handling
                 const result = await this.selectFromCustomRules(allRules, language);
-                if (result === null) return undefined; // User cancelled or chose default templates
-                if (result) return result; // User selected a custom rule
+                if (result.type === 'cancelled') return undefined; // 用户明确取消操作
+                if (result.type === 'use_default') {
+                    // 用户选择使用默认模板，继续到常规流程（不return，让代码继续执行）
+                } else if (result.type === 'rule') {
+                    return result.rule; // 用户选择了具体的自定义规则
+                }
             }
         }
 
