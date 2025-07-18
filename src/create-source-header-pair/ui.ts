@@ -220,20 +220,37 @@ export class PairCreatorUI {
             otherLanguageTemplates
         } = this.prepareCustomRulesChoices(allRules, language);
 
-        const choices = [
-            ...cleanedCustomRules, ...adaptedDefaultTemplates,
-            ...otherLanguageTemplates, {
+        // Enhance the choices with better formatting for display
+        const enhancedChoices = [
+            ...cleanedCustomRules.map(rule => ({
+                ...rule,
+                description: `Custom configuration for this workspace`,
+                detail: rule.description // Move original description to detail
+            })),
+            ...adaptedDefaultTemplates.map(rule => ({
+                ...rule,
+                description: `Built-in template with custom extensions`,
+                detail: rule.description // Move original description to detail
+            })),
+            ...otherLanguageTemplates.map(rule => ({
+                ...rule,
+                description: `Alternative ${rule.language.toUpperCase()} template option`,
+                detail: rule.description // Move original description to detail
+            })),
+            {
                 key: 'use_default',
                 label: '$(list-unordered) Use Default Templates',
-                description:
-                    'Use the built-in default pairing rules instead of custom rules',
+                description: 'Ignore custom settings and use built-in defaults',
+                detail: 'Standard .h/.cpp extensions.',
                 isSpecial: true
             }
         ];
 
-        const result = await vscode.window.showQuickPick(choices, {
+        const result = await vscode.window.showQuickPick(enhancedChoices, {
             placeHolder: `Select a ${language.toUpperCase()} pairing rule`,
             title: 'Custom Pairing Rules Available',
+            matchOnDescription: true,
+            matchOnDetail: true
         });
 
         if (!result)
@@ -433,9 +450,20 @@ export class PairCreatorUI {
     private async promptForTemplateTypeFirst(language: 'c' | 'cpp', uncertain: boolean): Promise<PairingRule | undefined> {
         const choices = this.prepareTemplateChoices(language, uncertain);
 
-        const result = await vscode.window.showQuickPick(choices, {
+        // Add detail field for better UI consistency
+        const enhancedChoices = choices.map(rule => ({
+            ...rule,
+            description: rule.isClass ? 'Includes constructor, destructor, and basic structure'
+                : rule.isStruct ? 'Simple data structure with member variables'
+                    : `Basic ${rule.language.toUpperCase()} file pair with header guards`,
+            detail: rule.description // Move original description to detail
+        }));
+
+        const result = await vscode.window.showQuickPick(enhancedChoices, {
             placeHolder: 'Please select the type of file pair to create.',
-            title: 'Create Source/Header Pair'
+            title: 'Create Source/Header Pair',
+            matchOnDescription: true,
+            matchOnDetail: true
         });
 
         if (result && !uncertain && language !== result.language) {
