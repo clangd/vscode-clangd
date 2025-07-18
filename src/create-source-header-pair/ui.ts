@@ -10,7 +10,7 @@
 import * as path from 'path';
 import * as vscode from 'vscode';
 
-import { PairingRule, PairingRuleService } from '../pairing-rule-manager';
+import { PairingRule, PairingRuleService, PairingRuleUI } from '../pairing-rule-manager';
 import { PairCreatorService } from './service';
 import { Language, VALIDATION_PATTERNS, TEMPLATE_RULES } from './templates';
 
@@ -408,7 +408,7 @@ export class PairCreatorUI {
 
             if (cppRules.length === 0) {
                 // No custom C++ rules, let user choose extensions
-                const extensionChoice = await this.promptForFileExtensions();
+                const extensionChoice = await PairingRuleUI.promptForFileExtensions();
                 if (!extensionChoice) return undefined;
 
                 // Apply the chosen extensions to the template
@@ -458,102 +458,23 @@ export class PairCreatorUI {
         return result;
     }
 
-    /**
-     * New improved flow: First choose file extensions, then template type
-     * This provides better UX by letting users see their choice immediately
-     */
-    private async promptForExtensionsAndTemplate(language: 'cpp'): Promise<PairingRule | undefined> {
-        // Step 1: Choose file extensions
-        const extensionChoice = await this.promptForFileExtensions();
-        if (!extensionChoice) return undefined;
+    // Shows workspace folder picker when multiple folders are available
+    public async showWorkspaceFolderPicker(): Promise<vscode.Uri | undefined> {
+        const workspaceFolders = vscode.workspace.workspaceFolders;
+        if (!workspaceFolders || workspaceFolders.length <= 1) {
+            return undefined;
+        }
 
-        // Step 2: Choose template type with the selected extensions
-        const templateChoice = await this.promptForTemplateType(extensionChoice);
-        return templateChoice;
-    }
+        const selected = await vscode.window.showQuickPick(
+            workspaceFolders.map(folder => ({
+                label: folder.name,
+                description: folder.uri.fsPath,
+                folder: folder
+            })),
+            { placeHolder: 'Select workspace folder for new files' }
+        );
 
-    /**
-     * Let user choose file extensions (.h/.cpp, .hh/.cc, etc.)
-     */
-    private async promptForFileExtensions(): Promise<{ headerExt: string, sourceExt: string } | undefined> {
-        const extensionOptions = [
-            {
-                label: '$(file-code) .h / .cpp',
-                description: 'Standard C++ extensions (most common)',
-                detail: 'Widely used, compatible with most tools and IDEs',
-                headerExt: '.h',
-                sourceExt: '.cpp'
-            },
-            {
-                label: '$(file-code) .hh / .cc',
-                description: 'Alternative C++ extensions',
-                detail: 'Used by Google style guide and some projects',
-                headerExt: '.hh',
-                sourceExt: '.cc'
-            },
-            {
-                label: '$(file-code) .hpp / .cpp',
-                description: 'Header Plus Plus style',
-                detail: 'Explicitly indicates C++ headers',
-                headerExt: '.hpp',
-                sourceExt: '.cpp'
-            },
-            {
-                label: '$(file-code) .hxx / .cxx',
-                description: 'Extended C++ extensions',
-                detail: 'Less common but explicit C++ indicator',
-                headerExt: '.hxx',
-                sourceExt: '.cxx'
-            }
-        ];
-
-        const selected = await vscode.window.showQuickPick(extensionOptions, {
-            placeHolder: 'Choose file extensions for your C++ files',
-            title: 'Step 1 of 2: Select File Extensions',
-            matchOnDescription: true,
-            matchOnDetail: true
-        });
-
-        return selected ? { headerExt: selected.headerExt, sourceExt: selected.sourceExt } : undefined;
-    }
-
-    /**
-     * Let user choose template type (Class, Struct, Empty) with selected extensions
-     */
-    private async promptForTemplateType(extensions: { headerExt: string, sourceExt: string }): Promise<PairingRule | undefined> {
-        const templateOptions: PairingRule[] = [
-            {
-                key: 'cpp_empty_custom',
-                label: `$(new-file) C++ Pair`,
-                description: `Creates ${extensions.headerExt}/${extensions.sourceExt} with header guards`,
-                language: 'cpp',
-                headerExt: extensions.headerExt,
-                sourceExt: extensions.sourceExt
-            },
-            {
-                key: 'cpp_class_custom',
-                label: `$(symbol-class) C++ Class`,
-                description: `Creates ${extensions.headerExt}/${extensions.sourceExt} with class template`,
-                language: 'cpp',
-                headerExt: extensions.headerExt,
-                sourceExt: extensions.sourceExt,
-                isClass: true
-            },
-            {
-                key: 'cpp_struct_custom',
-                label: `$(symbol-struct) C++ Struct`,
-                description: `Creates ${extensions.headerExt}/${extensions.sourceExt} with struct template`,
-                language: 'cpp',
-                headerExt: extensions.headerExt,
-                sourceExt: extensions.sourceExt,
-                isStruct: true
-            }
-        ];
-
-        return vscode.window.showQuickPick(templateOptions, {
-            placeHolder: `Choose template type for ${extensions.headerExt}/${extensions.sourceExt} files`,
-            title: 'Step 2 of 2: Select Template Type'
-        });
+        return selected?.folder.uri;
     }
 
     // Prompts the user to enter a name for the new file pair

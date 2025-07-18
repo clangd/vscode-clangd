@@ -33,11 +33,18 @@
 
 import { ClangdContext } from '../clangd-context';
 import { PairCoordinator } from './coordinator';
+import { PairCreatorService } from './service';
+import { PairCreatorUI } from './ui';
 
 // Registers the create source/header pair command with the VS Code extension context
-// This function should be called during extension activation to make the command available
+// Uses dependency injection to create properly configured instances
 export function registerCreateSourceHeaderPairCommand(context: ClangdContext) {
-    context.subscriptions.push(new PairCoordinator());
+    // Create instances with proper dependencies
+    const service = new PairCreatorService();
+    const ui = new PairCreatorUI(service);
+    const coordinator = new PairCoordinator(service, ui);
+
+    context.subscriptions.push(coordinator);
 }
 
 // Re-export main types and classes for external usage

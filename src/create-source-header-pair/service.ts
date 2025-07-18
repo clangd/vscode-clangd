@@ -350,4 +350,98 @@ export class PairCreatorService {
             return true; // Show warning if can't check
         }
     }
+
+    /**
+     * Checks if should offer to save rule as default and handles the save process
+     */
+    public async handleOfferToSaveAsDefault(rule: PairingRule, language: 'c' | 'cpp'): Promise<void> {
+        // Only offer for C++ rules
+        if (language !== 'cpp') {
+            return;
+        }
+
+        // Check if user already has custom C++ rules configured
+        const customRules = this.getAllPairingRules();
+        const hasCppCustomRules = customRules.some(r => r.language === 'cpp');
+        if (hasCppCustomRules) {
+            return; // Don't prompt if they already have C++ configuration
+        }
+
+        // Check if this is a custom rule (has _custom suffix means user went through extension selection)
+        const isCustomRule = rule.key.includes('custom');
+        if (!isCustomRule) {
+            return; // Don't prompt for built-in rules
+        }
+
+        const choice = await vscode.window.showInformationMessage(
+            `Files created successfully! Would you like to save "${rule.headerExt}/${rule.sourceExt}" as your default C++ extensions for this workspace?`,
+            'Save as Default',
+            'Not Now'
+        );
+
+        if (choice === 'Save as Default') {
+            await this.saveRuleAsDefault(rule);
+        }
+    }
+
+    /**
+     * Saves a rule as the default configuration with user choice of scope
+     */
+    public async saveRuleAsDefault(rule: PairingRule): Promise<void> {
+        const { PairingRuleService } = await import('../pairing-rule-manager');
+
+        const scopeChoice = await vscode.window.showQuickPick([
+            {
+                label: 'Save for this Workspace',
+                description: 'Recommended. Creates a .vscode/settings.json file.',
+                scope: 'workspace'
+            },
+            {
+                label: 'Save for all my Projects (Global)',
+                description: 'Modifies your global user settings.',
+                scope: 'user'
+            }
+        ], {
+            placeHolder: 'Where would you like to save this configuration?',
+            title: 'Save Configuration Scope'
+        });
+
+        if (!scopeChoice) {
+            return;
+        }
+
+        try {
+            // Create a clean rule for saving (remove the 'custom' key suffix)
+            const cleanRule: PairingRule = {
+                ...rule,
+                key: rule.key.replace('_custom', ''),
+                label: `${rule.language.toUpperCase()} Pair (${rule.headerExt}/${rule.sourceExt})`,
+                description: `Creates a ${rule.headerExt}/${rule.sourceExt} file pair with header guards.`
+            };
+
+            await PairingRuleService.writeRules([cleanRule], scopeChoice.scope as 'workspace' | 'user');
+
+            vscode.window.showInformationMessage(
+                `Successfully saved '${rule.headerExt}/${rule.sourceExt}' as the default extension for ${scopeChoice.scope === 'workspace' ? 'this workspace' : 'all projects'}.`
+            );
+        } catch (error) {
+            vscode.window.showErrorMessage(
+                `Failed to save configuration: ${error instanceof Error ? error.message : 'Unknown error'}`
+            );
+        }
+    }
+
+    /**
+     * Generates file content and writes both header and source files
+     */
+    public async generateAndWriteFiles(
+        fileName: string,
+        rule: PairingRule,
+        headerPath: vscode.Uri,
+        sourcePath: vscode.Uri
+    ): Promise<void> {
+        const eol = this.getLineEnding();
+        const { headerContent, sourceContent } = this.generateFileContent(fileName, eol, rule);
+        await this.writeFiles(headerPath, sourcePath, headerContent, sourceContent);
+    }
 }
