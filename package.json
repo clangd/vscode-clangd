@@ -271,7 +271,8 @@
             {
                 "command": "clangd.newSourcePair",
                 "category": "clangd",
-                "title": "New Source/Header Pair"
+                "title": "New Source/Header Pair",
+                "icon": "$(new-file)"
             },
             {
                 "command": "clangd.createPair.configureRules",
@@ -435,6 +436,13 @@
                     "command": "clangd.ast.close",
                     "when": "view == clangd.ast",
                     "group": "navigation"
+                }
+            ],
+            "explorer/context": [
+                {
+                    "command": "clangd.newSourcePair",
+                    "when": "explorerResourceIsFolder",
+                    "group": "2_workspace@1"
                 }
             ],
             "commandPalette": [
