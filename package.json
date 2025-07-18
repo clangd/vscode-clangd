@@ -397,11 +397,6 @@
                     "group": "0_navigation@5"
                 },
                 {
-                    "command": "clangd.newSourcePair",
-                    "when": "resourceLangId == c || resourceLangId == cpp || resourceLangId == cuda-cpp || resourceLangId == objective-c || resourceLangId == objective-cpp",
-                    "group": "1_modification@1"
-                },
-                {
                     "command": "clangd.ast",
                     "when": "(resourceLangId == c || resourceLangId == cpp || resourceLangId == cuda-cpp || resourceLangId == objective-c || resourceLangId == objective-cpp) && clangd.ast.supported"
                 }
