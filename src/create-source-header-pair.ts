@@ -227,16 +227,16 @@ class PairCreatorService {
 
   // Detects programming language from file info (pure business logic)
   // DETECTION STRATEGY:
-  // 1. Fast path: Check file extension against definitive lists
+  // 1. Fast path: Check file extension against definitive extension sets
   //    - .c files are definitely C
-  //    - .cpp/.cc/.cxx files are definitely C++
-  // 2. Special case: .h files are ambiguous
-  //    - Look for companion files in same directory
-  //    - .h + .c companion → C language
-  //    - .h + .cpp/.cc/.cxx companion → C++ language
-  //    - No companion found → default to C++ (uncertain)
+  //    - .cpp/.cc/.cxx/.hh/.hpp/.hxx are definitely C++
+  // 2. Special case: .h files are ambiguous (could be C or C++)
+  //    - Look for companion files in same directory to determine context
+  //    - If MyClass.h exists with MyClass.cpp -> C++
+  //    - If utils.h exists with utils.c -> C
   // 3. Fallback: Use VS Code's language ID detection
-  // Returns: language type and uncertainty flag for UI decisions
+  //    - Based on file content analysis or user settings
+  // 4. Default: When all else fails, assume C++ (more common in modern development)
   public async detectLanguage(languageId?: string, filePath?: string):
     Promise<{ language: Language, uncertain: boolean }> {
     if (!languageId || !filePath) {
@@ -265,14 +265,22 @@ class PairCreatorService {
   }
 
   // Optimized header file language detection by checking companion files
-  // COMPANION FILE DETECTION STRATEGY:
-  // 1. Extract base name from header file (remove .h extension)
-  // 2. Check for C companion first (.c) - less common, early exit optimization
-  //    - If found: definitely C language
-  // 3. Check for C++ companions in parallel (.cpp, .cc, .cxx)
-  //    - If any found: definitely C++ language
-  // 4. No companion found: default to C++ but mark as uncertain
-  // This helps determine appropriate templates and reduces user confusion
+  // HEADER FILE DETECTION STRATEGY:
+  // Problem: .h files are used by both C and C++, making language detection ambiguous
+  // Solution: Look for companion source files in the same directory
+  // 
+  // Algorithm:
+  // 1. Extract base name from header file (e.g., "utils" from "utils.h")
+  // 2. Check for C companion first (utils.c) - early exit optimization
+  //    - C projects are less common, so checking first allows quick determination
+  // 3. Check for C++ companions in parallel (utils.cpp, utils.cc, utils.cxx)
+  //    - Use Promise.all for concurrent file existence checks
+  // 4. Return definitive result if companion found, otherwise default to C++
+  // 
+  // Examples:
+  // - math.h + math.c exists → Detected as C language
+  // - Vector.h + Vector.cpp exists → Detected as C++ language  
+  // - standalone.h (no companions) → Default to C++ (uncertain=true)
   private async detectLanguageForHeaderFile(filePath: string):
     Promise<{ language: Language, uncertain: boolean } | null> {
     const baseName = path.basename(filePath, '.h');
@@ -954,10 +962,10 @@ class PairCreatorUI {
 
 // Main Coordinator Class
 
-// PairCreator coordinates the UI and Service layers to handle the complete file
+// SourceHeaderPairCoordinator coordinates the UI and Service layers to handle the complete file
 // pair creation workflow. It serves as the main entry point and orchestrates
 // the entire process.
-class PairCreator implements vscode.Disposable {
+class SourceHeaderPairCoordinator implements vscode.Disposable {
   private command: vscode.Disposable;
   private service: PairCreatorService;
   private ui: PairCreatorUI;
@@ -1024,5 +1032,5 @@ class PairCreator implements vscode.Disposable {
 // Registers the create source/header pair command with the VS Code extension context
 // This function should be called during extension activation to make the command available
 export function registerCreateSourceHeaderPairCommand(context: ClangdContext) {
-  context.subscriptions.push(new PairCreator());
+  context.subscriptions.push(new SourceHeaderPairCoordinator());
 }

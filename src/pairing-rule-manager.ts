@@ -1,34 +1,34 @@
-/**
- * PAIRING RULE MANAGER
- * ====================
- * 
- * PURPOSE:
- * This module manages custom file extension pairing rules for C/C++ header/source files.
- * It allows users to configure custom extensions (e.g., .hh/.cc instead of .h/.cpp)
- * and provides UI for managing these configurations.
- * 
- * ARCHITECTURE:
- * 1. PairingRuleService - Core configuration management
- *    - Reads/writes VS Code workspace/user settings
- *    - Validates pairing rules
- *    - Handles configuration scopes (workspace vs global)
- * 
- * 2. PairingRuleUI - User interface for configuration
- *    - Quick setup wizard with predefined options
- *    - Advanced management for editing/resetting rules
- *    - Scope selection (workspace vs global settings)
- * 
- * WORKFLOW:
- * User calls showConfigurationWizard() →
- * Presents predefined extension combinations (.h/.cpp, .hh/.cc, etc.) →
- * User selects option or goes to advanced management →
- * Rule is saved to workspace or global settings →
- * Other parts of extension use these rules for file creation
- * 
- * CONFIGURATION STORAGE:
- * - Workspace: .vscode/settings.json (clangd.createPair.rules)
- * - Global: User settings.json (clangd.createPair.rules)
- */
+//
+// PAIRING RULE MANAGER
+// ====================
+// 
+// PURPOSE:
+// This module manages custom file extension pairing rules for C/C++ header/source files.
+// It allows users to configure custom extensions (e.g., .hh/.cc instead of .h/.cpp)
+// and provides UI for managing these configurations.
+// 
+// ARCHITECTURE:
+// 1. PairingRuleService - Core configuration management
+//    - Reads/writes VS Code workspace/user settings
+//    - Validates pairing rules
+//    - Handles configuration scopes (workspace vs global)
+// 
+// 2. PairingRuleUI - User interface for configuration
+//    - Quick setup wizard with predefined options
+//    - Advanced management for editing/resetting rules
+//    - Scope selection (workspace vs global settings)
+// 
+// WORKFLOW:
+// User calls showConfigurationWizard() →
+// Presents predefined extension combinations (.h/.cpp, .hh/.cc, etc.) →
+// User selects option or goes to advanced management →
+// Rule is saved to workspace or global settings →
+// Other parts of extension use these rules for file creation
+// 
+// CONFIGURATION STORAGE:
+// - Workspace: .vscode/settings.json (clangd.createPair.rules)
+// - Global: User settings.json (clangd.createPair.rules)
+//
 
 import * as vscode from 'vscode';
 
