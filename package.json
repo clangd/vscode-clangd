@@ -203,15 +203,15 @@
                         "properties": {
                             "key": {
                                 "type": "string",
-                                "description": "Unique identifier for the pairing rule"
+                                "description": "Unique identifier for this rule"
                             },
                             "label": {
                                 "type": "string",
-                                "description": "Display label for the pairing rule"
+                                "description": "Human-readable name shown in UI"
                             },
                             "description": {
                                 "type": "string",
-                                "description": "Description of what the pairing rule does"
+                                "description": "Detailed description of what this rule creates"
                             },
                             "language": {
                                 "type": "string",
@@ -219,34 +219,35 @@
                                     "c",
                                     "cpp"
                                 ],
-                                "description": "Programming language for this rule"
+                                "description": "Target programming language"
                             },
                             "headerExt": {
                                 "type": "string",
-                                "description": "File extension for header files (e.g., .h, .hpp)"
+                                "description": "File extension for header file (e.g., '.h', '.hh')"
                             },
                             "sourceExt": {
                                 "type": "string",
-                                "description": "File extension for source files (e.g., .c, .cpp)"
+                                "description": "File extension for source file (e.g., '.cpp', '.cc', '.c')"
                             },
                             "isClass": {
                                 "type": "boolean",
-                                "description": "Whether this rule is for creating classes"
+                                "description": "Whether this rule creates a class template"
                             },
                             "isStruct": {
                                 "type": "boolean",
-                                "description": "Whether this rule is for creating structs"
+                                "description": "Whether this rule creates a struct template"
                             }
                         },
                         "required": [
                             "key",
                             "label",
+                            "description",
                             "language",
                             "headerExt",
                             "sourceExt"
                         ]
                     },
-                    "description": "Custom pairing rules for source/header file creation"
+                    "description": "Custom pairing rules for creating source/header file pairs with different extensions"
                 }
             }
         },
@@ -273,7 +274,7 @@
                 "title": "New Source/Header Pair"
             },
             {
-                "command": "clangd.newSourcePair.configureRules",
+                "command": "clangd.createPair.configureRules",
                 "category": "clangd",
                 "title": "Configure Source/Header Pairing Rules"
             },
