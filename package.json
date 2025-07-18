@@ -194,6 +194,59 @@
                     "type": "boolean",
                     "default": true,
                     "description": "Enable clangd language server features"
+                },
+                "clangd.createPair.rules": {
+                    "type": "array",
+                    "default": [],
+                    "items": {
+                        "type": "object",
+                        "properties": {
+                            "key": {
+                                "type": "string",
+                                "description": "Unique identifier for the pairing rule"
+                            },
+                            "label": {
+                                "type": "string",
+                                "description": "Display label for the pairing rule"
+                            },
+                            "description": {
+                                "type": "string",
+                                "description": "Description of what the pairing rule does"
+                            },
+                            "language": {
+                                "type": "string",
+                                "enum": [
+                                    "c",
+                                    "cpp"
+                                ],
+                                "description": "Programming language for this rule"
+                            },
+                            "headerExt": {
+                                "type": "string",
+                                "description": "File extension for header files (e.g., .h, .hpp)"
+                            },
+                            "sourceExt": {
+                                "type": "string",
+                                "description": "File extension for source files (e.g., .c, .cpp)"
+                            },
+                            "isClass": {
+                                "type": "boolean",
+                                "description": "Whether this rule is for creating classes"
+                            },
+                            "isStruct": {
+                                "type": "boolean",
+                                "description": "Whether this rule is for creating structs"
+                            }
+                        },
+                        "required": [
+                            "key",
+                            "label",
+                            "language",
+                            "headerExt",
+                            "sourceExt"
+                        ]
+                    },
+                    "description": "Custom pairing rules for source/header file creation"
                 }
             }
         },
