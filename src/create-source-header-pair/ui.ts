@@ -36,32 +36,6 @@ export class PairCreatorUI {
         return this.service.getDefaultPlaceholder(rule);
     }
 
-    // Gets target directory with UI fallback for multiple workspace folders
-    public async getTargetDirectory(): Promise<vscode.Uri | undefined> {
-        const activeEditor = vscode.window.activeTextEditor;
-        const activeDocumentPath =
-            activeEditor?.document && !activeEditor.document.isUntitled
-                ? activeEditor.document.uri.fsPath
-                : undefined;
-        const workspaceFolders = vscode.workspace.workspaceFolders;
-
-        // Try service layer first
-        const result = await this.service.getTargetDirectory(activeDocumentPath,
-            workspaceFolders);
-        if (result) {
-            return result;
-        }
-
-        // Handle multiple workspace folders with UI
-        if (workspaceFolders && workspaceFolders.length > 1) {
-            const selected = await vscode.window.showWorkspaceFolderPick(
-                { placeHolder: 'Select workspace folder for new files' });
-            return selected?.uri;
-        }
-
-        return undefined;
-    }
-
     // Checks if language mismatch warning should be shown with UI context
     private async shouldShowLanguageMismatchWarning(language: Language,
         result: PairingRule):
@@ -78,13 +52,6 @@ export class PairCreatorUI {
 
         return this.service.shouldShowLanguageMismatchWarning(
             language, result, currentDir, activeFilePath);
-    }
-
-    // Detects programming language by delegating to service layer
-    // UI layer should not contain business logic, only call service methods
-    public async detectLanguage():
-        Promise<{ language: Language, uncertain: boolean }> {
-        return this.service.detectLanguageFromEditor();
     }
 
     // Adapts template rules for display in UI based on custom extensions
@@ -395,29 +362,75 @@ export class PairCreatorUI {
                 `Custom pairing rule saved to ${locationText} settings.`);
 
             return customRule;
-        } catch (error: any) {
+        } catch (error: unknown) {
+            const errorMessage = error instanceof Error ? error.message : 'Unknown error occurred';
             vscode.window.showErrorMessage(
-                `Failed to save custom rule: ${error.message}`);
+                `Failed to save custom rule: ${errorMessage}`);
             return undefined;
         }
     }
 
     // Prompts the user to select a pairing rule from available options
-    // First checks for custom rules, then falls back to default templates
+    // IMPROVED FLOW: 
+    // 1. Check for existing custom rules first
+    // 2. If no custom rules, show template choice (C/C++ types)
+    // 3. If C++ selected, then choose extensions 
+    // 4. After successful creation, offer to save as default
     // Returns selected pairing rule or undefined if cancelled
     public async promptForPairingRule(language: 'c' | 'cpp', uncertain: boolean):
         Promise<PairingRule | undefined> {
-        const customRulesResult =
-            await this.checkAndOfferCustomRules(language, uncertain);
 
-        if (customRulesResult === null)
-            return undefined;
-        if (customRulesResult === 'use_default') {
-            // Continue to default template selection
-        } else if (customRulesResult) {
-            return customRulesResult;
+        // First check if there are existing custom rules
+        if (language === 'cpp') {
+            const allRules = this.service.getAllPairingRules();
+            const languageRules = allRules.filter((rule: PairingRule) => rule.language === language);
+
+            if (languageRules.length > 0) {
+                // Use existing flow for custom rules
+                const result = await this.selectFromCustomRules(allRules, language);
+                if (result === null || result === undefined) return undefined; // User cancelled
+                if (result === 'use_default') {
+                    // Continue to default template selection
+                } else if (result) {
+                    return result;
+                }
+            }
         }
 
+        // New improved flow: Choose template type first (C/C++ language and type)
+        const templateChoice = await this.promptForTemplateTypeFirst(language, uncertain);
+        if (!templateChoice) return undefined;
+
+        // If C++ template was selected and no custom rules exist, ask for extensions
+        if (templateChoice.language === 'cpp') {
+            const allRules = this.service.getAllPairingRules();
+            const cppRules = allRules.filter((rule: PairingRule) => rule.language === 'cpp');
+
+            if (cppRules.length === 0) {
+                // No custom C++ rules, let user choose extensions
+                const extensionChoice = await this.promptForFileExtensions();
+                if (!extensionChoice) return undefined;
+
+                // Apply the chosen extensions to the template
+                return {
+                    ...templateChoice,
+                    key: `${templateChoice.key}_custom`,
+                    headerExt: extensionChoice.headerExt,
+                    sourceExt: extensionChoice.sourceExt,
+                    description: templateChoice.description.replace(/\.h\/\.cpp/g,
+                        `${extensionChoice.headerExt}/${extensionChoice.sourceExt}`)
+                };
+            }
+        }
+
+        return templateChoice;
+    }
+
+    /**
+     * First step: Choose template type (language and template kind)
+     * Shows both C and C++ options regardless of detected language
+     */
+    private async promptForTemplateTypeFirst(language: 'c' | 'cpp', uncertain: boolean): Promise<PairingRule | undefined> {
         const choices = this.prepareTemplateChoices(language, uncertain);
 
         const result = await vscode.window.showQuickPick(choices, {
@@ -445,6 +458,104 @@ export class PairCreatorUI {
         return result;
     }
 
+    /**
+     * New improved flow: First choose file extensions, then template type
+     * This provides better UX by letting users see their choice immediately
+     */
+    private async promptForExtensionsAndTemplate(language: 'cpp'): Promise<PairingRule | undefined> {
+        // Step 1: Choose file extensions
+        const extensionChoice = await this.promptForFileExtensions();
+        if (!extensionChoice) return undefined;
+
+        // Step 2: Choose template type with the selected extensions
+        const templateChoice = await this.promptForTemplateType(extensionChoice);
+        return templateChoice;
+    }
+
+    /**
+     * Let user choose file extensions (.h/.cpp, .hh/.cc, etc.)
+     */
+    private async promptForFileExtensions(): Promise<{ headerExt: string, sourceExt: string } | undefined> {
+        const extensionOptions = [
+            {
+                label: '$(file-code) .h / .cpp',
+                description: 'Standard C++ extensions (most common)',
+                detail: 'Widely used, compatible with most tools and IDEs',
+                headerExt: '.h',
+                sourceExt: '.cpp'
+            },
+            {
+                label: '$(file-code) .hh / .cc',
+                description: 'Alternative C++ extensions',
+                detail: 'Used by Google style guide and some projects',
+                headerExt: '.hh',
+                sourceExt: '.cc'
+            },
+            {
+                label: '$(file-code) .hpp / .cpp',
+                description: 'Header Plus Plus style',
+                detail: 'Explicitly indicates C++ headers',
+                headerExt: '.hpp',
+                sourceExt: '.cpp'
+            },
+            {
+                label: '$(file-code) .hxx / .cxx',
+                description: 'Extended C++ extensions',
+                detail: 'Less common but explicit C++ indicator',
+                headerExt: '.hxx',
+                sourceExt: '.cxx'
+            }
+        ];
+
+        const selected = await vscode.window.showQuickPick(extensionOptions, {
+            placeHolder: 'Choose file extensions for your C++ files',
+            title: 'Step 1 of 2: Select File Extensions',
+            matchOnDescription: true,
+            matchOnDetail: true
+        });
+
+        return selected ? { headerExt: selected.headerExt, sourceExt: selected.sourceExt } : undefined;
+    }
+
+    /**
+     * Let user choose template type (Class, Struct, Empty) with selected extensions
+     */
+    private async promptForTemplateType(extensions: { headerExt: string, sourceExt: string }): Promise<PairingRule | undefined> {
+        const templateOptions: PairingRule[] = [
+            {
+                key: 'cpp_empty_custom',
+                label: `$(new-file) C++ Pair`,
+                description: `Creates ${extensions.headerExt}/${extensions.sourceExt} with header guards`,
+                language: 'cpp',
+                headerExt: extensions.headerExt,
+                sourceExt: extensions.sourceExt
+            },
+            {
+                key: 'cpp_class_custom',
+                label: `$(symbol-class) C++ Class`,
+                description: `Creates ${extensions.headerExt}/${extensions.sourceExt} with class template`,
+                language: 'cpp',
+                headerExt: extensions.headerExt,
+                sourceExt: extensions.sourceExt,
+                isClass: true
+            },
+            {
+                key: 'cpp_struct_custom',
+                label: `$(symbol-struct) C++ Struct`,
+                description: `Creates ${extensions.headerExt}/${extensions.sourceExt} with struct template`,
+                language: 'cpp',
+                headerExt: extensions.headerExt,
+                sourceExt: extensions.sourceExt,
+                isStruct: true
+            }
+        ];
+
+        return vscode.window.showQuickPick(templateOptions, {
+            placeHolder: `Choose template type for ${extensions.headerExt}/${extensions.sourceExt} files`,
+            title: 'Step 2 of 2: Select Template Type'
+        });
+    }
+
     // Prompts the user to enter a name for the new file pair
     // Validates input as a valid C/C++ identifier and provides context-appropriate prompts
     // Returns the entered file name or undefined if cancelled
@@ -468,9 +579,25 @@ export class PairCreatorUI {
     // Shows success message and opens the newly created header file
     public async showSuccessAndOpenFile(headerPath: vscode.Uri,
         sourcePath: vscode.Uri): Promise<void> {
-        await vscode.window.showTextDocument(
-            await vscode.workspace.openTextDocument(headerPath));
-        await vscode.window.showInformationMessage(
-            `Successfully created ${path.basename(headerPath.fsPath)} and ${path.basename(sourcePath.fsPath)}.`);
+        try {
+            const document = await vscode.workspace.openTextDocument(headerPath);
+
+            // Use setTimeout to make this non-blocking and avoid hanging
+            setTimeout(async () => {
+                try {
+                    await vscode.window.showTextDocument(document);
+                } catch (error) {
+                    // Silently handle file opening errors
+                }
+            }, 100);
+
+            // Make success message non-blocking by not awaiting it
+            vscode.window.showInformationMessage(
+                `Successfully created ${path.basename(headerPath.fsPath)} and ${path.basename(sourcePath.fsPath)}.`);
+        } catch (error) {
+            // Still show success message even if file opening fails
+            vscode.window.showInformationMessage(
+                `Successfully created ${path.basename(headerPath.fsPath)} and ${path.basename(sourcePath.fsPath)}.`);
+        }
     }
 }

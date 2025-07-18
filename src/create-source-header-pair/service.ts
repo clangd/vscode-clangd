@@ -20,14 +20,34 @@ import {
 
 // Service Layer - Core business logic
 export class PairCreatorService {
-    // Cache for expensive file system operations
+    // Cache for expensive file system operations with TTL
     private static readonly fileStatCache = new Map<string, Promise<boolean>>();
+    private static readonly CACHE_TTL = 5000; // 5 seconds
 
     // Definitive file extensions for fast lookup
     private static readonly DEFINITIVE_EXTENSIONS = {
         c: new Set(['.c']),
         cpp: new Set(['.cpp', '.cc', '.cxx', '.hh', '.hpp', '.hxx'])
-    };
+    } as const;
+
+    /**
+     * Creates file paths for header and source files
+     * @param targetDirectory Target directory URI
+     * @param fileName Base file name without extension  
+     * @param rule Pairing rule with extensions
+     * @returns Object with headerPath and sourcePath URIs
+     */
+    public createFilePaths(targetDirectory: vscode.Uri, fileName: string, rule: PairingRule): {
+        headerPath: vscode.Uri;
+        sourcePath: vscode.Uri;
+    } {
+        return {
+            headerPath: vscode.Uri.file(
+                path.join(targetDirectory.fsPath, `${fileName}${rule.headerExt}`)),
+            sourcePath: vscode.Uri.file(
+                path.join(targetDirectory.fsPath, `${fileName}${rule.sourceExt}`))
+        };
+    }
 
     // Optimized file existence check with caching to improve performance
     private static async fileExists(filePath: string): Promise<boolean> {
@@ -35,14 +55,15 @@ export class PairCreatorService {
             return this.fileStatCache.get(filePath)!;
         }
 
-        const promise =
-            Promise.resolve(vscode.workspace.fs.stat(vscode.Uri.file(filePath))
-                .then(() => true, () => false));
+        const promise = Promise.resolve(
+            vscode.workspace.fs.stat(vscode.Uri.file(filePath))
+                .then(() => true, () => false)
+        );
 
         this.fileStatCache.set(filePath, promise);
 
-        // Auto-clear cache entry after 5 seconds to prevent memory leaks
-        setTimeout(() => this.fileStatCache.delete(filePath), 5000);
+        // Auto-clear cache entry after TTL to prevent memory leaks
+        setTimeout(() => this.fileStatCache.delete(filePath), this.CACHE_TTL);
 
         return promise;
     }
