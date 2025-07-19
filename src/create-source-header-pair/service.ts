@@ -384,9 +384,8 @@ export class PairCreatorService {
         }
     }
 
-    /**
-     * Saves a rule as the default configuration with user choice of scope
-     */
+
+   // Saves a rule as the default configuration with user choice of scope
     public async saveRuleAsDefault(rule: PairingRule): Promise<void> {
         const { PairingRuleService } = await import('../pairing-rule-manager');
 
@@ -431,9 +430,7 @@ export class PairCreatorService {
         }
     }
 
-    /**
-     * Generates file content and writes both header and source files
-     */
+    // Generates file content and writes both header and source files
     public async generateAndWriteFiles(
         fileName: string,
         rule: PairingRule,
