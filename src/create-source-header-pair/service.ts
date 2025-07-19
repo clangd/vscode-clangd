@@ -197,6 +197,7 @@ export class PairCreatorService {
         const extPart = headerExt.replace(/^\./, '').toUpperCase();
         return `${fileName.toUpperCase()}_${extPart}_`;
     }
+    // Generates file content with improved template selection
     public generateFileContent(fileName: string, eol: string, rule: PairingRule): { headerContent: string; sourceContent: string; } {
         const templateKey: TemplateKey =
             rule.isClass ? 'CPP_CLASS'
@@ -244,7 +245,7 @@ export class PairCreatorService {
                 : '\n';
     }
 
-    // Generates file content with improved template selection
+
 
 
     // Optimized template variable substitution using regex replacement
