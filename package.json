@@ -1,8 +1,8 @@
 {
-    "name": "vscode-clangd",
+    "name": "vscode-clangd-fancy",
     "displayName": "clangd",
     "description": "C/C++ completion, navigation, and insights",
-    "version": "0.2.0",
+    "version": "0.2.1",
     "publisher": "llvm-vs-code-extensions",
     "license": "MIT",
     "homepage": "https://clangd.llvm.org/",
