@@ -4,7 +4,7 @@
 //
 // Lean coordinator that orchestrates the source/header pair creation workflow.
 // Uses dependency injection and delegates all implementation details to 
-// Service and UI layers. The create() method reads like a clear story.
+// service and UI layers.
 
 import * as vscode from 'vscode';
 
@@ -42,7 +42,7 @@ export class PairCoordinator implements vscode.Disposable {
         this.configureRulesCommand.dispose();
     }
 
-    // Main workflow orchestration - reads like a clear story
+    // Main workflow orchestration
     public async create(): Promise<void> {
         try {
             // 1. Determine where to create files
