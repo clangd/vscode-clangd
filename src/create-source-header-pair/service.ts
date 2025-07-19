@@ -191,6 +191,34 @@ export class PairCreatorService {
             .join('');
     }
 
+    // Generates header guard macro based on filename and extension
+    private generateHeaderGuard(fileName: string, headerExt: string): string {
+        // Remove leading dot from extension and convert to uppercase
+        const extPart = headerExt.replace(/^\./, '').toUpperCase();
+        return `${fileName.toUpperCase()}_${extPart}_`;
+    }
+    public generateFileContent(fileName: string, eol: string, rule: PairingRule): { headerContent: string; sourceContent: string; } {
+        const templateKey: TemplateKey =
+            rule.isClass ? 'CPP_CLASS'
+                : rule.isStruct ? (rule.language === 'cpp' ? 'CPP_STRUCT' : 'C_STRUCT')
+                    : rule.language === 'c' ? 'C_EMPTY'
+                        : 'CPP_EMPTY';
+
+        const templates = FILE_TEMPLATES[templateKey];
+        const context = {
+            fileName,
+            headerGuard: this.generateHeaderGuard(fileName, rule.headerExt),
+            includeLine: `#include "${fileName}${rule.headerExt}"`
+        };
+
+        const headerContent = this.applyTemplate(templates.header, context);
+        const sourceContent = this.applyTemplate(templates.source, context);
+
+        return {
+            headerContent: headerContent.replace(/\n/g, eol),
+            sourceContent: sourceContent.replace(/\n/g, eol)
+        };
+    }
     // Gets default placeholder based on rule type (pure function)
     public getDefaultPlaceholder(rule: PairingRule): string {
         if (rule.isClass) {
@@ -217,28 +245,7 @@ export class PairCreatorService {
     }
 
     // Generates file content with improved template selection
-    public generateFileContent(fileName: string, eol: string, rule: PairingRule): { headerContent: string; sourceContent: string; } {
-        const templateKey: TemplateKey =
-            rule.isClass ? 'CPP_CLASS'
-                : rule.isStruct ? (rule.language === 'cpp' ? 'CPP_STRUCT' : 'C_STRUCT')
-                    : rule.language === 'c' ? 'C_EMPTY'
-                        : 'CPP_EMPTY';
 
-        const templates = FILE_TEMPLATES[templateKey];
-        const context = {
-            fileName,
-            headerGuard: `${fileName.toUpperCase()}_H_`,
-            includeLine: `#include "${fileName}${rule.headerExt}"`
-        };
-
-        const headerContent = this.applyTemplate(templates.header, context);
-        const sourceContent = this.applyTemplate(templates.source, context);
-
-        return {
-            headerContent: headerContent.replace(/\n/g, eol),
-            sourceContent: sourceContent.replace(/\n/g, eol)
-        };
-    }
 
     // Optimized template variable substitution using regex replacement
     private applyTemplate(template: string,
@@ -385,7 +392,7 @@ export class PairCreatorService {
     }
 
 
-   // Saves a rule as the default configuration with user choice of scope
+    // Saves a rule as the default configuration with user choice of scope
     public async saveRuleAsDefault(rule: PairingRule): Promise<void> {
         const { PairingRuleService } = await import('../pairing-rule-manager');
 
