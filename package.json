@@ -1,5 +1,5 @@
 {
-    "name": "vscode-clangd-fancy",
+    "name": "vscode-clangd",
     "displayName": "clangd",
     "description": "C/C++ completion, navigation, and insights",
     "version": "0.2.0",
