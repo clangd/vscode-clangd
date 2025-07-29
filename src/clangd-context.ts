@@ -96,7 +96,7 @@ export class ClangdContext implements vscode.Disposable {
     const traceFile = config.get<string>('trace');
     if (!!traceFile) {
       const trace = {CLANGD_TRACE: traceFile};
-      clangd.options = {env: {...process.env, ...trace}};
+      clangd.options = {...clangd.options, env: {...process.env, ...trace}};
     }
     const serverOptions: vscodelc.ServerOptions = clangd;
 
