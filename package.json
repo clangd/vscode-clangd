@@ -51,20 +51,20 @@
         "vscode-languageclient": "^9.0.1"
     },
     "devDependencies": {
-        "@types/glob": "^8.1.0",
+        "@types/glob": "^9.0.0",
         "@types/mocha": "^10.0.7",
-        "@types/node": "^24.0.8",
+        "@types/node": "^24.1.0",
         "@types/sinon": "^17.0.4",
         "@types/vscode": "^1.75.0",
         "@vscode/test-electron": "^2.5.2",
         "@vscode/vsce": "^3.6.0",
         "clang-format": "^1.8.0",
-        "esbuild": "^0.25.5",
+        "esbuild": "^0.25.8",
         "glob": "^11.0.3",
         "mocha": "^11.7.1",
-        "ovsx": "^0.10.4",
+        "ovsx": "^0.10.5",
         "sinon": "^21.0.0",
-        "typescript": "^5.8.3"
+        "typescript": "^5.9.2"
     },
     "repository": {
         "type": "git",
