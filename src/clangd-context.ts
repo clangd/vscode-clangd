@@ -1,31 +1,32 @@
 import * as vscode from 'vscode';
 import * as vscodelc from 'vscode-languageclient/node';
 
-import * as ast from './ast';
+import { ASTFeature, ASTProvider } from './ast';
 import * as config from './config';
-import * as configFileWatcher from './config-file-watcher';
-import * as fileStatus from './file-status';
-import * as inactiveRegions from './inactive-regions';
-import * as inlayHints from './inlay-hints';
-import * as install from './install';
-import * as memoryUsage from './memory-usage';
+import { ConfigFileWatcher, ConfigFileWatcherFeature } from './config-file-watcher';
+import { FileStatus } from './file-status'
+import { InactiveRegionsFeature } from './inactive-regions';
+import { InlayHintsFeature } from './inlay-hints';
+import { MemoryUsageProvider, MemoryUsageFeature } from './memory-usage';
 import * as openConfig from './open-config';
 import * as switchSourceHeader from './switch-source-header';
-import * as typeHierarchy from './type-hierarchy';
+import { TypeHierarchyProvider, TypeHierarchyFeature } from './type-hierarchy';
 
-export const clangdDocumentSelector = [
-  {scheme: 'file', language: 'c'},
-  {scheme: 'file', language: 'cpp'},
-  {scheme: 'file', language: 'cuda-cpp'},
-  {scheme: 'file', language: 'objective-c'},
-  {scheme: 'file', language: 'objective-cpp'},
-];
-
-export function isClangdDocument(document: vscode.TextDocument) {
-  return vscode.languages.match(clangdDocumentSelector, document);
+export function clangdDocumentSelector(folder: vscode.WorkspaceFolder|undefined): vscodelc.DocumentSelector {
+  return [{scheme: 'file', language: 'c', pattern: `${folder?.uri.fsPath}/**/*`},
+          {scheme: 'file', language: 'cpp', pattern: `${folder?.uri.fsPath}/**/*`},
+          {scheme: 'file', language: 'cuda-cpp', pattern: `${folder?.uri.fsPath}/**/*`},
+          {scheme: 'file', language: 'objective-c', pattern: `${folder?.uri.fsPath}/**/*`},
+          {scheme: 'file', language: 'objective-cpp', pattern: `${folder?.uri.fsPath}/**/*`}];
 }
 
-class ClangdLanguageClient extends vscodelc.LanguageClient {
+export function isClangdDocument(document: vscode.TextDocument) {
+  return vscode.languages.match(clangdDocumentSelector(vscode.workspace.getWorkspaceFolder(document.uri)), document);
+}
+
+export class ClangdLanguageClient extends vscodelc.LanguageClient {
+  subscriptions: vscode.Disposable[] = [];
+
   // Override the default implementation for failed requests. The default
   // behavior is just to log failures in the output panel, however output panel
   // is designed for extension debugging purpose, normal users will not open it,
@@ -33,6 +34,14 @@ class ClangdLanguageClient extends vscodelc.LanguageClient {
   //
   // For user-interactive operations (e.g. applyFixIt, applyTweaks), we will
   // prompt up the failure to users.
+
+  constructor(
+    public readonly context: ClangdContext,
+    serverOptions: vscodelc.ServerOptions,
+    clientOptions: vscodelc.LanguageClientOptions,
+  ) {
+    super('clangd', serverOptions, clientOptions)
+  }
 
   handleFailedRequest<T>(type: vscodelc.MessageSignature, error: any,
                          token: vscode.CancellationToken|undefined,
@@ -43,9 +52,27 @@ class ClangdLanguageClient extends vscodelc.LanguageClient {
 
     return super.handleFailedRequest(type, token, error, defaultValue);
   }
+
+  isStarting() {
+    return this.state == vscodelc.State.Starting;
+  }
+
+  visibleEditors() {
+    return vscode.window.visibleTextEditors.filter((e) => isClangdDocument(e.document) &&
+      vscode.workspace.getWorkspaceFolder(e.document.uri) == this.clientOptions.workspaceFolder);
+  }
+
+  dispose(timeout?: number): Promise<void> {
+    this.subscriptions.forEach((d) => { d.dispose(); });
+    return super.dispose(timeout);
+  }
 }
 
 class EnableEditsNearCursorFeature implements vscodelc.StaticFeature {
+  constructor(client: ClangdLanguageClient) {
+    client.registerFeature(this);
+  }
+
   initialize() {}
   fillClientCapabilities(capabilities: vscodelc.ClientCapabilities): void {
     const extendedCompletionCapabilities: any =
@@ -58,42 +85,50 @@ class EnableEditsNearCursorFeature implements vscodelc.StaticFeature {
 
 export class ClangdContext implements vscode.Disposable {
   subscriptions: vscode.Disposable[];
-  client: ClangdLanguageClient;
+  clients: Map<string, ClangdLanguageClient>;
 
-  static async create(globalStoragePath: string,
-                      outputChannel: vscode.OutputChannel):
-      Promise<ClangdContext|null> {
-    const subscriptions: vscode.Disposable[] = [];
-    const clangdPath = await install.activate(subscriptions, globalStoragePath);
-    if (!clangdPath) {
-      subscriptions.forEach((d) => { d.dispose(); });
-      return null;
-    }
+  configFileWatcher: ConfigFileWatcher|undefined;
+  fileStatus: FileStatus;
 
-    return new ClangdContext(subscriptions, clangdPath, outputChannel);
-  }
+  constructor(private outputChannel: vscode.OutputChannel) {
+    this.subscriptions = [];
+    this.clients = new Map();
 
-  private constructor(subscriptions: vscode.Disposable[], clangdPath: string,
-                      outputChannel: vscode.OutputChannel) {
-    this.subscriptions = subscriptions;
-    const useScriptAsExecutable = config.get<boolean>('useScriptAsExecutable');
-    let clangdArguments = config.get<string[]>('arguments');
+    new ASTProvider(this);
+    new MemoryUsageProvider(this);
+    new TypeHierarchyProvider(this);
+
+    if (config.get<string>('onConfigChanged') !== 'ignore')
+      this.configFileWatcher = new ConfigFileWatcher(this);
+
+    this.fileStatus = new FileStatus(this);
+
+    openConfig.activate(this);
+    switchSourceHeader.activate(this);
+    InlayHintsFeature.activate(this);
+  };
+
+  public addClient(folder: vscode.WorkspaceFolder) {
+    const useScriptAsExecutable = config.get<boolean>('useScriptAsExecutable', folder);
+    let clangdPath = config.get<string>('path', folder);
+    let clangdArguments = config.get<string[]>('arguments', folder);
     if (useScriptAsExecutable) {
       let quote = (str: string) => { return `"${str}"`; };
-      clangdPath = quote(clangdPath)
+      clangdPath = quote(clangdPath);
       for (var i = 0; i < clangdArguments.length; i++) {
         clangdArguments[i] = quote(clangdArguments[i]);
       }
+
     }
     const clangd: vscodelc.Executable = {
       command: clangdPath,
       args: clangdArguments,
       options: {
-        cwd: vscode.workspace.rootPath || process.cwd(),
+        cwd: folder?.uri.fsPath || process.cwd(),
         shell: useScriptAsExecutable
       }
     };
-    const traceFile = config.get<string>('trace');
+    const traceFile = config.get<string>('trace', folder);
     if (!!traceFile) {
       const trace = {CLANGD_TRACE: traceFile};
       clangd.options = {...clangd.options, env: {...process.env, ...trace}};
@@ -102,12 +137,13 @@ export class ClangdContext implements vscode.Disposable {
 
     const clientOptions: vscodelc.LanguageClientOptions = {
       // Register the server for c-family and cuda files.
-      documentSelector: clangdDocumentSelector,
+      documentSelector: clangdDocumentSelector(folder),
+      workspaceFolder: folder,
       initializationOptions: {
         clangdFileStatus: true,
-        fallbackFlags: config.get<string[]>('fallbackFlags')
+        fallbackFlags: config.get<string[]>('fallbackFlags', folder)
       },
-      outputChannel: outputChannel,
+      outputChannel: this.outputChannel,
       // Do not switch to output window when clangd returns output.
       revealOutputChannelOn: vscodelc.RevealOutputChannelOn.Never,
 
@@ -128,10 +164,10 @@ export class ClangdContext implements vscode.Disposable {
       middleware: {
         provideCompletionItem: async (document, position, context, token,
                                       next) => {
-          if (!config.get<boolean>('enableCodeCompletion'))
+          if (!config.get<boolean>('enableCodeCompletion', folder))
             return new vscode.CompletionList([], /*isIncomplete=*/ false);
           let list = await next(document, position, context, token);
-          if (!config.get<boolean>('serverCompletionRanking'))
+          if (!config.get<boolean>('serverCompletionRanking', folder))
             return list;
           let items = (!list ? [] : Array.isArray(list) ? list : list.items);
           items = items.map(item => {
@@ -165,7 +201,7 @@ export class ClangdContext implements vscode.Disposable {
           return new vscode.CompletionList(items, /*isIncomplete=*/ true);
         },
         provideHover: async (document, position, token, next) => {
-          if (!config.get<boolean>('enableHover'))
+          if (!config.get<boolean>('enableHover', folder))
             return null;
           return next(document, position, token);
         },
@@ -199,24 +235,49 @@ export class ClangdContext implements vscode.Disposable {
       },
     };
 
-    this.client = new ClangdLanguageClient('Clang Language Server',
-                                           serverOptions, clientOptions);
-    this.client.clientOptions.errorHandler =
-        this.client.createDefaultErrorHandler(
+    const client = new ClangdLanguageClient(this, serverOptions, clientOptions);
+    this.subscriptions.push(client);
+
+    client.clientOptions.errorHandler =
+        client.createDefaultErrorHandler(
             // max restart count
-            config.get<boolean>('restartAfterCrash') ? /*default*/ 4 : 0);
-    this.client.registerFeature(new EnableEditsNearCursorFeature);
-    typeHierarchy.activate(this);
-    inlayHints.activate(this);
-    memoryUsage.activate(this);
-    ast.activate(this);
-    openConfig.activate(this);
-    inactiveRegions.activate(this);
-    configFileWatcher.activate(this);
-    this.client.start();
+            config.get<boolean>('restartAfterCrash', folder) ? /*default*/ 4 : 0);
+    new EnableEditsNearCursorFeature(client);
+    new TypeHierarchyFeature(client);
+    new InlayHintsFeature(client);
+    new MemoryUsageFeature(client);
+    new ASTFeature(client);
+    new InactiveRegionsFeature(client);
+    new ConfigFileWatcherFeature(client);
+
+    client.onDidChangeState(({newState}) => {
+      if (newState === vscodelc.State.Running) {
+        // clangd starts or restarts after crash.
+        client.onNotification(
+            'textDocument/clangd.fileStatus',
+            (fileStatus) => { this.fileStatus.onFileUpdated(fileStatus); });
+      } else if (newState === vscodelc.State.Stopped) {
+        // Clear all cached statuses when clangd crashes.
+        this.fileStatus.clear();
+      }
+    });
+
+    client.start();
     console.log('Clang Language Server is now active!');
-    fileStatus.activate(this);
-    switchSourceHeader.activate(this);
+
+    this.clients.set(folder.name, client);
+  }
+
+  public removeClient(folder: vscode.WorkspaceFolder) {
+    const client = this.clients.get(folder.name);
+    if (client) {
+      this.clients.delete(folder.name);
+      client.dispose();
+    }
+  }
+
+  public hasClient(folder: vscode.WorkspaceFolder): boolean {
+    return this.clients.has(folder.name);
   }
 
   get visibleClangdEditors(): vscode.TextEditor[] {
@@ -224,14 +285,32 @@ export class ClangdContext implements vscode.Disposable {
         (e) => isClangdDocument(e.document));
   }
 
-  clientIsStarting() {
-    return this.client && this.client.state == vscodelc.State.Starting;
+  public getActiveFolder(): vscode.WorkspaceFolder|undefined {
+    let folder = undefined;
+
+    if (vscode.window.activeTextEditor !== undefined) {
+      folder = vscode.workspace.getWorkspaceFolder(vscode.window.activeTextEditor.document.uri)
+    } else if (vscode.workspace.workspaceFolders !== undefined) {
+      folder = vscode.workspace.workspaceFolders[0];
+    }
+
+    return folder;
+  }
+
+
+  public getActiveClient(): ClangdLanguageClient|undefined {
+    const folder = this.getActiveFolder();
+    if (folder === undefined) {
+      return undefined;
+    }
+
+    return this.clients.get(folder.name);
   }
 
   dispose() {
     this.subscriptions.forEach((d) => { d.dispose(); });
-    if (this.client)
-      this.client.stop();
     this.subscriptions = []
+    this.clients.forEach((client) => { client.stop(); });
+    this.clients.clear();
   }
 }
