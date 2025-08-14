@@ -18,12 +18,15 @@ async function substitute<T>(val: T): Promise<T> {
   if (typeof val === 'string') {
     const replacementPattern = /\$\{(.*?)\}/g;
     const replacementPromises: Promise<string | undefined>[] = [];
-    val.replace(replacementPattern, (match, name) => {
-      replacementPromises.push(replacement(name));
-      return match;
-    });
+    const matches = val.matchAll(replacementPattern);
+    for (const match of matches) {
+      // match[1] is the first captured group
+      replacementPromises.push(replacement(match[1]));
+    }
     const replacements = await Promise.all(replacementPromises);
-    val = val.replace(/\$\{(.*?)\}/g, (match, _) => replacements.shift() ?? match) as unknown as T;
+    val = val.replace(replacementPattern,
+      // If there's no replacement available, keep the placeholder.
+      match => replacements.shift() ?? match) as unknown as T;
   } else if (Array.isArray(val)) {
     val = await Promise.all(val.map(substitute)) as T;
   } else if (typeof val === 'object') {

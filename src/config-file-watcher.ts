@@ -19,9 +19,9 @@ class ConfigFileWatcherFeature implements vscodelc.StaticFeature {
   constructor(private context: ClangdContext) {}
   fillClientCapabilities(capabilities: vscodelc.ClientCapabilities) {}
 
-  initialize(capabilities: vscodelc.ServerCapabilities,
+  async initialize(capabilities: vscodelc.ServerCapabilities,
              _documentSelector: vscodelc.DocumentSelector|undefined) {
-    if (!config.get<boolean>('onConfigChangedForceEnable') &&
+    if (!await config.get<boolean>('onConfigChangedForceEnable') &&
         (capabilities as ClangdClientCapabilities)
             .compilationDatabase?.automaticReload) {
       return;

@@ -212,13 +212,17 @@ export class ClangdContext implements vscode.Disposable {
     this.subscriptions = subscriptions;
     this.client = client;
 
+    this.startClient();
+  }
+
+  async startClient() {
     typeHierarchy.activate(this);
     inlayHints.activate(this);
     memoryUsage.activate(this);
     ast.activate(this);
     openConfig.activate(this);
     inactiveRegions.activate(this);
-    configFileWatcher.activate(this);
+    await configFileWatcher.activate(this);
     this.client.start();
     console.log('Clang Language Server is now active!');
     fileStatus.activate(this);
