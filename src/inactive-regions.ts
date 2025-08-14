@@ -46,7 +46,7 @@ export class InactiveRegionsFeature implements vscodelc.StaticFeature {
     }
   }
   async initialize(capabilities: vscodelc.ServerCapabilities,
-             documentSelector: vscodelc.DocumentSelector|undefined) {
+                   documentSelector: vscodelc.DocumentSelector|undefined) {
     const serverCapabilities: vscodelc.ServerCapabilities&
         {inactiveRegionsProvider?: any} = capabilities;
     if (serverCapabilities.inactiveRegionsProvider) {
@@ -98,7 +98,8 @@ export class InactiveRegionsFeature implements vscodelc.StaticFeature {
     } else {
       this.decorationType = vscode.window.createTextEditorDecorationType({
         isWholeLine: true,
-        opacity: (await config.get<number>('inactiveRegions.opacity')).toString()
+        opacity:
+            (await config.get<number>('inactiveRegions.opacity')).toString()
       });
     }
   }

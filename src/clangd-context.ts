@@ -70,11 +70,15 @@ export class ClangdContext implements vscode.Disposable {
       return null;
     }
 
-    return new ClangdContext(subscriptions, await ClangdContext.createClient(clangdPath, outputChannel));
+    return new ClangdContext(subscriptions, await ClangdContext.createClient(
+                                                clangdPath, outputChannel));
   }
 
-  private static async createClient(clangdPath: string, outputChannel: vscode.OutputChannel): Promise<ClangdLanguageClient> {
-    const useScriptAsExecutable = await config.get<boolean>('useScriptAsExecutable');
+  private static async createClient(clangdPath: string,
+                                    outputChannel: vscode.OutputChannel):
+      Promise<ClangdLanguageClient> {
+    const useScriptAsExecutable =
+        await config.get<boolean>('useScriptAsExecutable');
     let clangdArguments = await config.get<string[]>('arguments');
     if (useScriptAsExecutable) {
       let quote = (str: string) => { return `"${str}"`; };
@@ -198,17 +202,17 @@ export class ClangdContext implements vscode.Disposable {
     };
 
     const client = new ClangdLanguageClient('Clang Language Server',
-                                           serverOptions, clientOptions);
-    client.clientOptions.errorHandler =
-        client.createDefaultErrorHandler(
-            // max restart count
-            await config.get<boolean>('restartAfterCrash') ? /*default*/ 4 : 0);
+                                            serverOptions, clientOptions);
+    client.clientOptions.errorHandler = client.createDefaultErrorHandler(
+        // max restart count
+        await config.get<boolean>('restartAfterCrash') ? /*default*/ 4 : 0);
     client.registerFeature(new EnableEditsNearCursorFeature);
 
     return client;
   }
 
-  private constructor(subscriptions: vscode.Disposable[], client: ClangdLanguageClient) {
+  private constructor(subscriptions: vscode.Disposable[],
+                      client: ClangdLanguageClient) {
     this.subscriptions = subscriptions;
     this.client = client;
 

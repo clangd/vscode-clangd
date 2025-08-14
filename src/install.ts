@@ -16,19 +16,21 @@ export async function activate(disposables: vscode.Disposable[],
       'clangd.install', async () => common.installLatest(ui)));
   disposables.push(vscode.commands.registerCommand(
       'clangd.update', async () => common.checkUpdates(true, ui)));
-  const status = await common.prepare(ui, await config.get<boolean>('checkUpdates'));
+  const status =
+      await common.prepare(ui, await config.get<boolean>('checkUpdates'));
   return status.clangdPath;
 }
 
 class UI {
-  static async create(disposables: vscode.Disposable[], globalStoragePath: string): Promise<UI> {
+  static async create(disposables: vscode.Disposable[],
+                      globalStoragePath: string): Promise<UI> {
     const ui = new UI(disposables, globalStoragePath);
     await ui.resolveClangdPath();
     return ui;
   }
 
   private constructor(private disposables: vscode.Disposable[],
-              private globalStoragePath: string) {}
+                      private globalStoragePath: string) {}
 
   get storagePath(): string { return this.globalStoragePath; }
   async choose(prompt: string, options: string[]): Promise<string|undefined> {
@@ -141,7 +143,7 @@ class UI {
     // relative to project root.
     if (!path.isAbsolute(p) && p.includes(path.sep) &&
         vscode.workspace.rootPath !== undefined) {
-          p = path.join(vscode.workspace.rootPath, p);
+      p = path.join(vscode.workspace.rootPath, p);
     }
 
     this._clangdPath = p;
@@ -149,9 +151,7 @@ class UI {
 
   private _clangdPath?: string = undefined;
 
-  get clangdPath(): string {
-    return this._clangdPath as string;
-  }
+  get clangdPath(): string { return this._clangdPath as string; }
   set clangdPath(p: string) {
     this._pathUpdated = new Promise(resolve => {
       config.update('path', p, vscode.ConfigurationTarget.Global).then(() => {

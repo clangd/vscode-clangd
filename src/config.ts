@@ -4,7 +4,8 @@ import * as vscode from 'vscode';
 
 // Gets the config value `clangd.<key>`. Applies ${variable} substitutions.
 export async function get<T>(key: string): Promise<T> {
-  return await substitute(vscode.workspace.getConfiguration('clangd').get<T>(key)!);
+  return await substitute(
+      vscode.workspace.getConfiguration('clangd').get<T>(key)!);
 }
 
 // Sets the config value `clangd.<key>`. Does not apply substitutions.
@@ -17,16 +18,17 @@ export function update<T>(key: string, value: T,
 async function substitute<T>(val: T): Promise<T> {
   if (typeof val === 'string') {
     const replacementPattern = /\$\{(.*?)\}/g;
-    const replacementPromises: Promise<string | undefined>[] = [];
+    const replacementPromises: Promise<string|undefined>[] = [];
     const matches = val.matchAll(replacementPattern);
     for (const match of matches) {
       // match[1] is the first captured group
       replacementPromises.push(replacement(match[1]));
     }
     const replacements = await Promise.all(replacementPromises);
-    val = val.replace(replacementPattern,
-      // If there's no replacement available, keep the placeholder.
-      match => replacements.shift() ?? match) as unknown as T;
+    val = val.replace(
+              replacementPattern,
+              // If there's no replacement available, keep the placeholder.
+              match => replacements.shift() ?? match) as unknown as T;
   } else if (Array.isArray(val)) {
     val = await Promise.all(val.map(substitute)) as T;
   } else if (typeof val === 'object') {
@@ -70,7 +72,8 @@ async function replacement(name: string): Promise<string|undefined> {
   const commandPrefix = 'command:';
   if (name.startsWith(commandPrefix)) {
     try {
-      return await vscode.commands.executeCommand(name.substr(commandPrefix.length));
+      return await vscode.commands.executeCommand(
+          name.substr(commandPrefix.length));
     } catch {
       return undefined;
     }
