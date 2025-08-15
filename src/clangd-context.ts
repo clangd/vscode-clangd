@@ -70,14 +70,18 @@ export class ClangdContext implements vscode.Disposable {
       return null;
     }
 
-    return new ClangdContext(subscriptions, clangdPath, outputChannel);
+    const clangdArguments =
+        await resolveCommandVariables(config.get<string[]>('arguments'));
+
+    return new ClangdContext(subscriptions, clangdPath, clangdArguments,
+                             outputChannel);
   }
 
   private constructor(subscriptions: vscode.Disposable[], clangdPath: string,
+                      clangdArguments: string[],
                       outputChannel: vscode.OutputChannel) {
     this.subscriptions = subscriptions;
     const useScriptAsExecutable = config.get<boolean>('useScriptAsExecutable');
-    let clangdArguments = config.get<string[]>('arguments');
     if (useScriptAsExecutable) {
       let quote = (str: string) => { return `"${str}"`; };
       clangdPath = quote(clangdPath)
@@ -234,4 +238,35 @@ export class ClangdContext implements vscode.Disposable {
       this.client.stop();
     this.subscriptions = []
   }
+}
+
+// Find and resolve ${command:...} variables in a string array.
+async function resolveCommandVariables(args: string[]):
+    Promise<string[]>{const commandRegex = /\${command:([^}]+)}/g
+
+  return Promise.all(
+    args.map(arg => resolveCommandsInString(arg, commandRegex))
+  )
+}
+
+async function resolveCommandsInString(
+  arg: string,
+  regex: RegExp
+): Promise<string> {
+  const matches = Array.from(arg.matchAll(regex));
+
+  let resolvedArg = arg;
+  for (const [command, commandId] of matches.map((m) => [m[0], m[1]])) {
+    try {
+      const result = await vscode.commands.executeCommand<string>(commandId);
+      if (typeof result === 'string') {
+        resolvedArg = resolvedArg.replace(command, result);
+      }
+    } catch (error) {
+      console.error(`Clangd: Error resolving command '${commandId}':`, error);
+      vscode.window.showWarningMessage(`Clangd: Failed to resolve ${command}`);
+    }
+  }
+
+  return resolvedArg;
 }
