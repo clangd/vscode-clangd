@@ -71,10 +71,14 @@ async function replacement(name: string): Promise<string|undefined> {
   }
   const commandPrefix = 'command:';
   if (name.startsWith(commandPrefix)) {
+    const commandId = name.substr(commandPrefix.length);
     try {
-      return await vscode.commands.executeCommand(
-          name.substr(commandPrefix.length));
-    } catch {
+      return await vscode.commands.executeCommand(commandId);
+    } catch (error) {
+      console.warn(`Clangd: Error resolving command '${commandId}':`, error);
+      vscode.window.showWarningMessage(
+          `Clangd: Failed to resolve ${commandId}`);
+
       return undefined;
     }
   }
