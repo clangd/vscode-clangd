@@ -35,7 +35,7 @@
         "vscode:prepublish": "npm run check-ts && npm run esbuild -- --minify --keep-names",
         "compile": "npm run esbuild -- --sourcemap",
         "check-ts": "tsc -noEmit -p ./",
-        "format": "clang-format -i --glob=\"{src,test}/*.ts\"",
+        "format": "clang-format -i --glob=\"{src,test}/**/*.ts\"",
         "test-compile": "tsc -p ./ && npm run compile",
         "test": "npm run test-compile && node ./out/test/index.js",
         "package": "vsce package --baseImagesUrl https://raw.githubusercontent.com/clangd/vscode-clangd/master/",
@@ -48,7 +48,8 @@
     },
     "dependencies": {
         "@clangd/install": "0.1.20",
-        "vscode-languageclient": "^9.0.1"
+        "vscode-languageclient": "^9.0.1",
+        "vscode-nls": "^5.2.0"
     },
     "devDependencies": {
         "@types/glob": "^9.0.0",
@@ -194,6 +195,60 @@
                     "type": "boolean",
                     "default": true,
                     "description": "Enable clangd language server features"
+                },
+                "clangd.createPair.rules": {
+                    "type": "array",
+                    "default": [],
+                    "items": {
+                        "type": "object",
+                        "properties": {
+                            "key": {
+                                "type": "string",
+                                "description": "Unique identifier for this rule"
+                            },
+                            "label": {
+                                "type": "string",
+                                "description": "Human-readable name shown in UI"
+                            },
+                            "description": {
+                                "type": "string",
+                                "description": "Detailed description of what this rule creates"
+                            },
+                            "language": {
+                                "type": "string",
+                                "enum": [
+                                    "c",
+                                    "cpp"
+                                ],
+                                "description": "Target programming language"
+                            },
+                            "headerExt": {
+                                "type": "string",
+                                "description": "File extension for header file (e.g., '.h', '.hh')"
+                            },
+                            "sourceExt": {
+                                "type": "string",
+                                "description": "File extension for source file (e.g., '.cpp', '.cc', '.c')"
+                            },
+                            "isClass": {
+                                "type": "boolean",
+                                "description": "Whether this rule creates a class template"
+                            },
+                            "isStruct": {
+                                "type": "boolean",
+                                "description": "Whether this rule creates a struct template"
+                            }
+                        },
+                        "required": [
+                            "key",
+                            "label",
+                            "description",
+                            "language",
+                            "headerExt",
+                            "sourceExt"
+                        ]
+                    },
+                    "description": "Custom pairing rules for creating source/header file pairs with different extensions"
                 }
             }
         },
@@ -212,7 +267,18 @@
             {
                 "command": "clangd.switchheadersource",
                 "category": "clangd",
-                "title": "Switch Between Source/Header"
+                "title": "Switch Between Source/Header Pair"
+            },
+            {
+                "command": "clangd.newSourcePair",
+                "category": "clangd",
+                "title": "New Source/Header Pair",
+                "icon": "$(new-file)"
+            },
+            {
+                "command": "clangd.createPair.configureRules",
+                "category": "clangd",
+                "title": "Configure Source/Header Pairing Rules"
             },
             {
                 "command": "clangd.install",
@@ -368,6 +434,13 @@
                     "group": "navigation"
                 }
             ],
+            "explorer/context": [
+                {
+                    "command": "clangd.newSourcePair",
+                    "when": "explorerResourceIsFolder",
+                    "group": "2_workspace@1"
+                }
+            ],
             "commandPalette": [
                 {
                     "command": "clangd.typeHierarchy.viewParents",
@@ -388,17 +461,20 @@
                 {
                     "id": "clangd.typeHierarchyView",
                     "name": "Type Hierarchy",
-                    "when": "clangd.typeHierarchyVisible"
+                    "when": "clangd.typeHierarchyVisible",
+                    "icon": "$(type-hierarchy)"
                 },
                 {
                     "id": "clangd.memoryUsage",
                     "name": "clangd Memory Usage",
-                    "when": "clangd.memoryUsage.hasData"
+                    "when": "clangd.memoryUsage.hasData",
+                    "icon": "$(dashboard)"
                 },
                 {
                     "id": "clangd.ast",
                     "name": "AST",
-                    "when": "clangd.ast.hasData"
+                    "when": "clangd.ast.hasData",
+                    "icon": "$(list-tree)"
                 }
             ]
         }

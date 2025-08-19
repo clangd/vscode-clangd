@@ -5,6 +5,10 @@ import {ClangdExtension} from '../api/vscode-clangd';
 import {ClangdExtensionImpl} from './api';
 import {ClangdContext} from './clangd-context';
 import {get, update} from './config';
+import {
+  registerCreateSourceHeaderPairCommand
+} from './create-source-header-pair/index';
+import {showConfigurationWizard} from './pairing-rule-manager';
 
 let apiInstance: ClangdExtensionImpl|undefined;
 
@@ -52,8 +56,11 @@ export async function activate(context: vscode.ExtensionContext):
           clangdContext.dispose();
         clangdContext = await ClangdContext.create(context.globalStoragePath,
                                                    outputChannel);
-        if (clangdContext)
+        if (clangdContext) {
           context.subscriptions.push(clangdContext);
+
+          registerCreateSourceHeaderPairCommand(clangdContext);
+        }
         if (apiInstance) {
           apiInstance.client = clangdContext?.client;
         }
@@ -64,8 +71,11 @@ export async function activate(context: vscode.ExtensionContext):
   if (vscode.workspace.getConfiguration('clangd').get<boolean>('enable')) {
     clangdContext =
         await ClangdContext.create(context.globalStoragePath, outputChannel);
-    if (clangdContext)
+    if (clangdContext) {
       context.subscriptions.push(clangdContext);
+
+      registerCreateSourceHeaderPairCommand(clangdContext);
+    }
 
     shouldCheck = vscode.workspace.getConfiguration('clangd').get<boolean>(
                       'detectExtensionConflicts') ??
@@ -103,7 +113,8 @@ export async function activate(context: vscode.ExtensionContext):
       }
     }, 5000);
   }
-
+  context.subscriptions.push(vscode.commands.registerCommand(
+      'clangd.createPair.configureRules', showConfigurationWizard));
   apiInstance = new ClangdExtensionImpl(clangdContext?.client);
   return apiInstance;
 }
