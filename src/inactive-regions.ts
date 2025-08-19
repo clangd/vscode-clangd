@@ -45,16 +45,19 @@ export class InactiveRegionsFeature implements vscodelc.StaticFeature {
       };
     }
   }
-  async initialize(capabilities: vscodelc.ServerCapabilities,
-                   documentSelector: vscodelc.DocumentSelector|undefined) {
+  initialize(capabilities: vscodelc.ServerCapabilities,
+             documentSelector: vscodelc.DocumentSelector|undefined) {
     const serverCapabilities: vscodelc.ServerCapabilities&
         {inactiveRegionsProvider?: any} = capabilities;
     if (serverCapabilities.inactiveRegionsProvider) {
-      await this.updateDecorationType();
       this.context.subscriptions.push(
-          vscode.window.onDidChangeVisibleTextEditors(
-              (editors) => editors.forEach(
-                  (e) => this.applyHighlights(e.document.fileName))));
+          vscode.window.onDidChangeVisibleTextEditors(async (editors) => {
+            if (!this.decorationType) {
+              // If the decoration type is not yet initialized, update it
+              await this.updateDecorationType();
+            }
+            editors.forEach((e) => this.applyHighlights(e.document.fileName))
+          }));
       this.context.subscriptions.push(
           vscode.workspace.onDidChangeConfiguration(async (conf) => {
             const inactiveSettingsChanged =
