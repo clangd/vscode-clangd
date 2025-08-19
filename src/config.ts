@@ -3,8 +3,9 @@ import * as path from 'path';
 import * as vscode from 'vscode';
 
 // Gets the config value `clangd.<key>`. Applies ${variable} substitutions.
-export function get<T>(key: string): T {
-  return substitute(vscode.workspace.getConfiguration('clangd').get<T>(key)!);
+export async function get<T>(key: string): Promise<T> {
+  return await substitute(
+      vscode.workspace.getConfiguration('clangd').get<T>(key)!);
 }
 
 // Sets the config value `clangd.<key>`. Does not apply substitutions.
@@ -14,19 +15,27 @@ export function update<T>(key: string, value: T,
 }
 
 // Traverse a JSON value, replacing placeholders in all strings.
-function substitute<T>(val: T): T {
+async function substitute<T>(val: T): Promise<T> {
   if (typeof val === 'string') {
-    val = val.replace(/\$\{(.*?)\}/g, (match, name) => {
-      // If there's no replacement available, keep the placeholder.
-      return replacement(name) ?? match;
-    }) as unknown as T;
+    const replacementPattern = /\$\{(.*?)\}/g;
+    const replacementPromises: Promise<string|undefined>[] = [];
+    const matches = val.matchAll(replacementPattern);
+    for (const match of matches) {
+      // match[1] is the first captured group
+      replacementPromises.push(replacement(match[1]));
+    }
+    const replacements = await Promise.all(replacementPromises);
+    val = val.replace(
+              replacementPattern,
+              // If there's no replacement available, keep the placeholder.
+              match => replacements.shift() ?? match) as unknown as T;
   } else if (Array.isArray(val)) {
-    val = val.map((x) => substitute(x)) as unknown as T;
+    val = await Promise.all(val.map(substitute)) as T;
   } else if (typeof val === 'object') {
     // Substitute values but not keys, so we don't deal with collisions.
     const result = {} as {[k: string]: any};
     for (const key in val) {
-      result[key] = substitute(val[key]);
+      result[key] = await substitute(val[key]);
     }
     val = result as T;
   }
@@ -35,7 +44,7 @@ function substitute<T>(val: T): T {
 
 // Subset of substitution variables that are most likely to be useful.
 // https://code.visualstudio.com/docs/editor/variables-reference
-function replacement(name: string): string|undefined {
+async function replacement(name: string): Promise<string|undefined> {
   if (name === 'userHome') {
     return homedir();
   }
@@ -59,6 +68,19 @@ function replacement(name: string): string|undefined {
     const config = vscode.workspace.getConfiguration().get(
         name.substr(configPrefix.length));
     return (typeof config === 'string') ? config : undefined;
+  }
+  const commandPrefix = 'command:';
+  if (name.startsWith(commandPrefix)) {
+    const commandId = name.substr(commandPrefix.length);
+    try {
+      return await vscode.commands.executeCommand(commandId);
+    } catch (error) {
+      console.warn(`Clangd: Error resolving command '${commandId}':`, error);
+      vscode.window.showWarningMessage(
+          `Clangd: Failed to resolve ${commandId}`);
+
+      return undefined;
+    }
   }
 
   return undefined;

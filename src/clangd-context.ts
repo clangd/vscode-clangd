@@ -70,14 +70,16 @@ export class ClangdContext implements vscode.Disposable {
       return null;
     }
 
-    return new ClangdContext(subscriptions, clangdPath, outputChannel);
+    return new ClangdContext(subscriptions, await ClangdContext.createClient(
+                                                clangdPath, outputChannel));
   }
 
-  private constructor(subscriptions: vscode.Disposable[], clangdPath: string,
-                      outputChannel: vscode.OutputChannel) {
-    this.subscriptions = subscriptions;
-    const useScriptAsExecutable = config.get<boolean>('useScriptAsExecutable');
-    let clangdArguments = config.get<string[]>('arguments');
+  private static async createClient(clangdPath: string,
+                                    outputChannel: vscode.OutputChannel):
+      Promise<ClangdLanguageClient> {
+    const useScriptAsExecutable =
+        await config.get<boolean>('useScriptAsExecutable');
+    let clangdArguments = await config.get<string[]>('arguments');
     if (useScriptAsExecutable) {
       let quote = (str: string) => { return `"${str}"`; };
       clangdPath = quote(clangdPath)
@@ -93,7 +95,7 @@ export class ClangdContext implements vscode.Disposable {
         shell: useScriptAsExecutable
       }
     };
-    const traceFile = config.get<string>('trace');
+    const traceFile = await config.get<string>('trace');
     if (!!traceFile) {
       const trace = {CLANGD_TRACE: traceFile};
       clangd.options = {...clangd.options, env: {...process.env, ...trace}};
@@ -105,7 +107,7 @@ export class ClangdContext implements vscode.Disposable {
       documentSelector: clangdDocumentSelector,
       initializationOptions: {
         clangdFileStatus: true,
-        fallbackFlags: config.get<string[]>('fallbackFlags')
+        fallbackFlags: await config.get<string[]>('fallbackFlags')
       },
       outputChannel: outputChannel,
       // Do not switch to output window when clangd returns output.
@@ -128,10 +130,10 @@ export class ClangdContext implements vscode.Disposable {
       middleware: {
         provideCompletionItem: async (document, position, context, token,
                                       next) => {
-          if (!config.get<boolean>('enableCodeCompletion'))
+          if (!await config.get<boolean>('enableCodeCompletion'))
             return new vscode.CompletionList([], /*isIncomplete=*/ false);
           let list = await next(document, position, context, token);
-          if (!config.get<boolean>('serverCompletionRanking'))
+          if (!await config.get<boolean>('serverCompletionRanking'))
             return list;
           let items = (!list ? [] : Array.isArray(list) ? list : list.items);
           items = items.map(item => {
@@ -165,7 +167,7 @@ export class ClangdContext implements vscode.Disposable {
           return new vscode.CompletionList(items, /*isIncomplete=*/ true);
         },
         provideHover: async (document, position, token, next) => {
-          if (!config.get<boolean>('enableHover'))
+          if (!await config.get<boolean>('enableHover'))
             return null;
           return next(document, position, token);
         },
@@ -199,20 +201,32 @@ export class ClangdContext implements vscode.Disposable {
       },
     };
 
-    this.client = new ClangdLanguageClient('Clang Language Server',
-                                           serverOptions, clientOptions);
-    this.client.clientOptions.errorHandler =
-        this.client.createDefaultErrorHandler(
-            // max restart count
-            config.get<boolean>('restartAfterCrash') ? /*default*/ 4 : 0);
-    this.client.registerFeature(new EnableEditsNearCursorFeature);
+    const client = new ClangdLanguageClient('Clang Language Server',
+                                            serverOptions, clientOptions);
+    client.clientOptions.errorHandler = client.createDefaultErrorHandler(
+        // max restart count
+        await config.get<boolean>('restartAfterCrash') ? /*default*/ 4 : 0);
+    client.registerFeature(new EnableEditsNearCursorFeature);
+
+    return client;
+  }
+
+  private constructor(subscriptions: vscode.Disposable[],
+                      client: ClangdLanguageClient) {
+    this.subscriptions = subscriptions;
+    this.client = client;
+
+    this.startClient();
+  }
+
+  async startClient() {
     typeHierarchy.activate(this);
     inlayHints.activate(this);
     memoryUsage.activate(this);
     ast.activate(this);
     openConfig.activate(this);
     inactiveRegions.activate(this);
-    configFileWatcher.activate(this);
+    await configFileWatcher.activate(this);
     this.client.start();
     console.log('Clang Language Server is now active!');
     fileStatus.activate(this);

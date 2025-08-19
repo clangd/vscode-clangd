@@ -16,6 +16,8 @@ class MockClangdContext implements ClangdContext {
 
   async activate() { throw new Error('Method not implemented.'); }
 
+  async startClient() { throw new Error('Method not implemented.'); }
+
   clientIsStarting() { return false; }
 
   dispose() { throw new Error('Method not implemented.'); }
@@ -28,7 +30,7 @@ suite('InactiveRegionsFeature', () => {
     sandbox = sinon.createSandbox();
     sandbox.stub(config, 'get')
         .withArgs('inactiveRegions.opacity')
-        .returns(0.55);
+        .returns(Promise.resolve(0.55));
   });
 
   teardown(() => { sandbox.restore(); });
