@@ -1,5 +1,12 @@
 # Change Log
 
+## Version 0.3.0: August 19, 2025
+
+* Rename onConfigChanged.forceEnable to onConfigChangedForceEnable [#822](https://github.com/clangd/vscode-clangd/pull/822).
+* Fix UI.localize function to use placeholders [#837](https://github.com/clangd/vscode-clangd/pull/837).
+* Fix clangd launch options being overwritten when trace file is set [#848](https://github.com/clangd/vscode-clangd/pull/848).
+* Support command variables in config [#796](https://github.com/clangd/vscode-clangd/pull/796).
+
 ## Version 0.2.0: June 1, 2025
 
 * Stable release of changes in versions 0.1.34 and 0.1.35.
