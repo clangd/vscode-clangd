@@ -1,5 +1,9 @@
 # Change Log
 
+## Version 0.3.1: August 21, 2025
+
+* pick up a bug fix for a Github Action [EndBug/version-check#315](https://github.com/EndBug/version-check/issues/315)
+
 ## Version 0.3.0: August 19, 2025
 
 * Rename onConfigChanged.forceEnable to onConfigChangedForceEnable [#822](https://github.com/clangd/vscode-clangd/pull/822).
