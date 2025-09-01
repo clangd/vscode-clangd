@@ -12,7 +12,7 @@ jobs:
       run: |
         Xvfb :99 -screen 0 1024x768x24 > /dev/null 2>&1 &
         echo "DISPLAY=:99" >> $GITHUB_ENV
-    - uses: actions/checkout@v4
+    - uses: actions/checkout@v5
     - run: npm ci
     - run: npm test
     - name: clang-format (diff)
