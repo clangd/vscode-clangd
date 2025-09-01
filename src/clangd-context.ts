@@ -113,6 +113,51 @@ export class ClangdContext implements vscode.Disposable {
       // Do not switch to output window when clangd returns output.
       revealOutputChannelOn: vscodelc.RevealOutputChannelOn.Never,
 
+      // https://github.com/clangd/vscode-clangd/issues/726
+      // Remove this workaround once clangd fixes the issue on their side: https://github.com/clangd/clangd/issues/108
+      uriConverters: {
+        code2Protocol: (uri: vscode.Uri): string => {
+          if (uri.scheme === 'file') {
+            function fix_windows_drive_letter_casing(uri: vscode.Uri): string | undefined {
+              // We can't just use process.platform === 'win32' because of remote development
+
+              // detect windows paths
+              const isWindowsPathRegex = /^(?<drive_letter>[a-zA-Z]):[\\\/](?<remainingPath>.*)/i;
+
+              // Fix lower case drive letters on Windows
+              const fsPath = uri.fsPath
+
+              const windowsPathMatch = fsPath.match(isWindowsPathRegex);
+
+              if (!windowsPathMatch) {
+                // we are not dealing with a windows path
+                return undefined;
+              }
+
+              // change the drive letter to uppercase
+              const drive_letter = windowsPathMatch.groups?.drive_letter?.toUpperCase() ?? '';
+              const remainingPath = windowsPathMatch.groups?.remainingPath ?? '';
+
+              if (!drive_letter) {
+                // no drive letter so there is nothing to fix
+                return undefined;
+              }
+
+              // Reconstruct the path
+              const fixed_uri = `file:///${drive_letter}:\\${remainingPath}`;
+              return fixed_uri;
+            }
+
+            const fixed_uri = fix_windows_drive_letter_casing(uri);
+            if (fixed_uri) {
+              return fixed_uri;
+            }
+          }
+          return uri.toString();
+        },
+        protocol2Code: (uri: string) => vscode.Uri.parse(uri),
+      },
+
       // We hack up the completion items a bit to prevent VSCode from re-ranking
       // and throwing away all our delicious signals like type information.
       //
