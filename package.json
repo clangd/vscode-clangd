@@ -235,6 +235,11 @@
                 "title": "Restart language server"
             },
             {
+                "command": "clangd.shutdown",
+                "category": "clangd",
+                "title": "Shutdown language server"
+            },
+            {
                 "command": "clangd.typeHierarchy",
                 "category": "clangd",
                 "title": "Open Type Hierarchy"
