@@ -242,6 +242,10 @@ export class ClangdContext implements vscode.Disposable {
     return this.client && this.client.state == vscodelc.State.Starting;
   }
 
+  clientIsRunning() {
+    return this.client && this.client.state == vscodelc.State.Running;
+  }
+
   dispose() {
     this.subscriptions.forEach((d) => { d.dispose(); });
     if (this.client)

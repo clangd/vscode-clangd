@@ -22,7 +22,13 @@ export async function activate(context: vscode.ExtensionContext):
   // An empty place holder for the activate command, otherwise we'll get an
   // "command is not registered" error.
   context.subscriptions.push(
-      vscode.commands.registerCommand('clangd.activate', async () => {}));
+      vscode.commands.registerCommand('clangd.activate', async () => {
+        // If clangd server is already running, do nothing.
+        if (clangdContext && clangdContext.clientIsRunning()) {
+          return;
+        }
+        vscode.commands.executeCommand('clangd.restart');
+      }));
   context.subscriptions.push(
       vscode.commands.registerCommand('clangd.restart', async () => {
         if (!get<boolean>('enable')) {
