@@ -21,10 +21,8 @@ export async function activate(context: vscode.ExtensionContext):
 
   context.subscriptions.push(
       vscode.commands.registerCommand('clangd.activate', async () => {
-        if (clangdContext && clangdContext.clientIsStarting()) {
-          return;
-        }
-        if (clangdContext && clangdContext.clientIsRunning()) {
+        if (clangdContext && (clangdContext.clientIsStarting() ||
+                              clangdContext.clientIsRunning())) {
           return;
         }
         vscode.commands.executeCommand('clangd.restart');
