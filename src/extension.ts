@@ -19,10 +19,14 @@ export async function activate(context: vscode.ExtensionContext):
 
   let clangdContext: ClangdContext|null = null;
 
-  // An empty place holder for the activate command, otherwise we'll get an
-  // "command is not registered" error.
   context.subscriptions.push(
-      vscode.commands.registerCommand('clangd.activate', async () => {}));
+      vscode.commands.registerCommand('clangd.activate', async () => {
+        if (clangdContext && (clangdContext.clientIsStarting() ||
+                              clangdContext.clientIsRunning())) {
+          return;
+        }
+        vscode.commands.executeCommand('clangd.restart');
+      }));
   context.subscriptions.push(
       vscode.commands.registerCommand('clangd.restart', async () => {
         if (!get<boolean>('enable')) {
@@ -57,6 +61,14 @@ export async function activate(context: vscode.ExtensionContext):
         if (apiInstance) {
           apiInstance.client = clangdContext?.client;
         }
+      }));
+  context.subscriptions.push(
+      vscode.commands.registerCommand('clangd.shutdown', async () => {
+        if (clangdContext && clangdContext.clientIsStarting()) {
+          return;
+        }
+        if (clangdContext)
+          clangdContext.dispose();
       }));
 
   let shouldCheck = false;
