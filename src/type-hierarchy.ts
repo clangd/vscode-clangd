@@ -73,6 +73,8 @@ const dummyNode: TypeHierarchyItem = {
 class TypeHierarchyTreeItem extends vscode.TreeItem {
   constructor(item: TypeHierarchyItem, direction: TypeHierarchyDirection) {
     super(item.name);
+    this.description = item.detail;
+    this.iconPath = new vscode.ThemeIcon('symbol-class');
     let subItems = direction === TypeHierarchyDirection.Children ? item.children : item.parents;
     if (subItems) {
       if (subItems.length === 0) {
