@@ -317,9 +317,7 @@ class TypeHierarchyProvider implements
 
       this._onDidChangeTreeData.fire(null);
 
-      // This focuses the "explorer" view container which contains the
-      // type hierarchy view.
-      vscode.commands.executeCommand('workbench.view.explorer');
+      vscode.commands.executeCommand('clangd.typeHierarchyView.focus');
 
       // This expands and focuses the type hierarchy view.
       // Focus the item on which the operation was invoked, not the
