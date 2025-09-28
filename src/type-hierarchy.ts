@@ -71,10 +71,11 @@ const dummyNode: TypeHierarchyItem = {
 };
 
 class TypeHierarchyTreeItem extends vscode.TreeItem {
-  constructor(item: TypeHierarchyItem) {
+  constructor(item: TypeHierarchyItem, direction: TypeHierarchyDirection) {
     super(item.name);
-    if (item.children) {
-      if (item.children.length === 0) {
+    let subItems = direction === TypeHierarchyDirection.Children ? item.children : item.parents;
+    if (subItems) {
+      if (subItems.length === 0) {
         this.collapsibleState = vscode.TreeItemCollapsibleState.None;
       } else {
         this.collapsibleState = vscode.TreeItemCollapsibleState.Expanded;
@@ -224,7 +225,7 @@ class TypeHierarchyProvider implements
   }
 
   public getTreeItem(element: TypeHierarchyItem): vscode.TreeItem {
-    return new TypeHierarchyTreeItem(element);
+    return new TypeHierarchyTreeItem(element, this.direction);
   }
 
   public getParent(element: TypeHierarchyItem): TypeHierarchyItem|null {
