@@ -75,7 +75,8 @@ class TypeHierarchyTreeItem extends vscode.TreeItem {
     super(item.name);
     this.description = item.detail;
     this.iconPath = new vscode.ThemeIcon('symbol-class');
-    let subItems = direction === TypeHierarchyDirection.Children ? item.children : item.parents;
+    let subItems = direction === TypeHierarchyDirection.Children ? item.children
+                                                                 : item.parents;
     if (subItems) {
       if (subItems.length === 0) {
         this.collapsibleState = vscode.TreeItemCollapsibleState.None;
@@ -260,11 +261,15 @@ class TypeHierarchyProvider implements
           await this.client.sendRequest(ResolveTypeHierarchyRequest.type, {
             item: element,
             direction: TypeHierarchyDirection.Children,
-            resolve: 2 // We need 2 levels to understand which collapsible state to use
+            resolve: 2 // We need 2 levels to understand collapsible state
           });
       element.children = resolved?.children;
       // Cut-of existing sub-children to resolve them later
-      element.children?.forEach(x => { if (x.children?.length !== 0) { x.children = undefined; } }); 
+      element.children?.forEach(x => {
+        if (x.children?.length !== 0) {
+          x.children = undefined;
+        }
+      });
     }
     return element.children ?? [];
   }
