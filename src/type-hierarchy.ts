@@ -258,9 +258,11 @@ class TypeHierarchyProvider implements
           await this.client.sendRequest(ResolveTypeHierarchyRequest.type, {
             item: element,
             direction: TypeHierarchyDirection.Children,
-            resolve: 1
+            resolve: 2 // We need 2 levels to understand which collapsible state to use
           });
       element.children = resolved?.children;
+      // Cut-of existing sub-children to resolve them later
+      element.children?.forEach(x => { if (x.children?.length !== 0) { x.children = undefined; } }); 
     }
     return element.children ?? [];
   }
