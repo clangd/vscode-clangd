@@ -1,5 +1,113 @@
 # Change Log
 
+## Version 0.3.2: September 29, 2025
+
+* Add a command to shut down the server explicitly [#866](https://github.com/clangd/vscode-clangd/pull/866).
+
+## Version 0.3.1: August 21, 2025
+
+* pick up a bug fix for a Github Action [EndBug/version-check#315](https://github.com/EndBug/version-check/issues/315)
+
+## Version 0.3.0: August 19, 2025
+
+* Rename onConfigChanged.forceEnable to onConfigChangedForceEnable [#822](https://github.com/clangd/vscode-clangd/pull/822).
+* Fix UI.localize function to use placeholders [#837](https://github.com/clangd/vscode-clangd/pull/837).
+* Fix clangd launch options being overwritten when trace file is set [#848](https://github.com/clangd/vscode-clangd/pull/848).
+* Support command variables in config [#796](https://github.com/clangd/vscode-clangd/pull/796).
+
+## Version 0.2.0: June 1, 2025
+
+* Stable release of changes in versions 0.1.34 and 0.1.35.
+
+## Version 0.1.35: May 23, 2025
+
+* On config changed watcher can be force enabled [#300](https://github.com/clangd/vscode-clangd/issues/300).
+* Extension is only enabled in trusted workspaces [#812](https://github.com/clangd/vscode-clangd/pull/812).
+
+## Version 0.1.34: March 15, 2025
+
+* Create pre-release flows [#748](https://github.com/clangd/vscode-clangd/issues/748) [#753](https://github.com/clangd/vscode-clangd/issues/753) [#765](https://github.com/clangd/vscode-clangd/issues/765)
+* Clean up disposables in early-return path of ClangdContext.create() [#743](https://github.com/clangd/vscode-clangd/issues/743)
+* Publish API package to the default registry [#746](https://github.com/clangd/vscode-clangd/issues/746)
+* Documentation
+  * Mention the clangd config file in the README [#752](https://github.com/clangd/vscode-clangd/issues/752)
+  * Mention the editor.defaultFormatter setting [#768](https://github.com/clangd/vscode-clangd/issues/768)
+* Add an option to allow "clangd.path" to point to a shell script [#683](https://github.com/clangd/vscode-clangd/issues/683)
+* Automatically restart clangd language server after it is installed [#749](https://github.com/clangd/vscode-clangd/issues/749)
+* Handle workspace symbols searches with a '::' prefix [#769](https://github.com/clangd/vscode-clangd/issues/769)
+
+## Version 0.1.33: November 21, 2024
+
+* Reverted [#730](https://github.com/clangd/vscode-clangd/pull/730) for causing [#734](https://github.com/clangd/vscode-clangd/issues/734)
+
+
+## Version 0.1.32: November 21, 2024
+
+* Allow "clangd.path" to point to a shell script (restoring behavior from VS Code 1.91), behind option "clangd.useScriptAsExecutable" [#730](https://github.com/clangd/vscode-clangd/pull/730)
+* Handle language client being null if clangd is disabled or failed to initialize in the API [#728](https://github.com/clangd/vscode-clangd/pull/728), [#731](https://github.com/clangd/vscode-clangd/pull/731)
+
+
+## Version 0.1.31: November 13, 2024
+
+* Reverted [#708](https://github.com/clangd/vscode-clangd/pull/708) and [#715](https://github.com/clangd/vscode-clangd/pull/715) for causing [#722](https://github.com/clangd/vscode-clangd/issues/722)
+
+
+## Version 0.1.30: November 13, 2024
+
+* Added option to disable hovers [#703](https://github.com/clangd/vscode-clangd/pull/703)
+* Added option to disable clangd [#636](https://github.com/clangd/vscode-clangd/pull/636)
+* Key bindings are restricted to the supported files [#690](https://github.com/clangd/vscode-clangd/pull/690)
+* Allow "clangd.path" to point to a shell script (restoring behavior from VS Code 1.91) [#708](https://github.com/clangd/vscode-clangd/pull/708), [#715](https://github.com/clangd/vscode-clangd/pull/715)
+
+## Version 0.1.29: July 12, 2024
+
+* vscode-clangd now exposes an [API](https://github.com/clangd/vscode-clangd/blob/master/api/README.md)
+  to other VSCode extensions, allowing them to make requests of their own to the clangd server [#575](https://github.com/clangd/vscode-clangd/pull/575)
+* The predefined variable `${workspaceFolderBasename}` is now recognized in settings values
+  such as `"clangd.arguments"` [#147](https://github.com/clangd/vscode-clangd/issues/147)
+* Bug fixes to inactive region highlighting
+  * Decorations are now cleared on clangd restart [#600](https://github.com/clangd/vscode-clangd/issues/600)
+  * Decorations are now updated when their settings are changed [#613](https://github.com/clangd/vscode-clangd/pull/613)
+
+## Version 0.1.28: March 20, 2024
+
+* Fix a regression in the behaviour of `clangd.restart` introduced in 0.1.27 [#599](https://github.com/clangd/vscode-clangd/issues/599)
+
+## Version 0.1.27: March 16, 2024
+
+* Trigger signature help when accepting code completions, where appropriate [#390](https://github.com/clangd/vscode-clangd/issues/390)
+* Gracefully handle `clangd.restart` being invoked when the extension hasn't been activated yet [#502](https://github.com/clangd/vscode-clangd/issues/502)
+* Add an option to disable code completion [#588](https://github.com/clangd/vscode-clangd/issues/588)
+
+## Version 0.1.26: December 20, 2023
+
+* Bump @clangd/install dependency to 0.1.17. This works around a bug in a
+  dependent library affecting node versions 18.16 and later that can cause
+  the downloaded clangd executable to be corrupt after unzipping.
+
+## Version 0.1.25: August 15, 2023
+
+* Combine inactive region style with client-side (textmate) token colors [#193](https://github.com/clangd/vscode-clangd/pull/193).
+  Requires clangd 17 or later.
+  * The default inactive region style is reduced opacity. The opacity level can be
+    customized with `clangd.inactiveRegions.opacity`.
+  * An alternative inactive region style of a background highlight can be enabled with
+    `clangd.inactiveRegions.useBackgroundHighlight=true`. The highlight color can be
+    customized with `clangd.inactiveRegions.background` in `workbench.colorCustomizations`.
+* The variable substitution `${userHome}` is now supported in clangd configuration setting values [#486](https://github.com/clangd/vscode-clangd/pull/486)
+
+## Version 0.1.24: April 21, 2023
+
+- Fix an undefined object access in ClangdContext.dispose() [#461](https://github.com/clangd/vscode-clangd/pull/461)
+- Remove custom secure configuration items and rely on workspace trust from vscode [#451](https://github.com/clangd/vscode-clangd/pull/451)
+
+## Version 0.1.23: October 23, 2022
+
+* Update vscode-language client to 8.0.2, with apparent bugfixes
+* clangd autoupdate: correctly detect versions of distro-modified clangd
+* clangd autoupdate: improved error messages
+* fix clangd not detected due to permission issues [#267](https://github.com/clangd/vscode-clangd/issues/267)
+
 ## Version 0.1.22: October 12, 2022
 
 * Type-hierarchy: Prefer standard/extension version of the feature depending on

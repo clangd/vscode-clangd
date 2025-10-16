@@ -127,7 +127,7 @@ class TypeHierarchyFeature implements vscodelc.StaticFeature {
         !serverCapabilities.standardTypeHierarchyProvider) {
       // Disable mis-guided support for standard type-hierarchy feature.
       this.context.client.getFeature('textDocument/prepareTypeHierarchy')
-          .dispose();
+          .clear();
       this.serverSupportsTypeHierarchy = true;
       this.recomputeEnableTypeHierarchy();
     } else {
@@ -136,7 +136,7 @@ class TypeHierarchyFeature implements vscodelc.StaticFeature {
     }
   }
   getState(): vscodelc.FeatureState { return {kind: 'static'}; }
-  dispose() {}
+  clear() {}
 
   private recomputeEnableTypeHierarchy() {
     if (this.state === vscodelc.State.Running) {

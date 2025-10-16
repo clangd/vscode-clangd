@@ -75,7 +75,7 @@ class MemoryUsageFeature implements vscodelc.StaticFeature {
                                    'memoryUsageProvider' in capabilities);
   }
   getState(): vscodelc.FeatureState { return {kind: 'static'}; }
-  dispose() {}
+  clear() {}
 }
 
 class TreeAdapter implements vscode.TreeDataProvider<InternalTree> {

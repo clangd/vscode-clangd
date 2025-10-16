@@ -2,32 +2,35 @@
 // This wraps `@clangd/install` in the VSCode UI. See that package for more.
 
 import * as common from '@clangd/install';
-import AbortController from 'abort-controller';
 import * as path from 'path';
 import * as vscode from 'vscode';
 
-import {ClangdContext} from './clangd-context';
 import * as config from './config';
 
 // Returns the clangd path to be used, or null if clangd is not installed.
-export async function activate(
-    context: ClangdContext, globalStoragePath: string,
-    workspaceState: vscode.Memento): Promise<string|null> {
-  // If the workspace overrides clangd.path, give the user a chance to bless it.
-  await config.getSecureOrPrompt<string>('path', workspaceState);
-
-  const ui = new UI(context, globalStoragePath, workspaceState);
-  context.subscriptions.push(vscode.commands.registerCommand(
+export async function activate(disposables: vscode.Disposable[],
+                               globalStoragePath: string):
+    Promise<string|null> {
+  const ui = await UI.create(disposables, globalStoragePath);
+  disposables.push(vscode.commands.registerCommand(
       'clangd.install', async () => common.installLatest(ui)));
-  context.subscriptions.push(vscode.commands.registerCommand(
+  disposables.push(vscode.commands.registerCommand(
       'clangd.update', async () => common.checkUpdates(true, ui)));
-  const status = await common.prepare(ui, config.get<boolean>('checkUpdates'));
+  const status =
+      await common.prepare(ui, await config.get<boolean>('checkUpdates'));
   return status.clangdPath;
 }
 
 class UI {
-  constructor(private context: ClangdContext, private globalStoragePath: string,
-              private workspaceState: vscode.Memento) {}
+  static async create(disposables: vscode.Disposable[],
+                      globalStoragePath: string): Promise<UI> {
+    const ui = new UI(disposables, globalStoragePath);
+    await ui.resolveClangdPath();
+    return ui;
+  }
+
+  private constructor(private disposables: vscode.Disposable[],
+                      private globalStoragePath: string) {}
 
   get storagePath(): string { return this.globalStoragePath; }
   async choose(prompt: string, options: string[]): Promise<string|undefined> {
@@ -61,11 +64,17 @@ class UI {
     });
     return Promise.resolve(result); // Thenable to real promise.
   }
+  localize(message: string, ...args: Array<string|number|boolean>): string {
+    let ret = message;
+    for (const i in args) {
+      ret = ret.replace(`{${i}}`, args[i].toString());
+    }
+    return ret;
+  }
   error(s: string) { vscode.window.showErrorMessage(s); }
   info(s: string) { vscode.window.showInformationMessage(s); }
   command(name: string, body: () => any) {
-    this.context.subscriptions.push(
-        vscode.commands.registerCommand(name, body));
+    this.disposables.push(vscode.commands.registerCommand(name, body));
   }
 
   async shouldReuse(release: string): Promise<boolean|undefined> {
@@ -86,9 +95,13 @@ class UI {
     }
   }
 
+  private _pathUpdated: Promise<void>|null = null;
+
   async promptReload(message: string) {
-    if (await vscode.window.showInformationMessage(message, 'Reload window'))
-      vscode.commands.executeCommand('workbench.action.reloadWindow');
+    vscode.window.showInformationMessage(message);
+    await this._pathUpdated;
+    this._pathUpdated = null;
+    vscode.commands.executeCommand('clangd.restart');
   }
 
   async showHelp(message: string, url: string) {
@@ -124,16 +137,27 @@ class UI {
       common.installLatest(this);
   }
 
-  get clangdPath(): string {
-    let p = config.getSecure<string>('path', this.workspaceState)!;
+  async resolveClangdPath() {
+    let p = await config.get<string>('path');
     // Backwards compatibility: if it's a relative path with a slash, interpret
     // relative to project root.
     if (!path.isAbsolute(p) && p.includes(path.sep) &&
-        vscode.workspace.rootPath !== undefined)
+        vscode.workspace.rootPath !== undefined) {
       p = path.join(vscode.workspace.rootPath, p);
-    return p;
+    }
+
+    this._clangdPath = p;
   }
+
+  private _clangdPath?: string = undefined;
+
+  get clangdPath(): string { return this._clangdPath as string; }
   set clangdPath(p: string) {
-    config.update('path', p, vscode.ConfigurationTarget.Global);
+    this._pathUpdated = new Promise(resolve => {
+      config.update('path', p, vscode.ConfigurationTarget.Global).then(() => {
+        this._clangdPath = p;
+        resolve();
+      });
+    });
   }
 }

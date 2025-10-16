@@ -5,6 +5,7 @@ import * as ast from './ast';
 import * as config from './config';
 import * as configFileWatcher from './config-file-watcher';
 import * as fileStatus from './file-status';
+import * as inactiveRegions from './inactive-regions';
 import * as inlayHints from './inlay-hints';
 import * as install from './install';
 import * as memoryUsage from './memory-usage';
@@ -62,31 +63,52 @@ class EnableEditsNearCursorFeature implements vscodelc.StaticFeature {
     extendedCompletionCapabilities.editsNearCursor = true;
   }
   getState(): vscodelc.FeatureState { return {kind: 'static'}; }
-  dispose() {}
+  clear() {}
 }
 
 export class ClangdContext implements vscode.Disposable {
-  subscriptions: vscode.Disposable[] = [];
-  client!: ClangdLanguageClient;
+  subscriptions: vscode.Disposable[];
+  client: ClangdLanguageClient;
 
-  async activate(globalStoragePath: string, outputChannel: vscode.OutputChannel,
-                 workspaceState: vscode.Memento) {
+  static async create(globalStoragePath: string,
+                      outputChannel: vscode.OutputChannel):
+      Promise<ClangdContext|null> {
+    const subscriptions: vscode.Disposable[] = [];
+    const clangdPath = await install.activate(subscriptions, globalStoragePath);
+    if (!clangdPath) {
+      subscriptions.forEach((d) => { d.dispose(); });
+      return null;
+    }
 
-    const clangdPath =
-        await install.activate(this, globalStoragePath, workspaceState);
-    if (!clangdPath)
-      return;
+    return new ClangdContext(subscriptions, await ClangdContext.createClient(
+                                                clangdPath, outputChannel));
+  }
 
+  private static async createClient(clangdPath: string,
+                                    outputChannel: vscode.OutputChannel):
+      Promise<ClangdLanguageClient> {
+    const useScriptAsExecutable =
+        await config.get<boolean>('useScriptAsExecutable');
+    let clangdArguments = await config.get<string[]>('arguments');
+    if (useScriptAsExecutable) {
+      let quote = (str: string) => { return `"${str}"`; };
+      clangdPath = quote(clangdPath)
+      for (var i = 0; i < clangdArguments.length; i++) {
+        clangdArguments[i] = quote(clangdArguments[i]);
+      }
+    }
     const clangd: vscodelc.Executable = {
       command: clangdPath,
-      args:
-          await config.getSecureOrPrompt<string[]>('arguments', workspaceState),
-      options: {cwd: vscode.workspace.rootPath || process.cwd()}
+      args: clangdArguments,
+      options: {
+        cwd: vscode.workspace.rootPath || process.cwd(),
+        shell: useScriptAsExecutable
+      }
     };
-    const traceFile = config.get<string>('trace');
+    const traceFile = await config.get<string>('trace');
     if (!!traceFile) {
       const trace = {CLANGD_TRACE: traceFile};
-      clangd.options = {env: {...process.env, ...trace}};
+      clangd.options = {...clangd.options, env: {...process.env, ...trace}};
     }
     const serverOptions: vscodelc.ServerOptions = clangd;
 
@@ -95,7 +117,7 @@ export class ClangdContext implements vscode.Disposable {
       documentSelector: getDocumentSelector(),
       initializationOptions: {
         clangdFileStatus: true,
-        fallbackFlags: config.get<string[]>('fallbackFlags')
+        fallbackFlags: await config.get<string[]>('fallbackFlags')
       },
       outputChannel: outputChannel,
       // Do not switch to output window when clangd returns output.
@@ -118,10 +140,13 @@ export class ClangdContext implements vscode.Disposable {
       middleware: {
         provideCompletionItem: async (document, position, context, token,
                                       next) => {
+          if (!await config.get<boolean>('enableCodeCompletion'))
+            return new vscode.CompletionList([], /*isIncomplete=*/ false);
           let list = await next(document, position, context, token);
-          if (!config.get<boolean>('serverCompletionRanking'))
+          if (!await config.get<boolean>('serverCompletionRanking'))
             return list;
-          let items = (Array.isArray(list) ? list : list!.items).map(item => {
+          let items = (!list ? [] : Array.isArray(list) ? list : list.items);
+          items = items.map(item => {
             // Gets the prefix used by VSCode when doing fuzzymatch.
             let prefix = document.getText(
                 new vscode.Range((item.range as vscode.Range).start, position))
@@ -133,9 +158,28 @@ export class ClangdContext implements vscode.Disposable {
             // notice until the behavior was in several releases, so we need
             // to override it on the client.
             item.commitCharacters = [];
+            // VSCode won't automatically trigger signature help when entering
+            // a placeholder, e.g. if the completion inserted brackets and
+            // placed the cursor inside them.
+            // https://github.com/microsoft/vscode/issues/164310
+            // They say a plugin should trigger this, but LSP has no mechanism.
+            // https://github.com/microsoft/language-server-protocol/issues/274
+            // (This workaround is incomplete, and only helps the first param).
+            if (item.insertText instanceof vscode.SnippetString &&
+                !item.command &&
+                item.insertText.value.match(/[([{<,] ?\$\{?[01]\D/))
+              item.command = {
+                title: 'Signature help',
+                command: 'editor.action.triggerParameterHints'
+              };
             return item;
           })
           return new vscode.CompletionList(items, /*isIncomplete=*/ true);
+        },
+        provideHover: async (document, position, token, next) => {
+          if (!await config.get<boolean>('enableHover'))
+            return null;
+          return next(document, position, token);
         },
         // VSCode applies fuzzy match only on the symbol name, thus it throws
         // away all results if query token is a prefix qualified name.
@@ -153,6 +197,11 @@ export class ClangdContext implements vscode.Disposable {
             if (query.includes('::')) {
               if (symbol.containerName)
                 symbol.name = `${symbol.containerName}::${symbol.name}`;
+              // results from clangd strip the leading '::', so vscode fuzzy
+              // match will filter out all results unless we add prefix back in
+              if (query.startsWith('::')) {
+                symbol.name = `::${symbol.name}`;
+              }
               // Clean the containerName to avoid displaying it twice.
               symbol.containerName = '';
             }
@@ -162,23 +211,36 @@ export class ClangdContext implements vscode.Disposable {
       },
     };
 
-    this.client = new ClangdLanguageClient('Clang Language Server',
-                                           serverOptions, clientOptions);
-    this.client.clientOptions.errorHandler =
-        this.client.createDefaultErrorHandler(
-            // max restart count
-            config.get<boolean>('restartAfterCrash') ? /*default*/ 4 : 0);
-    this.client.registerFeature(new EnableEditsNearCursorFeature);
+    const client = new ClangdLanguageClient('Clang Language Server',
+                                            serverOptions, clientOptions);
+    client.clientOptions.errorHandler = client.createDefaultErrorHandler(
+        // max restart count
+        await config.get<boolean>('restartAfterCrash') ? /*default*/ 4 : 0);
+    client.registerFeature(new EnableEditsNearCursorFeature);
+
+    return client;
+  }
+
+  private constructor(subscriptions: vscode.Disposable[],
+                      client: ClangdLanguageClient) {
+    this.subscriptions = subscriptions;
+    this.client = client;
+
+    this.startClient();
+  }
+
+  async startClient() {
     typeHierarchy.activate(this);
     inlayHints.activate(this);
     memoryUsage.activate(this);
     ast.activate(this);
     openConfig.activate(this);
+    inactiveRegions.activate(this);
+    await configFileWatcher.activate(this);
     this.client.start();
     console.log('Clang Language Server is now active!');
     fileStatus.activate(this);
     switchSourceHeader.activate(this);
-    configFileWatcher.activate(this);
   }
 
   get visibleClangdEditors(): vscode.TextEditor[] {
@@ -186,9 +248,18 @@ export class ClangdContext implements vscode.Disposable {
         (e) => isClangdDocument(e.document));
   }
 
+  clientIsStarting() {
+    return this.client && this.client.state == vscodelc.State.Starting;
+  }
+
+  clientIsRunning() {
+    return this.client && this.client.state == vscodelc.State.Running;
+  }
+
   dispose() {
     this.subscriptions.forEach((d) => { d.dispose(); });
-    this.client.stop();
+    if (this.client)
+      this.client.stop();
     this.subscriptions = []
   }
 }

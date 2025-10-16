@@ -1,0 +1,39 @@
+name: Publish unstable release
+on:
+  workflow_dispatch: 
+    inputs:
+      tag:
+        description: 'Tag name'
+        required: true
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    steps:
+    - name: start X server
+      run: |
+        Xvfb :99 -screen 0 1024x768x24 > /dev/null 2>&1 &
+        echo "DISPLAY=:99" >> $GITHUB_ENV
+    - uses: actions/checkout@v5
+    - name: read version
+      id: version
+      uses: martinbeentjes/npm-get-version-action@v1.3.1
+    - name: read commit id
+      id: commit_id
+      run: echo "commit_id=$(git rev-parse --short HEAD)" >> "$GITHUB_OUTPUT"
+    - name: ci
+      run: npm ci
+    - name: test
+      run: npm test
+    - name: package
+      run: npm run package
+    - name: rename
+      run: mv vscode-clangd-${{ steps.version.outputs.current-version }}.vsix
+              vscode-clangd-unstable-${{ steps.commit_id.outputs.commit_id }}.vsix
+    - name: publish to Github
+      uses: ncipollo/release-action@v1
+      with:
+        artifacts: "vscode-clangd-unstable-${{ steps.commit_id.outputs.commit_id }}.vsix"
+        tag: ${{ github.event.inputs.tag }}
+        commit: master
+        prerelease: true
+        token: ${{ secrets.GITHUB_TOKEN }}

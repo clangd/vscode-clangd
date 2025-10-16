@@ -1,36 +1,24 @@
 // Entry point for all tests.
 // Spawns VSCode with our extension, and then runs *.test.ts in that context.
 
-import * as glob from 'glob';
+import {runTests} from '@vscode/test-electron';
+import {glob} from 'glob';
 import * as Mocha from 'mocha';
 import * as path from 'path';
-import {runTests} from 'vscode-test';
 
 // The entry point under VSCode - find the test files and run them in Mocha.
-export function run(): Promise<void> {
+export async function run(): Promise<void> {
   const mocha = new Mocha({ui: 'tdd', color: true});
   const testsRoot = path.resolve(__dirname, '..');
 
-  return new Promise((c, e) => {
-    glob('**/**.test.js', {cwd: testsRoot}, (err, files) => {
-      if (err) {
-        return e(err);
-      }
-      files.forEach(f => mocha.addFile(path.resolve(testsRoot, f)));
+  const files = await glob('**/**.test.ts', {cwd: testsRoot});
+  files.forEach(f => mocha.addFile(path.resolve(testsRoot, f)));
 
-      try {
-        // Run the mocha test
-        mocha.run(failures => {
-          if (failures > 0) {
-            e(new Error(`${failures} tests failed.`));
-          } else {
-            c();
-          }
-        });
-      } catch (err) {
-        e(err);
-      }
-    });
+  // Run the mocha test
+  mocha.run(failures => {
+    if (failures > 0) {
+      throw new Error(`${failures} tests failed.`);
+    }
   });
 }
 
