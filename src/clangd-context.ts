@@ -20,8 +20,18 @@ export const clangdDocumentSelector = [
   {scheme: 'file', language: 'objective-cpp'},
 ];
 
+function getDocumentSelector()
+{
+  var documentSelector = clangdDocumentSelector;
+  if (vscode.workspace.getConfiguration('clangd').get('enableHLSL'))
+    documentSelector.push({scheme: 'file', language: 'hlsl'});
+  return documentSelector;
+}
+
 export function isClangdDocument(document: vscode.TextDocument) {
-  return vscode.languages.match(clangdDocumentSelector, document);
+  const documentSelector = getDocumentSelector();
+
+  return vscode.languages.match(documentSelector, document);
 }
 
 class ClangdLanguageClient extends vscodelc.LanguageClient {
@@ -61,6 +71,7 @@ export class ClangdContext implements vscode.Disposable {
 
   async activate(globalStoragePath: string, outputChannel: vscode.OutputChannel,
                  workspaceState: vscode.Memento) {
+
     const clangdPath =
         await install.activate(this, globalStoragePath, workspaceState);
     if (!clangdPath)
@@ -81,7 +92,7 @@ export class ClangdContext implements vscode.Disposable {
 
     const clientOptions: vscodelc.LanguageClientOptions = {
       // Register the server for c-family and cuda files.
-      documentSelector: clangdDocumentSelector,
+      documentSelector: getDocumentSelector(),
       initializationOptions: {
         clangdFileStatus: true,
         fallbackFlags: config.get<string[]>('fallbackFlags')

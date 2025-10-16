@@ -20,7 +20,8 @@
         "C++",
         "clang",
         "clangd",
-        "LLVM"
+        "LLVM",
+        "HLSL"
     ],
     "activationEvents": [
         "onLanguage:c",
@@ -28,6 +29,7 @@
         "onLanguage:cuda-cpp",
         "onLanguage:objective-c",
         "onLanguage:objective-cpp",
+        "onLanguage:hlsl",
         "onCommand:clangd.activate",
         "onCommand:clangd.install",
         "onCommand:clangd.update"
@@ -150,6 +152,11 @@
                     "type": "boolean",
                     "default": true,
                     "description": "Warn about conflicting extensions and suggest disabling them."
+                },
+                "clangd.enableHLSL": {
+                    "type": "boolean",
+                    "default": false,
+                    "description": "Enable experimental HLSL Support."
                 }
             }
         },
