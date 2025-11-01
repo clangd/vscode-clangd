@@ -53,15 +53,15 @@
     "devDependencies": {
         "@types/glob": "^9.0.0",
         "@types/mocha": "^10.0.7",
-        "@types/node": "^24.6.1",
+        "@types/node": "^24.9.2",
         "@types/sinon": "^17.0.4",
         "@types/vscode": "^1.75.0",
         "@vscode/test-electron": "^2.5.2",
         "@vscode/vsce": "^3.6.2",
         "clang-format": "^1.8.0",
-        "esbuild": "^0.25.10",
+        "esbuild": "^0.25.11",
         "glob": "^11.0.3",
-        "mocha": "^11.7.3",
+        "mocha": "^11.7.4",
         "ovsx": "^0.10.6",
         "sinon": "^21.0.0",
         "typescript": "^5.9.3"
