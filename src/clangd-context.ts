@@ -233,6 +233,7 @@ export class ClangdContext implements vscode.Disposable {
   private async overrideDiagnostics() {
     const context = this; // create closure for accessing ClangdContext members
     context.userDiagnosticsDelayAfterEdit = await config.get<number>('diagnosticsDelay.afterTyping') ?? this.defaultDiagnosticsDelayAfterEdit;
+    context.postEditDelayer = new vscodelcAsync.Delayer<void>(this.userDiagnosticsDelayAfterEdit * 1000);
     
     // Add middleware to client options after the client is created
     const originalMiddleware = this.client.clientOptions.middleware || {};
