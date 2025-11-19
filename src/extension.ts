@@ -116,6 +116,15 @@ export async function activate(context: vscode.ExtensionContext):
     }, 5000);
   }
 
+  context.subscriptions.push(
+    // Watch for config changes so user can change the diagnostics delay setting at will
+    vscode.workspace.onDidChangeConfiguration((conf) =>
+    {
+      if (conf.affectsConfiguration('clangd.diagnosticsDelay.afterTyping') && clangdContext)
+        clangdContext.updateDelay();
+      })
+  );
+
   apiInstance = new ClangdExtensionImpl(clangdContext?.client);
   return apiInstance;
 }
