@@ -4,6 +4,7 @@ import {ClangdContext, isClangdDocument} from './clangd-context';
 import * as config from './config';
 import * as fileStatus from './file-status';
 import * as install from './install';
+import * as memoryUsage from './memory-usage';
 import * as typeHierarchy from './type-hierarchy';
 
 /**
@@ -38,6 +39,7 @@ export class ClangdContextManager implements vscode.Disposable {
     install.activate(this);
 
     fileStatus.activate(this);
+    memoryUsage.activate(this);
     typeHierarchy.activate(this);
 
     this.registerWorkspaceFolderHandlers();
