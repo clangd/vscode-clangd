@@ -2,6 +2,7 @@ import * as vscode from 'vscode';
 
 import {ClangdContext, isClangdDocument} from './clangd-context';
 import * as config from './config';
+import * as install from './install';
 
 /**
  * Manages ClangdContext instances for multi-root workspace support.
@@ -32,6 +33,8 @@ export class ClangdContextManager implements vscode.Disposable {
   constructor(private readonly globalStoragePath: string) {}
 
   async activate(): Promise<void> {
+    install.activate(this);
+
     this.registerWorkspaceFolderHandlers();
 
     // Create contexts lazily based on already-open documents
