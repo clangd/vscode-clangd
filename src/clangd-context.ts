@@ -7,7 +7,6 @@ import * as configFileWatcher from './config-file-watcher';
 import * as inactiveRegions from './inactive-regions';
 import * as inlayHints from './inlay-hints';
 import * as install from './install';
-import * as memoryUsage from './memory-usage';
 import * as openConfig from './open-config';
 import * as switchSourceHeader from './switch-source-header';
 
@@ -247,7 +246,6 @@ export class ClangdContext implements vscode.Disposable {
 
   async startClient() {
     inlayHints.activate(this);
-    memoryUsage.activate(this);
     ast.activate(this);
     openConfig.activate(this);
     inactiveRegions.activate(this);
