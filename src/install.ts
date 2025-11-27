@@ -11,7 +11,7 @@ import * as config from './config';
 export async function activate(disposables: vscode.Disposable[],
                                globalStoragePath: string):
     Promise<string|null> {
-  const ui = await UI.create(disposables, globalStoragePath);
+  const ui = await UI.create(globalStoragePath);
   disposables.push(vscode.commands.registerCommand(
       'clangd.install', async () => common.installLatest(ui)));
   disposables.push(vscode.commands.registerCommand(
@@ -22,15 +22,13 @@ export async function activate(disposables: vscode.Disposable[],
 }
 
 class UI {
-  static async create(disposables: vscode.Disposable[],
-                      globalStoragePath: string): Promise<UI> {
-    const ui = new UI(disposables, globalStoragePath);
+  static async create(globalStoragePath: string): Promise<UI> {
+    const ui = new UI(globalStoragePath);
     await ui.resolveClangdPath();
     return ui;
   }
 
-  private constructor(private disposables: vscode.Disposable[],
-                      private globalStoragePath: string) {}
+  private constructor(private globalStoragePath: string) {}
 
   get storagePath(): string { return this.globalStoragePath; }
   async choose(prompt: string, options: string[]): Promise<string|undefined> {
@@ -73,9 +71,6 @@ class UI {
   }
   error(s: string) { vscode.window.showErrorMessage(s); }
   info(s: string) { vscode.window.showInformationMessage(s); }
-  command(name: string, body: () => any) {
-    this.disposables.push(vscode.commands.registerCommand(name, body));
-  }
 
   async shouldReuse(release: string): Promise<boolean|undefined> {
     const message = `clangd ${release} is already installed!`;
