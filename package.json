@@ -194,6 +194,12 @@
                     "type": "boolean",
                     "default": true,
                     "description": "Enable clangd language server features"
+                },
+                "clangd.enablePerFolderServer": {
+                    "type": "boolean",
+                    "default": false,
+                    "scope": "window",
+                    "description": "Run a separate clangd instance for each workspace folder. When disabled (default), a single global clangd instance handles all folders."
                 }
             }
         },
