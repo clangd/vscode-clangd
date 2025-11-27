@@ -3,8 +3,9 @@
 import * as vscode from 'vscode';
 import * as vscodelc from 'vscode-languageclient/node';
 
+import type {ASTNode, ASTParams} from '../api/vscode-clangd';
+
 import {ClangdContext} from './clangd-context';
-import type {ASTParams, ASTNode} from '../api/vscode-clangd';
 
 const ASTRequestMethod = 'textDocument/ast';
 
