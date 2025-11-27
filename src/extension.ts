@@ -6,8 +6,6 @@ import {ClangdExtensionImpl} from './api';
 import {ClangdContextManager} from './clangd-context-manager';
 import {get, update} from './config';
 
-let apiInstance: ClangdExtensionImpl|undefined;
-
 /**
  *  This method is called when the extension is activated. The extension is
  *  activated the very first time a command is executed.
@@ -16,6 +14,10 @@ export async function activate(context: vscode.ExtensionContext):
     Promise<ClangdExtension> {
   const contextManager = new ClangdContextManager(context.globalStoragePath);
   context.subscriptions.push(contextManager);
+
+  // Create the API instance that wraps the context manager
+  const apiInstance = new ClangdExtensionImpl(contextManager);
+  context.subscriptions.push(apiInstance);
 
   context.subscriptions.push(
       vscode.commands.registerCommand('clangd.activate', async () => {
@@ -62,10 +64,6 @@ export async function activate(context: vscode.ExtensionContext):
           // No active context, restart global
           contextManager.disposeContext(null);
           await contextManager.createContext(null);
-        }
-
-        if (apiInstance) {
-          apiInstance.client = contextManager.getActiveContext()?.client;
         }
       }));
   context.subscriptions.push(
@@ -121,7 +119,5 @@ export async function activate(context: vscode.ExtensionContext):
     }, 5000);
   }
 
-  apiInstance =
-      new ClangdExtensionImpl(contextManager.getActiveContext()?.client);
   return apiInstance;
 }
