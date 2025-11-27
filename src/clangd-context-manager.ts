@@ -4,6 +4,7 @@ import {ClangdContext, isClangdDocument} from './clangd-context';
 import * as config from './config';
 import * as fileStatus from './file-status';
 import * as install from './install';
+import * as typeHierarchy from './type-hierarchy';
 
 /**
  * Manages ClangdContext instances for multi-root workspace support.
@@ -37,6 +38,7 @@ export class ClangdContextManager implements vscode.Disposable {
     install.activate(this);
 
     fileStatus.activate(this);
+    typeHierarchy.activate(this);
 
     this.registerWorkspaceFolderHandlers();
 
