@@ -2,6 +2,7 @@ import * as vscode from 'vscode';
 
 import {ClangdContext, isClangdDocument} from './clangd-context';
 import * as config from './config';
+import * as fileStatus from './file-status';
 import * as install from './install';
 
 /**
@@ -34,6 +35,8 @@ export class ClangdContextManager implements vscode.Disposable {
 
   async activate(): Promise<void> {
     install.activate(this);
+
+    fileStatus.activate(this);
 
     this.registerWorkspaceFolderHandlers();
 

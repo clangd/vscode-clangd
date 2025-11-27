@@ -4,7 +4,6 @@ import * as vscodelc from 'vscode-languageclient/node';
 import * as ast from './ast';
 import * as config from './config';
 import * as configFileWatcher from './config-file-watcher';
-import * as fileStatus from './file-status';
 import * as inactiveRegions from './inactive-regions';
 import * as inlayHints from './inlay-hints';
 import * as install from './install';
@@ -260,7 +259,6 @@ export class ClangdContext implements vscode.Disposable {
                              ? ` for the ${this.workspaceFolder.name} folder`
                              : '';
     console.log(`Clang Language Server is now active${folderSuffix}!`);
-    fileStatus.activate(this);
     switchSourceHeader.activate(this);
   }
 
