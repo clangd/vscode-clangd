@@ -1,5 +1,6 @@
 import * as vscode from 'vscode';
 
+import * as ast from './ast';
 import {ClangdContext, isClangdDocument} from './clangd-context';
 import * as config from './config';
 import * as fileStatus from './file-status';
@@ -38,6 +39,7 @@ export class ClangdContextManager implements vscode.Disposable {
   async activate(): Promise<void> {
     install.activate(this);
 
+    ast.activate(this);
     fileStatus.activate(this);
     memoryUsage.activate(this);
     typeHierarchy.activate(this);

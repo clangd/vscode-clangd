@@ -1,7 +1,6 @@
 import * as vscode from 'vscode';
 import * as vscodelc from 'vscode-languageclient/node';
 
-import * as ast from './ast';
 import * as config from './config';
 import * as configFileWatcher from './config-file-watcher';
 import * as inactiveRegions from './inactive-regions';
@@ -246,7 +245,6 @@ export class ClangdContext implements vscode.Disposable {
 
   async startClient() {
     inlayHints.activate(this);
-    ast.activate(this);
     openConfig.activate(this);
     inactiveRegions.activate(this);
     await configFileWatcher.activate(this);
