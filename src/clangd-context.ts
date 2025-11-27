@@ -6,7 +6,6 @@ import * as configFileWatcher from './config-file-watcher';
 import * as inactiveRegions from './inactive-regions';
 import * as inlayHints from './inlay-hints';
 import * as install from './install';
-import * as openConfig from './open-config';
 
 export function clangdDocumentSelector(workspaceFolder: vscode.WorkspaceFolder|
                                        null): vscodelc.DocumentSelector {
@@ -244,7 +243,6 @@ export class ClangdContext implements vscode.Disposable {
 
   async startClient() {
     inlayHints.activate(this);
-    openConfig.activate(this);
     inactiveRegions.activate(this);
     await configFileWatcher.activate(this);
     this.client.start();
