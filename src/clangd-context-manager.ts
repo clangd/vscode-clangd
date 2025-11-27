@@ -4,6 +4,7 @@ import * as ast from './ast';
 import {ClangdContext, isClangdDocument} from './clangd-context';
 import * as config from './config';
 import * as fileStatus from './file-status';
+import * as inlayHints from './inlay-hints';
 import * as install from './install';
 import * as memoryUsage from './memory-usage';
 import * as openConfig from './open-config';
@@ -43,6 +44,7 @@ export class ClangdContextManager implements vscode.Disposable {
 
     ast.activate(this);
     fileStatus.activate(this);
+    inlayHints.activate(this);
     memoryUsage.activate(this);
     openConfig.activate(this);
     switchSourceHeader.activate(this);
