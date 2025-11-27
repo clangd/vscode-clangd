@@ -1,4 +1,5 @@
 import * as vscode from 'vscode';
+import * as vscodelcAsync from 'vscode-languageclient/lib/common/utils/async';
 import * as vscodelc from 'vscode-languageclient/node';
 
 import * as ast from './ast';
@@ -59,6 +60,14 @@ class EnableEditsNearCursorFeature implements vscodelc.StaticFeature {
 export class ClangdContext implements vscode.Disposable {
   subscriptions: vscode.Disposable[];
   client: ClangdLanguageClient;
+
+  diagnosticsHandle =
+      vscode.languages.createDiagnosticCollection('Delayed diagnostics');
+  diagnosticsCache: Map<string, vscode.Diagnostic[]> = new Map();
+  defaultDiagnosticsDelayAfterEdit = 0.75;
+  userDiagnosticsDelayAfterEdit = this.defaultDiagnosticsDelayAfterEdit;
+  postEditDelayer = new vscodelcAsync.Delayer<void>(
+      this.userDiagnosticsDelayAfterEdit * 1000);
 
   static async create(globalStoragePath: string,
                       outputChannel: vscode.OutputChannel):
@@ -197,8 +206,8 @@ export class ClangdContext implements vscode.Disposable {
             }
             return symbol;
           })
-        },
-      },
+        }
+      }
     };
 
     const client = new ClangdLanguageClient('Clang Language Server',
@@ -216,7 +225,62 @@ export class ClangdContext implements vscode.Disposable {
     this.subscriptions = subscriptions;
     this.client = client;
 
+    // Add onto middleware hooks with an async function so that we can call
+    // config.get()
+    this.overrideDiagnostics();
+
     this.startClient();
+  }
+
+  async overrideDiagnostics() {
+    const context = this; // create closure for accessing ClangdContext members
+    context.userDiagnosticsDelayAfterEdit =
+        await config.get<number>('diagnosticsDelay.afterTyping') ??
+        this.defaultDiagnosticsDelayAfterEdit;
+    context.postEditDelayer = new vscodelcAsync.Delayer<void>(
+        this.userDiagnosticsDelayAfterEdit * 1000);
+
+    // Add middleware to client options after the client is created
+    const originalMiddleware = this.client.clientOptions.middleware || {};
+
+    this.client.clientOptions.middleware = {
+      ...originalMiddleware,
+      handleDiagnostics: (uri, diagnostics, next) => {
+        // Delay the displaying of diagnostics if:
+        // 1. They are non-empty AND
+        // 2. The user asked for diagnostics to be delayed after typing
+        // Rule #1 means that regardless of user settings we will always update
+        // diagnostics immediately if the document's new diagnostics state is a
+        // clean bill of health (no errors, no warnings) rather than leaving
+        // stale diagnostics on-screen
+        if (diagnostics.length > 0 &&
+            context.userDiagnosticsDelayAfterEdit > 0.0)
+          context.diagnosticsCache.set(
+              uri.toString(), diagnostics); // save diagnostics for later
+        else {
+          context.diagnosticsCache
+              .clear(); // prevent outdated cache from appearing after this
+
+          // Let diagnostics pass through to client, but we have to do this
+          // through our custom diagnostics collection, not by calling
+          // "next(uri, diagnostics)", because the custom collection overrides
+          // the built-in diagnostics
+          context.diagnosticsHandle.set(uri, diagnostics);
+        }
+      },
+      didChange: async (event, next) => {
+        if (context.userDiagnosticsDelayAfterEdit > 0.0) {
+          // The user did something, so restart timer for when to reveal
+          // diagnostics
+          context.postEditDelayer.cancel();
+          context.postEditDelayer.trigger(
+              () => { context.revealDiagnostics(); });
+        }
+
+        // Allow document change to be processed
+        next(event);
+      }
+    };
   }
 
   async startClient() {
@@ -251,5 +315,24 @@ export class ClangdContext implements vscode.Disposable {
     if (this.client)
       this.client.stop();
     this.subscriptions = []
+  }
+
+  // Send to VSC the last diagnostics received from clangd
+  revealDiagnostics() {
+    for (const [key, diagnostics] of this.diagnosticsCache) {
+      const uri = vscode.Uri.parse(key);
+      this.diagnosticsHandle.set(uri, diagnostics);
+    }
+
+    this.diagnosticsCache.clear();
+  }
+
+  // React to user changing the diagnostics delay
+  async updateDelay() {
+    this.userDiagnosticsDelayAfterEdit =
+        await config.get<number>('diagnosticsDelay.afterTyping') ??
+        this.defaultDiagnosticsDelayAfterEdit;
+    this.postEditDelayer = new vscodelcAsync.Delayer<void>(
+        this.userDiagnosticsDelayAfterEdit * 1000);
   }
 }
