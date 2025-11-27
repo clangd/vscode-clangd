@@ -10,7 +10,6 @@ import * as install from './install';
 import * as memoryUsage from './memory-usage';
 import * as openConfig from './open-config';
 import * as switchSourceHeader from './switch-source-header';
-import * as typeHierarchy from './type-hierarchy';
 
 export function clangdDocumentSelector(workspaceFolder: vscode.WorkspaceFolder|
                                        null): vscodelc.DocumentSelector {
@@ -247,7 +246,6 @@ export class ClangdContext implements vscode.Disposable {
   }
 
   async startClient() {
-    typeHierarchy.activate(this);
     inlayHints.activate(this);
     memoryUsage.activate(this);
     ast.activate(this);
