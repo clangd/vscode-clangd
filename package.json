@@ -110,14 +110,17 @@
                     "items": {
                         "type": "string"
                     },
+                    "scope": "resource",
                     "description": "Arguments for clangd server."
                 },
                 "clangd.trace": {
                     "type": "string",
+                    "scope": "resource",
                     "description": "Names a file that clangd should log a performance trace to, in chrome trace-viewer JSON format."
                 },
                 "clangd.semanticHighlighting": {
                     "type": "boolean",
+                    "scope": "resource",
                     "default": true,
                     "description": "Enable semantic highlighting in clangd.",
                     "deprecationMessage": "Legacy semanticHighlights is no longer supported. Please use `editor.semanticHighlighting.enabled` instead."
@@ -128,26 +131,31 @@
                     "items": {
                         "type": "string"
                     },
+                    "scope": "resource",
                     "description": "Extra clang flags used to parse files when no compilation database is found."
                 },
                 "clangd.serverCompletionRanking": {
                     "type": "boolean",
                     "default": true,
+                    "scope": "resource",
                     "description": "Always rank completion items on the server as you type. This produces more accurate results at the cost of higher latency than client-side filtering."
                 },
                 "clangd.restartAfterCrash": {
                     "type": "boolean",
                     "default": true,
+                    "scope": "resource",
                     "description": "Auto restart clangd (up to 4 times) if it crashes."
                 },
                 "clangd.checkUpdates": {
                     "type": "boolean",
+                    "scope": "resource",
                     "default": false,
                     "description": "Check for language server updates on startup."
                 },
                 "clangd.onConfigChanged": {
                     "type": "string",
                     "default": "prompt",
+                    "scope": "resource",
                     "description": "What to do when clangd configuration files are changed. Ignored for clangd 12+, which can reload such files itself; however, this can be overridden with clangd.onConfigChangedForceEnable.",
                     "enum": [
                         "prompt",
@@ -163,6 +171,7 @@
                 "clangd.onConfigChangedForceEnable": {
                     "type": "boolean",
                     "default": false,
+                    "scope": "resource",
                     "description": "Force enable of \"On Config Changed\" option regardless of clangd version."
                 },
                 "clangd.detectExtensionConflicts": {
@@ -173,26 +182,31 @@
                 "clangd.inactiveRegions.useBackgroundHighlight": {
                     "type": "boolean",
                     "default": false,
+                    "scope": "resource",
                     "description": "Use a background highlight rather than opacity to identify inactive preprocessor regions."
                 },
                 "clangd.inactiveRegions.opacity": {
                     "type": "number",
                     "default": 0.55,
+                    "scope": "resource",
                     "description": "Opacity of inactive regions (used only if clangd.inactiveRegions.useBackgroundHighlight=false)"
                 },
                 "clangd.enableCodeCompletion": {
                     "type": "boolean",
                     "default": true,
+                    "scope": "resource",
                     "description": "Enable code completion provided by the language server"
                 },
                 "clangd.enableHover": {
                     "type": "boolean",
                     "default": true,
+                    "scope": "resource",
                     "description": "Enable hovers provided by the language server"
                 },
                 "clangd.enable": {
                     "type": "boolean",
                     "default": true,
+                    "scope": "resource",
                     "description": "Enable clangd language server features"
                 },
                 "clangd.enablePerFolderServer": {
