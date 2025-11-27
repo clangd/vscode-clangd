@@ -66,7 +66,6 @@ export class ClangdContext implements vscode.Disposable {
   defaultDiagnosticsDelayAfterEdit = 0.75;
   userDiagnosticsDelayAfterEdit = this.defaultDiagnosticsDelayAfterEdit;
   postEditDelayer = new vscodelcAsync.Delayer<void>(this.userDiagnosticsDelayAfterEdit * 1000);
-  noDelayOnNextDiag = false;
 
   static async create(globalStoragePath: string,
                       outputChannel: vscode.OutputChannel):
@@ -230,7 +229,7 @@ export class ClangdContext implements vscode.Disposable {
     this.startClient();
   }
 
-  private async overrideDiagnostics() {
+  async overrideDiagnostics() {
     const context = this; // create closure for accessing ClangdContext members
     context.userDiagnosticsDelayAfterEdit = await config.get<number>('diagnosticsDelay.afterTyping') ?? this.defaultDiagnosticsDelayAfterEdit;
     context.postEditDelayer = new vscodelcAsync.Delayer<void>(this.userDiagnosticsDelayAfterEdit * 1000);
@@ -256,8 +255,6 @@ export class ClangdContext implements vscode.Disposable {
           // "next(uri, diagnostics)", because the custom collection overrides the built-in diagnostics
           context.diagnosticsHandle.set(uri, diagnostics);
         }
-
-        context.noDelayOnNextDiag = false;
       },
       didChange: async (event, next) => {
         if (context.userDiagnosticsDelayAfterEdit > 0.0)
@@ -317,7 +314,6 @@ export class ClangdContext implements vscode.Disposable {
     }
 
     this.diagnosticsCache.clear();
-    this.noDelayOnNextDiag = false;
   }
 
   // React to user changing the diagnostics delay
