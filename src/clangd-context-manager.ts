@@ -6,6 +6,7 @@ import * as config from './config';
 import * as fileStatus from './file-status';
 import * as install from './install';
 import * as memoryUsage from './memory-usage';
+import * as switchSourceHeader from './switch-source-header';
 import * as typeHierarchy from './type-hierarchy';
 
 /**
@@ -42,6 +43,7 @@ export class ClangdContextManager implements vscode.Disposable {
     ast.activate(this);
     fileStatus.activate(this);
     memoryUsage.activate(this);
+    switchSourceHeader.activate(this);
     typeHierarchy.activate(this);
 
     this.registerWorkspaceFolderHandlers();

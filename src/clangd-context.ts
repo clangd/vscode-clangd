@@ -7,7 +7,6 @@ import * as inactiveRegions from './inactive-regions';
 import * as inlayHints from './inlay-hints';
 import * as install from './install';
 import * as openConfig from './open-config';
-import * as switchSourceHeader from './switch-source-header';
 
 export function clangdDocumentSelector(workspaceFolder: vscode.WorkspaceFolder|
                                        null): vscodelc.DocumentSelector {
@@ -253,7 +252,6 @@ export class ClangdContext implements vscode.Disposable {
                              ? ` for the ${this.workspaceFolder.name} folder`
                              : '';
     console.log(`Clang Language Server is now active${folderSuffix}!`);
-    switchSourceHeader.activate(this);
   }
 
   /**
