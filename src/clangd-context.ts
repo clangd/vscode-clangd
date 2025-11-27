@@ -69,25 +69,24 @@ export class ClangdContext implements vscode.Disposable {
   subscriptions: vscode.Disposable[];
   client: ClangdLanguageClient;
   readonly workspaceFolder: vscode.WorkspaceFolder|null;
+  readonly ui: install.UI;
 
   static async create(globalStoragePath: string,
                       workspaceFolder: vscode.WorkspaceFolder|
                       null): Promise<ClangdContext|undefined> {
-    const subscriptions: vscode.Disposable[] = [];
-    const clangdPath = await install.activate(subscriptions, globalStoragePath);
+    const ui = await install.UI.create(globalStoragePath, workspaceFolder);
+    const clangdPath = await install.prepare(ui, workspaceFolder);
     if (!clangdPath) {
-      subscriptions.forEach((d) => { d.dispose(); });
       return undefined;
     }
 
     const outputChannelName =
         workspaceFolder ? `clangd (${workspaceFolder.name})` : 'clangd';
 
-    return new ClangdContext(subscriptions,
-                             await ClangdContext.createClient(clangdPath,
+    return new ClangdContext(await ClangdContext.createClient(clangdPath,
                                                               outputChannelName,
                                                               workspaceFolder),
-                             workspaceFolder);
+                             workspaceFolder, ui);
   }
 
   private static async createClient(clangdPath: string,
@@ -237,12 +236,13 @@ export class ClangdContext implements vscode.Disposable {
     return client;
   }
 
-  private constructor(subscriptions: vscode.Disposable[],
-                      client: ClangdLanguageClient,
-                      workspaceFolder: vscode.WorkspaceFolder|null) {
-    this.subscriptions = subscriptions;
+  private constructor(client: ClangdLanguageClient,
+                      workspaceFolder: vscode.WorkspaceFolder|null,
+                      ui: install.UI) {
+    this.subscriptions = [];
     this.client = client;
     this.workspaceFolder = workspaceFolder;
+    this.ui = ui;
 
     this.startClient();
   }

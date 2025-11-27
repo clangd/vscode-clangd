@@ -5,6 +5,7 @@ import * as vscodelc from 'vscode-languageclient/node';
 import {ClangdContext, clangdDocumentSelector} from '../src/clangd-context';
 import * as config from '../src/config';
 import * as inactiveRegions from '../src/inactive-regions';
+import * as install from '../src/install';
 
 import * as mocks from './mocks';
 
@@ -14,6 +15,7 @@ class MockClangdContext implements ClangdContext {
   workspaceFolder: vscode.WorkspaceFolder|null = null;
   outputChannel = vscode.window.createOutputChannel('clangd-test');
   documentSelector: vscodelc.DocumentSelector = clangdDocumentSelector(null);
+  ui = {} as install.UI;
 
   visibleClangdEditors: vscode.TextEditor[] = [];
 
