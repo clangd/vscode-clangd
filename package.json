@@ -98,6 +98,21 @@
                     "scope": "machine-overridable",
                     "description": "The path to clangd executable, e.g.: /usr/bin/clangd."
                 },
+                "clangd.linux.path": {
+                    "type": "string",
+                    "scope": "machine-overridable",
+                    "description": "Overrides the clangd.path setting on Linux, e.g.: /usr/bin/clangd."
+                },
+                "clangd.win32.path": {
+                    "type": "string",
+                    "scope": "machine-overridable",
+                    "description": "Overrides the clangd.path setting on Windows, e.g.: C:\\Program Files\\clangd\\clangd.exe."
+                },
+                "clangd.darwin.path": {
+                    "type": "string",
+                    "scope": "machine-overridable",
+                    "description": "Overrides the clangd.path setting on macOS, e.g.: /Applications/clangd.app/Contents/MacOS/clangd."
+                },
                 "clangd.useScriptAsExecutable": {
                     "type": "boolean",
                     "default": false,
@@ -111,6 +126,27 @@
                         "type": "string"
                     },
                     "description": "Arguments for clangd server."
+                },
+                "clangd.linux.arguments": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    },
+                    "description": "Overrides the clangd.arguments for clangd server on Linux."
+                },
+                "clangd.win32.arguments": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    },
+                    "description": "Overrides the clangd.arguments for clangd server on Windows."
+                },
+                "clangd.darwin.arguments": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    },
+                    "description": "Overrides the clangd.arguments for clangd server on macOS."
                 },
                 "clangd.trace": {
                     "type": "string",
@@ -129,6 +165,27 @@
                         "type": "string"
                     },
                     "description": "Extra clang flags used to parse files when no compilation database is found."
+                },
+                "clangd.linux.fallbackFlags": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    },
+                    "description": "Overrides the clangd.fallbackFlags for clangd server on Linux."
+                },
+                "clangd.win32.fallbackFlags": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    },
+                    "description": "Overrides the clangd.fallbackFlags for clangd server on Windows."
+                },
+                "clangd.darwin.fallbackFlags": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    },
+                    "description": "Overrides the clangd.fallbackFlags for clangd server on macOS."
                 },
                 "clangd.serverCompletionRanking": {
                     "type": "boolean",
