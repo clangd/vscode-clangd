@@ -190,6 +190,11 @@
                     "default": true,
                     "description": "Enable hovers provided by the language server"
                 },
+                "clangd.followSymlinks": {
+                    "type": "boolean",
+                    "default": false,
+                    "description": "Resolve navigation targets to canonical filesystem paths when possible (deduplicates editors when files are accessed via symlinks or junctions). Applies to file: URIs only."
+                },
                 "clangd.enable": {
                     "type": "boolean",
                     "default": true,
