@@ -1,3 +1,4 @@
+import * as vscode from 'vscode';
 import {BaseLanguageClient} from 'vscode-languageclient';
 import * as vscodelc from 'vscode-languageclient/node';
 
@@ -11,8 +12,24 @@ export interface ClangdApiV1 {
   languageClient: BaseLanguageClient|undefined
 }
 
+export interface ClangdApiV2 {
+  // Get the language client for a specific document or URI.
+  // If uri is undefined, returns the client for the active editor.
+  // Returns undefined if no client is available for the given URI.
+  getLanguageClient(uri?: vscode.Uri): BaseLanguageClient|undefined;
+
+  // Get all active language clients (one per workspace folder in per-folder
+  // mode, or a single global client otherwise).
+  getAllLanguageClients(): BaseLanguageClient[];
+
+  // Event fired when clients are added or removed (e.g., when workspace
+  // folders change or when clangd instances are restarted).
+  onDidChangeClients: vscode.Event<void>;
+}
+
 export interface ClangdExtension {
   getApi(version: 1): ClangdApiV1;
+  getApi(version: 2): ClangdApiV2;
 }
 
 // clangd custom request types
