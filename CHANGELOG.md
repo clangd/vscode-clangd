@@ -1,5 +1,9 @@
 # Change Log
 
+## Version 0.4.0: January 20, 2025
+
+* Stable release of changes in versions 0.3.0, 0.3.1, and 0.3.2
+
 ## Version 0.3.2: September 29, 2025
 
 * Add a command to shut down the server explicitly [#866](https://github.com/clangd/vscode-clangd/pull/866).
