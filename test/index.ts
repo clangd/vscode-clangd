@@ -25,8 +25,8 @@ export async function run(): Promise<void> {
 // The main entry point: its job is to launch VSCode and execute run() under it.
 async function main() {
   try {
-    // The extension to be loaded is in the parent directory.
-    const extensionDevelopmentPath = path.resolve(__dirname, '../');
+    // The extension to be loaded is in the project root directory.
+    const extensionDevelopmentPath = path.resolve(__dirname, '../../');
     // The run() function to run in vscode is defined in this file.
     const extensionTestsPath = __filename;
     // Download VS Code, unzip it and run the integration test
