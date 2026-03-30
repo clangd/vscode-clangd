@@ -1,6 +1,6 @@
 # Change Log
 
-## Version 0.4.0: January 20, 2025
+## Version 0.4.0: January 20, 2026
 
 * Stable release of changes in versions 0.3.0, 0.3.1, and 0.3.2
 
