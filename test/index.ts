@@ -3,7 +3,7 @@
 
 import {runTests} from '@vscode/test-electron';
 import {glob} from 'glob';
-import * as Mocha from 'mocha';
+import Mocha = require('mocha');
 import * as path from 'path';
 
 // The entry point under VSCode - find the test files and run them in Mocha.
@@ -24,17 +24,12 @@ export async function run(): Promise<void> {
 
 // The main entry point: its job is to launch VSCode and execute run() under it.
 async function main() {
-  try {
-    // The extension to be loaded is in the project root directory.
-    const extensionDevelopmentPath = path.resolve(__dirname, '../../');
-    // The run() function to run in vscode is defined in this file.
-    const extensionTestsPath = __filename;
-    // Download VS Code, unzip it and run the integration test
-    await runTests({extensionDevelopmentPath, extensionTestsPath});
-  } catch (err) {
-    console.error('Failed to run tests');
-    process.exit(1);
-  }
+  // The extension to be loaded is in the project root directory.
+  const extensionDevelopmentPath = path.resolve(__dirname, '../../');
+  // The run() function to run in vscode is defined in this file.
+  const extensionTestsPath = __filename;
+  // Download VS Code, unzip it and run the integration test
+  await runTests({extensionDevelopmentPath, extensionTestsPath});
 }
 
 if (require.main === module) {
