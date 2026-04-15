@@ -1,11 +1,11 @@
 import * as vscode from 'vscode';
 import * as vscodelc from 'vscode-languageclient/node';
 
-import {ClangdContext} from './clangd-context';
+import {ClangdContextManager} from './clangd-context-manager';
 
-export function activate(context: ClangdContext) {
-  context.subscriptions.push(vscode.commands.registerCommand(
-      'clangd.switchheadersource', () => switchSourceHeader(context.client)));
+export function activate(manager: ClangdContextManager) {
+  manager.subscriptions.push(vscode.commands.registerCommand(
+      'clangd.switchheadersource', () => switchSourceHeader(manager)));
 }
 
 namespace SwitchSourceHeaderRequest {
@@ -15,15 +15,24 @@ export const type =
             'textDocument/switchSourceHeader');
 }
 
-async function switchSourceHeader(client: vscodelc.LanguageClient):
+async function switchSourceHeader(manager: ClangdContextManager):
     Promise<void> {
-  if (!vscode.window.activeTextEditor)
+  const editor = vscode.window.activeTextEditor;
+  if (!editor)
     return;
-  const uri = vscode.Uri.file(vscode.window.activeTextEditor.document.fileName);
+
+  const context = manager.getContextForDocument(editor.document);
+  if (!context) {
+    vscode.window.showInformationMessage(
+        'No clangd instance available for this document');
+    return;
+  }
+
+  const uri = vscode.Uri.file(editor.document.fileName);
 
   const docIdentifier = vscodelc.TextDocumentIdentifier.create(uri.toString());
-  const sourceUri =
-      await client.sendRequest(SwitchSourceHeaderRequest.type, docIdentifier);
+  const sourceUri = await context.client.sendRequest(
+      SwitchSourceHeaderRequest.type, docIdentifier);
   if (!sourceUri) {
     vscode.window.showInformationMessage('Didn\'t find a corresponding file.');
     return;
