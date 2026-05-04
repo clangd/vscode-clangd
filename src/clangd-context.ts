@@ -148,7 +148,7 @@ export class ClangdContext implements vscode.Disposable {
               prefix = document.getText(new vscode.Range(start, position));
             }
             if (prefix)
-            item.filterText = prefix + '_' + item.filterText;
+              item.filterText = prefix + '_' + item.filterText;
             // Workaround for https://github.com/clangd/vscode-clangd/issues/357
             // clangd's used of commit-characters was well-intentioned, but
             // overall UX is poor. Due to vscode-languageclient bugs, we didn't
