@@ -138,8 +138,15 @@ export class ClangdContext implements vscode.Disposable {
           let items = (!list ? [] : Array.isArray(list) ? list : list.items);
           items = items.map(item => {
             // Gets the prefix used by VSCode when doing fuzzymatch.
-            let prefix = document.getText(
-                new vscode.Range((item.range as vscode.Range).start, position))
+            // item.range is either a Range or {inserting, replacing} (see
+            // CompletionItem in the VS Code API); narrow before using.
+            let prefix = '';
+            if (item.range) {
+              const start = item.range instanceof vscode.Range
+                                ? item.range.start
+                                : item.range.inserting.start;
+              prefix = document.getText(new vscode.Range(start, position));
+            }
             if (prefix)
             item.filterText = prefix + '_' + item.filterText;
             // Workaround for https://github.com/clangd/vscode-clangd/issues/357
