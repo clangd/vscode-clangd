@@ -138,7 +138,7 @@ class UI {
   }
 
   async resolveClangdPath() {
-    let p = await config.get<string>('path');
+    let p = await config.getPath();
     // Backwards compatibility: if it's a relative path with a slash, interpret
     // relative to project root.
     if (!path.isAbsolute(p) && p.includes(path.sep) &&

@@ -8,10 +8,39 @@ export async function get<T>(key: string): Promise<T> {
       vscode.workspace.getConfiguration('clangd').get<T>(key)!);
 }
 
+// Gets clangd.path with platform-specific override support:
+// clangd.path.<linux|osx|windows> falls back to clangd.path.
+export async function getPath(): Promise<string> {
+  const platformKey = currentPlatformKey();
+  if (platformKey) {
+    const platformPath = await substitute(vscode.workspace
+                                              .getConfiguration('clangd')
+                                              .get<string|null>(
+                                                  `path.${platformKey}`));
+    if (platformPath) {
+      return platformPath;
+    }
+  }
+  return await get<string>('path');
+}
+
 // Sets the config value `clangd.<key>`. Does not apply substitutions.
 export function update<T>(key: string, value: T,
                           target?: vscode.ConfigurationTarget) {
   return vscode.workspace.getConfiguration('clangd').update(key, value, target);
+}
+
+function currentPlatformKey(): 'linux'|'osx'|'windows'|null {
+  switch (process.platform) {
+    case 'linux':
+      return 'linux';
+    case 'darwin':
+      return 'osx';
+    case 'win32':
+      return 'windows';
+    default:
+      return null;
+  }
 }
 
 // Traverse a JSON value, replacing placeholders in all strings.
