@@ -1,5 +1,9 @@
 # Change Log
 
+## Version 0.6.0: May 21, 2026
+
+* Stable release of changes in version 0.5.0.
+
 ## Version 0.5.0: May 9, 2026
 
 * Support InsertReplaceEdit in code completion middleware [#954](https://github.com/clangd/vscode-clangd/pull/954).
