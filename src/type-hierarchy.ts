@@ -71,10 +71,14 @@ const dummyNode: TypeHierarchyItem = {
 };
 
 class TypeHierarchyTreeItem extends vscode.TreeItem {
-  constructor(item: TypeHierarchyItem) {
+  constructor(item: TypeHierarchyItem, direction: TypeHierarchyDirection) {
     super(item.name);
-    if (item.children) {
-      if (item.children.length === 0) {
+    this.description = item.detail;
+    this.iconPath = new vscode.ThemeIcon('symbol-class');
+    let subItems = direction === TypeHierarchyDirection.Children ? item.children
+                                                                 : item.parents;
+    if (subItems) {
+      if (subItems.length === 0) {
         this.collapsibleState = vscode.TreeItemCollapsibleState.None;
       } else {
         this.collapsibleState = vscode.TreeItemCollapsibleState.Expanded;
@@ -224,7 +228,7 @@ class TypeHierarchyProvider implements
   }
 
   public getTreeItem(element: TypeHierarchyItem): vscode.TreeItem {
-    return new TypeHierarchyTreeItem(element);
+    return new TypeHierarchyTreeItem(element, this.direction);
   }
 
   public getParent(element: TypeHierarchyItem): TypeHierarchyItem|null {
@@ -257,9 +261,15 @@ class TypeHierarchyProvider implements
           await this.client.sendRequest(ResolveTypeHierarchyRequest.type, {
             item: element,
             direction: TypeHierarchyDirection.Children,
-            resolve: 1
+            resolve: 2 // We need 2 levels to understand collapsible state
           });
       element.children = resolved?.children;
+      // Cut-of existing sub-children to resolve them later
+      element.children?.forEach(x => {
+        if (x.children?.length !== 0) {
+          x.children = undefined;
+        }
+      });
     }
     return element.children ?? [];
   }
@@ -317,9 +327,7 @@ class TypeHierarchyProvider implements
 
       this._onDidChangeTreeData.fire(null);
 
-      // This focuses the "explorer" view container which contains the
-      // type hierarchy view.
-      vscode.commands.executeCommand('workbench.view.explorer');
+      vscode.commands.executeCommand('clangd.typeHierarchyView.focus');
 
       // This expands and focuses the type hierarchy view.
       // Focus the item on which the operation was invoked, not the
