@@ -61,7 +61,7 @@ export class ClangdContext implements vscode.Disposable {
   client: ClangdLanguageClient;
 
   static async create(globalStoragePath: string,
-                      outputChannel: vscode.OutputChannel):
+                      outputChannel: vscode.LogOutputChannel):
       Promise<ClangdContext|null> {
     const subscriptions: vscode.Disposable[] = [];
     const clangdPath = await install.activate(subscriptions, globalStoragePath);
@@ -75,7 +75,7 @@ export class ClangdContext implements vscode.Disposable {
   }
 
   private static async createClient(clangdPath: string,
-                                    outputChannel: vscode.OutputChannel):
+                                    outputChannel: vscode.LogOutputChannel):
       Promise<ClangdLanguageClient> {
     const useScriptAsExecutable =
         await config.get<boolean>('useScriptAsExecutable');
@@ -235,7 +235,7 @@ export class ClangdContext implements vscode.Disposable {
     inactiveRegions.activate(this);
     await configFileWatcher.activate(this);
     this.client.start();
-    console.log('Clang Language Server is now active!');
+    this.client.info('Clang Language Server is now active!');
     fileStatus.activate(this);
     switchSourceHeader.activate(this);
   }

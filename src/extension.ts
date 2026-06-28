@@ -14,7 +14,7 @@ let apiInstance: ClangdExtensionImpl|undefined;
  */
 export async function activate(context: vscode.ExtensionContext):
     Promise<ClangdExtension> {
-  const outputChannel = vscode.window.createOutputChannel('clangd');
+  const outputChannel = vscode.window.createOutputChannel('clangd', {log: true });
   context.subscriptions.push(outputChannel);
 
   let clangdContext: ClangdContext|null = null;
