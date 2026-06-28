@@ -5,6 +5,7 @@ export class MockTextDocument implements vscode.TextDocument {
   readonly fileName: string;
   readonly isUntitled: boolean = false;
   readonly languageId: string;
+  readonly encoding: string = 'utf8';
   readonly version: number = 0;
   readonly isDirty: boolean = false;
   readonly isClosed: boolean = false;
