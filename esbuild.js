@@ -14,7 +14,11 @@ async function main() {
     platform: 'node',
     outfile: 'out/extension.js',
     external: [
-      'vscode'
+      'vscode',
+
+      // Temporary workaround for https://github.com/ZJONSSON/node-unzipper/issues/330
+      // unzipper is a dependency of @clangd/install 0.1.20
+      '@aws-sdk/client-s3'
     ],
     logLevel: 'warning',
     plugins: [
