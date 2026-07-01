@@ -48,21 +48,21 @@
     },
     "dependencies": {
         "@clangd/install": "0.1.20",
-        "vscode-languageclient": "^9.0.1"
+        "vscode-languageclient": "^10.0.1"
     },
     "devDependencies": {
         "@types/glob": "^9.0.0",
         "@types/mocha": "^10.0.7",
-        "@types/node": "^25.9.1",
+        "@types/node": "^26.0.1",
         "@types/sinon": "^21.0.1",
         "@types/vscode": "^1.75.0",
-        "@vscode/test-electron": "^2.5.2",
-        "@vscode/vsce": "^3.9.1",
+        "@vscode/test-electron": "^3.0.0",
+        "@vscode/vsce": "^3.9.2",
         "clang-format": "^1.8.0",
         "esbuild": "^0.28.1",
         "glob": "^13.0.6",
         "mocha": "^11.7.6",
-        "ovsx": "^1.0.0",
+        "ovsx": "^1.0.2",
         "sinon": "^22.0.0",
         "typescript": "^6.0.3"
     },
