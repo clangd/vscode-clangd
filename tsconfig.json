@@ -1,18 +1,10 @@
 {
     "compilerOptions": {
         "module": "commonjs",
-        "target": "es6",
+        "target": "ES2022",
         "outDir": "out",
         "lib": [
-            "es6",
-            "es2015.core",
-            "es2015.collection",
-            "es2015.generator",
-            "es2015.iterable",
-            "es2015.promise",
-            "es2015.symbol",
-            "es2016.array.include",
-            "es2017.object"
+            "ES2022",
         ],
         "sourceMap": true,
         "rootDir": ".",
