@@ -114,6 +114,50 @@ Current refactorings include:
  - use raw strings
  - rename (bound to `<F2>`, rather than a contextual code action)
 
+## Multi-Root Workspaces
+
+The extension supports VS Code [multi-root workspaces](https://code.visualstudio.com/docs/editor/workspaces/multi-root-workspaces),
+allowing you to work with multiple project folders in a single VS Code instance.
+
+By default, a single global clangd instance handles all workspace folders.
+This works well when all folders share similar build configurations.
+
+### Per-Folder Clangd Instances
+
+For more complex setups, you can enable `clangd.enablePerFolderServer` to run
+a separate clangd instance for each workspace folder. This is useful when:
+
+ - **Different clangd executables**: Each folder needs a different clangd binary
+   (e.g., running clangd in a container, remote environment, or with different
+   toolchain versions)
+ - **Environment isolation**: Different folders require different environment
+   variables or paths
+ - **Crash isolation**: A crash in one instance won't affect other projects
+ - **Memory isolation**: Large projects won't impact the responsiveness of others
+
+To enable per-folder mode, add to your workspace settings:
+
+```json
+{
+  "clangd.enablePerFolderServer": true
+}
+```
+
+**Limitation**: In per-folder mode, each clangd instance only handles files
+within its workspace folder. Files outside all workspace folders (such as
+system headers in `/usr/include`) will not have full language server support
+when opened directly. This mode is best suited for projects that don't rely
+heavily on navigating to external headers outside the workspace.
+
+When enabled, each workspace folder can have its own:
+ - `clangd.path` setting (different clangd executable per folder)
+ - `clangd.arguments` setting
+ - `.clangd` configuration file
+ - `compile_commands.json` compilation database
+
+Each clangd instance will have its own output channel (e.g., "clangd (FolderName)")
+for easier debugging.
+
 ## Bugs/contributing
 
 clangd is part of the [LLVM project](https://llvm.org).

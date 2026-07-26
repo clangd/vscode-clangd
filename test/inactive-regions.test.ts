@@ -2,15 +2,20 @@ import * as sinon from 'sinon';
 import * as vscode from 'vscode';
 import * as vscodelc from 'vscode-languageclient/node';
 
-import {ClangdContext} from '../src/clangd-context';
+import {ClangdContext, clangdDocumentSelector} from '../src/clangd-context';
 import * as config from '../src/config';
 import * as inactiveRegions from '../src/inactive-regions';
+import * as install from '../src/install';
 
 import * as mocks from './mocks';
 
 class MockClangdContext implements ClangdContext {
   subscriptions: vscode.Disposable[] = [];
   client = new vscodelc.LanguageClient('', {command: ''}, {});
+  workspaceFolder: vscode.WorkspaceFolder|null = null;
+  outputChannel = vscode.window.createOutputChannel('clangd-test');
+  documentSelector: vscodelc.DocumentSelector = clangdDocumentSelector(null);
+  ui = {} as install.UI;
 
   visibleClangdEditors: vscode.TextEditor[] = [];
 

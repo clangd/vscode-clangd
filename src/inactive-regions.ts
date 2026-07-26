@@ -51,12 +51,14 @@ export class InactiveRegionsFeature implements vscodelc.StaticFeature {
         {inactiveRegionsProvider?: any} = capabilities;
     if (serverCapabilities.inactiveRegionsProvider) {
       this.context.subscriptions.push(
-          vscode.window.onDidChangeVisibleTextEditors(async (editors) => {
+          vscode.window.onDidChangeVisibleTextEditors(async () => {
             if (!this.decorationType) {
               // If the decoration type is not yet initialized, update it
               await this.updateDecorationType();
             }
-            editors.forEach((e) => this.applyHighlights(e.document.fileName))
+            this.context.visibleClangdEditors.forEach((e) => {
+                this.applyHighlights(e.document.fileName);
+            });
           }));
       this.context.subscriptions.push(
           vscode.workspace.onDidChangeConfiguration(async (conf) => {
@@ -70,7 +72,7 @@ export class InactiveRegionsFeature implements vscodelc.StaticFeature {
             if (inactiveSettingsChanged) {
               await this.updateDecorationType();
             }
-            vscode.window.visibleTextEditors.forEach((e) => {
+            this.context.visibleClangdEditors.forEach((e) => {
               if (!this.decorationType)
                 return;
               const ranges = this.files.get(e.document.fileName);
@@ -92,7 +94,8 @@ export class InactiveRegionsFeature implements vscodelc.StaticFeature {
 
   async updateDecorationType() {
     this.decorationType?.dispose();
-    if (await config.get<boolean>('inactiveRegions.useBackgroundHighlight')) {
+    if (await config.get<boolean>('inactiveRegions.useBackgroundHighlight',
+                                  this.context.workspaceFolder)) {
       this.decorationType = vscode.window.createTextEditorDecorationType({
         isWholeLine: true,
         backgroundColor:
@@ -101,8 +104,9 @@ export class InactiveRegionsFeature implements vscodelc.StaticFeature {
     } else {
       this.decorationType = vscode.window.createTextEditorDecorationType({
         isWholeLine: true,
-        opacity:
-            (await config.get<number>('inactiveRegions.opacity')).toString()
+        opacity: (await config.get<number>('inactiveRegions.opacity',
+                                           this.context.workspaceFolder))
+                     .toString()
       });
     }
   }

@@ -5,32 +5,44 @@ import * as common from '@clangd/install';
 import * as path from 'path';
 import * as vscode from 'vscode';
 
+import {ClangdContextManager} from './clangd-context-manager';
 import * as config from './config';
 
-// Returns the clangd path to be used, or null if clangd is not installed.
-export async function activate(disposables: vscode.Disposable[],
-                               globalStoragePath: string):
-    Promise<string|null> {
-  const ui = await UI.create(disposables, globalStoragePath);
-  disposables.push(vscode.commands.registerCommand(
-      'clangd.install', async () => common.installLatest(ui)));
-  disposables.push(vscode.commands.registerCommand(
-      'clangd.update', async () => common.checkUpdates(true, ui)));
-  const status =
-      await common.prepare(ui, await config.get<boolean>('checkUpdates'));
+export function activate(manager: ClangdContextManager): void {
+  manager.subscriptions.push(
+      vscode.commands.registerCommand('clangd.install', async () => {
+        const context = manager.getActiveContext();
+        if (context?.ui) {
+          await common.installLatest(context.ui);
+        }
+      }));
+  manager.subscriptions.push(
+      vscode.commands.registerCommand('clangd.update', async () => {
+        const context = manager.getActiveContext();
+        if (context?.ui) {
+          await common.checkUpdates(true, context.ui);
+        }
+      }));
+}
+
+export async function prepare(ui: UI, workspaceFolder: vscode.WorkspaceFolder|
+                                      null): Promise<string|null> {
+  const status = await common.prepare(
+      ui, await config.get<boolean>('checkUpdates', workspaceFolder));
   return status.clangdPath;
 }
 
-class UI {
-  static async create(disposables: vscode.Disposable[],
-                      globalStoragePath: string): Promise<UI> {
-    const ui = new UI(disposables, globalStoragePath);
+export class UI {
+  static async create(globalStoragePath: string,
+                      workspaceFolder: vscode.WorkspaceFolder|
+                      null): Promise<UI> {
+    const ui = new UI(globalStoragePath, workspaceFolder);
     await ui.resolveClangdPath();
     return ui;
   }
 
-  private constructor(private disposables: vscode.Disposable[],
-                      private globalStoragePath: string) {}
+  private constructor(private globalStoragePath: string,
+                      private workspaceFolder: vscode.WorkspaceFolder|null) {}
 
   get storagePath(): string { return this.globalStoragePath; }
   async choose(prompt: string, options: string[]): Promise<string|undefined> {
@@ -73,9 +85,6 @@ class UI {
   }
   error(s: string) { vscode.window.showErrorMessage(s); }
   info(s: string) { vscode.window.showInformationMessage(s); }
-  command(name: string, body: () => any) {
-    this.disposables.push(vscode.commands.registerCommand(name, body));
-  }
 
   async shouldReuse(release: string): Promise<boolean|undefined> {
     const message = `clangd ${release} is already installed!`;
@@ -138,12 +147,13 @@ class UI {
   }
 
   async resolveClangdPath() {
-    let p = await config.get<string>('path');
+    let p = await config.get<string>('path', this.workspaceFolder);
     // Backwards compatibility: if it's a relative path with a slash, interpret
     // relative to project root.
-    if (!path.isAbsolute(p) && p.includes(path.sep) &&
-        vscode.workspace.rootPath !== undefined) {
-      p = path.join(vscode.workspace.rootPath, p);
+    const rootPath = this.workspaceFolder?.uri.fsPath ??
+                     vscode.workspace.workspaceFolders?.[0]?.uri.fsPath;
+    if (!path.isAbsolute(p) && p.includes(path.sep) && rootPath !== undefined) {
+      p = path.join(rootPath, p);
     }
 
     this._clangdPath = p;
@@ -153,8 +163,11 @@ class UI {
 
   get clangdPath(): string { return this._clangdPath as string; }
   set clangdPath(p: string) {
+    const target = this.workspaceFolder
+                       ? vscode.ConfigurationTarget.WorkspaceFolder
+                       : vscode.ConfigurationTarget.Global;
     this._pathUpdated = new Promise(resolve => {
-      config.update('path', p, vscode.ConfigurationTarget.Global).then(() => {
+      config.update('path', p, target, this.workspaceFolder).then(() => {
         this._clangdPath = p;
         resolve();
       });
