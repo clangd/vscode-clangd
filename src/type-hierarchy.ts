@@ -218,8 +218,7 @@ class TypeHierarchyProvider implements
           // Sometimes TreeView.reveal() fails. It's unclear why, and it does
           // not appear to have any visible effects, but vscode complains if you
           // don't handle the rejection promise, so we do so and log a warning.
-          console.log('Warning: TreeView.reveal() failed for reason: ' +
-                      reason);
+          this.client.warn('TreeView.reveal() failed for reason: ', reason);
         });
   }
 
@@ -330,8 +329,7 @@ class TypeHierarchyProvider implements
             // not appear to have any visible effects, but vscode complains if
             // you don't handle the rejection promise, so we do so and log a
             // warning.
-            console.log('Warning: TreeView.reveal() failed for reason: ' +
-                        reason);
+            this.client.warn('TreeView.reveal() failed for reason: ', reason);
           });
     } else {
       vscode.window.showInformationMessage(

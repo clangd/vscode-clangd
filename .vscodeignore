@@ -4,5 +4,5 @@
 !doc-assets/**
 !icon.png
 !LICENSE
-!out/bundle.js
+!out/extension.js
 !package.json
