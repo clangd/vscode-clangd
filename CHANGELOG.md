@@ -1,5 +1,9 @@
 # Change Log
 
+## Unreleased
+
+* Increase the minimum supported VS Code version from 1.75 to 1.91.
+
 ## Version 0.6.0: May 21, 2026
 
 * Stable release of changes in version 0.5.0.
