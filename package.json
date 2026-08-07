@@ -194,6 +194,11 @@
                     "type": "boolean",
                     "default": true,
                     "description": "Enable clangd language server features"
+                },
+                "clangd.waitForCompilationDatabase": {
+                    "type": "string",
+                    "default": "",
+                    "description": "Wait for specified compilation database to be ready before starting the language server. If empty, clangd will start immediately and may not have full information about the project."
                 }
             }
         },
