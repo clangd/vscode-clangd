@@ -60,6 +60,13 @@ async function replacement(name: string): Promise<string|undefined> {
       vscode.workspace.rootPath !== undefined) {
     return path.basename(vscode.workspace.rootPath);
   }
+  const workspaceFolderPrefix = 'workspaceFolder:';
+  if (name.startsWith(workspaceFolderPrefix)) {
+    const folderName = name.substr(workspaceFolderPrefix.length);
+    return vscode.workspace.workspaceFolders
+        ?.find(folder => folder.name === folderName)
+        ?.uri.fsPath;
+  }
   const envPrefix = 'env:';
   if (name.startsWith(envPrefix))
     return process.env[name.substr(envPrefix.length)] ?? '';
