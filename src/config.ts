@@ -67,7 +67,7 @@ async function replacement(name: string): Promise<string|undefined> {
   if (name.startsWith(configPrefix)) {
     const config = vscode.workspace.getConfiguration().get(
         name.substr(configPrefix.length));
-    return (typeof config === 'string') ? config : undefined;
+    return (typeof config === 'string') ? substitute(config) : undefined;
   }
   const commandPrefix = 'command:';
   if (name.startsWith(commandPrefix)) {
