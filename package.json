@@ -180,6 +180,11 @@
                     "default": 0.55,
                     "description": "Opacity of inactive regions (used only if clangd.inactiveRegions.useBackgroundHighlight=false)"
                 },
+                "clangd.diagnosticsDelay.afterTyping": {
+                    "type": "number",
+                    "default": 0.75,
+                    "description": "Number of seconds to wait after user has finished typing before showing diagnostics from clangd."
+                },
                 "clangd.enableCodeCompletion": {
                     "type": "boolean",
                     "default": true,
