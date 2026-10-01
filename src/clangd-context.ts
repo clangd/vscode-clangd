@@ -234,6 +234,13 @@ export class ClangdContext implements vscode.Disposable {
     openConfig.activate(this);
     inactiveRegions.activate(this);
     await configFileWatcher.activate(this);
+    const waitForDatabase =
+        await config.get<string>('waitForCompilationDatabase');
+    // The context may be disposed while we wait (e.g. clangd.restart), in
+    // which case we must not start the client.
+    if (waitForDatabase &&
+        !await fileStatus.waitForCompilationDatabase(this, waitForDatabase))
+      return;
     this.client.start();
     console.log('Clang Language Server is now active!');
     fileStatus.activate(this);
