@@ -108,7 +108,7 @@ function describe(role: string, kind: string): string {
 }
 
 // Map a root ASTNode onto a VSCode tree.
-class TreeAdapter implements vscode.TreeDataProvider<ASTNode> {
+export class TreeAdapter implements vscode.TreeDataProvider<ASTNode> {
   private root?: ASTNode;
   private doc?: vscode.Uri;
 
