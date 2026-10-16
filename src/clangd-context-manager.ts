@@ -1,12 +1,14 @@
 import * as vscode from 'vscode';
 
-import {ClangdContext} from './clangd-context';
+import {ClangdContext, registerFeatureCommands} from './clangd-context';
 import * as install from './install';
 
 // Owns the clangd session: locates (or installs) clangd, creates the
 // ClangdContext and implements restart and shutdown.
 //
-// Only the manager creates and disposes contexts.
+// The commands, views and status bar item of the features are registered once
+// per session and find the context to act on through the manager. Only the
+// manager creates and disposes contexts.
 export class ClangdContextManager implements vscode.Disposable {
   private readonly contextMap = new Map<string, ClangdContext>();
   // Disposables that live as long as the session, e.g. the install commands.
@@ -100,6 +102,7 @@ export class ClangdContextManager implements vscode.Disposable {
       context.dispose();
       return;
     }
+    session.push(...registerFeatureCommands(this));
     this.addContext('', context);
     await context.startClient();
   }

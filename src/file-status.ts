@@ -2,39 +2,57 @@ import * as vscode from 'vscode';
 import * as vscodelc from 'vscode-languageclient/node';
 
 import {ClangdContext} from './clangd-context';
+import type {ClangdContextManager} from './clangd-context-manager';
 
-export function activate(context: ClangdContext) {
-  context.subscriptions.push(vscode.commands.registerCommand(
-      'clangd.openOutputPanel', () => context.client.outputChannel.show()));
-  const status = new FileStatus('clangd.openOutputPanel');
-  context.subscriptions.push(vscode.Disposable.from(status));
-  context.subscriptions.push(vscode.window.onDidChangeActiveTextEditor(
-      () => { status.updateStatus(); }));
-  context.subscriptions.push(context.client.onDidChangeState(({newState}) => {
-    if (newState === vscodelc.State.Running) {
-      // clangd starts or restarts after crash.
-      context.client.onNotification(
-          'textDocument/clangd.fileStatus',
-          (fileStatus) => { status.onFileUpdated(fileStatus); });
-    } else if (newState === vscodelc.State.Stopped) {
-      // Clear all cached statuses when clangd crashes.
-      status.clear();
-    }
-  }));
+// Creates the file status bar item, shared by all contexts.
+export function registerCommands(manager: ClangdContextManager):
+    vscode.Disposable[] {
+  const status = new FileStatus(manager, 'clangd.openOutputPanel');
+  return [
+    vscode.commands.registerCommand(
+        'clangd.openOutputPanel',
+        () => manager.activeContext?.client.outputChannel.show()),
+    status,
+    vscode.window.onDidChangeActiveTextEditor(() => { status.updateStatus(); }),
+    manager.onDidAddContext((context) => { status.addContext(context); }),
+    manager.onDidRemoveContext((context) => { status.removeContext(context); }),
+  ];
 }
 
-class FileStatus {
-  private statuses = new Map<string, any>();
+class FileStatus implements vscode.Disposable {
+  // The file statuses (by file path) reported by each context.
+  private statuses = new Map<ClangdContext, Map<string, any>>();
   private readonly statusBarItem =
       vscode.window.createStatusBarItem(vscode.StatusBarAlignment.Left, 10);
 
-  constructor(onClickCommand: string) {
+  constructor(private readonly manager: ClangdContextManager,
+              onClickCommand: string) {
     this.statusBarItem.command = onClickCommand;
   }
 
-  onFileUpdated(fileStatus: any) {
+  addContext(context: ClangdContext) {
+    this.statuses.set(context, new Map());
+    context.subscriptions.push(context.client.onDidChangeState(({newState}) => {
+      if (newState === vscodelc.State.Running) {
+        // clangd starts or restarts after crash.
+        context.client.onNotification(
+            'textDocument/clangd.fileStatus',
+            (fileStatus) => { this.onFileUpdated(context, fileStatus); });
+      } else if (newState === vscodelc.State.Stopped) {
+        // Clear all cached statuses when clangd crashes.
+        this.clear(context);
+      }
+    }));
+  }
+
+  removeContext(context: ClangdContext) {
+    this.clear(context);
+    this.statuses.delete(context);
+  }
+
+  onFileUpdated(context: ClangdContext, fileStatus: any) {
     const filePath = vscode.Uri.parse(fileStatus.uri);
-    this.statuses.set(filePath.fsPath, fileStatus);
+    this.statuses.get(context)?.set(filePath.fsPath, fileStatus);
     this.updateStatus();
   }
 
@@ -45,7 +63,9 @@ class FileStatus {
     // This aligns with the behavior of other panels, e.g. problems.
     if (!activeDoc || activeDoc.uri.scheme === 'output')
       return;
-    const status = this.statuses.get(activeDoc.fileName);
+    const context = this.manager.contextFor(activeDoc.uri);
+    const status =
+        context && this.statuses.get(context)?.get(activeDoc.fileName);
     if (!status) {
       this.statusBarItem.hide();
       return;
@@ -54,9 +74,12 @@ class FileStatus {
     this.statusBarItem.show();
   }
 
-  clear() {
-    this.statuses.clear();
+  // Hides the status even while the output panel is active, then shows the
+  // status of the active editor's context, if any.
+  clear(context: ClangdContext) {
+    this.statuses.get(context)?.clear();
     this.statusBarItem.hide();
+    this.updateStatus();
   }
 
   dispose() { this.statusBarItem.dispose(); }

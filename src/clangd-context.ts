@@ -58,6 +58,34 @@ class EnableEditsNearCursorFeature implements vscodelc.StaticFeature {
   clear() {}
 }
 
+// Registers the commands, views and the status bar item of the features, which
+// are shared by all contexts. The per-client parts of the features are
+// activated by ClangdContext.startClient().
+export function registerFeatureCommands(manager: ClangdContextManager):
+    vscode.Disposable[] {
+  return [
+    ...ast.registerCommands(manager),
+    ...fileStatus.registerCommands(manager),
+    ...inlayHints.registerCommands(),
+    ...memoryUsage.registerCommands(manager),
+    ...openConfig.registerCommands(manager),
+    ...switchSourceHeader.registerCommands(manager),
+    ...typeHierarchy.registerCommands(manager),
+  ];
+}
+
+// Returns the context serving `uri` for a command, if its client is starting
+// or running. Otherwise tells the user and returns undefined.
+export function contextForCommand(manager: ClangdContextManager,
+                                  uri: vscode.Uri): ClangdContext|undefined {
+  const context = manager.contextFor(uri);
+  if (!context?.clientIsStartingOrRunning()) {
+    vscode.window.showInformationMessage('clangd is not running for this file');
+    return undefined;
+  }
+  return context;
+}
+
 // Disposes what is pushed to it.
 class DisposingArray extends Array<vscode.Disposable> {
   push(...items: vscode.Disposable[]): number {
@@ -239,10 +267,7 @@ export class ClangdContext implements vscode.Disposable {
     inlayHints.activate(this);
     memoryUsage.activate(this);
     ast.activate(this);
-    openConfig.activate(this);
     inactiveRegions.activate(this);
-    fileStatus.activate(this);
-    switchSourceHeader.activate(this);
     const watcherActivated = configFileWatcher.activate(this);
     // Assigned synchronously, so that dispose() can wait for the client to
     // finish starting: a client can't be stopped while it is starting.
