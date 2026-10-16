@@ -8,7 +8,7 @@ import * as inactiveRegions from '../src/inactive-regions';
 
 import * as mocks from './mocks';
 
-class MockClangdContext implements ClangdContext {
+class MockClangdContext {
   subscriptions: vscode.Disposable[] = [];
   client = new vscodelc.LanguageClient('', {command: ''}, {});
 
@@ -39,7 +39,8 @@ suite('InactiveRegionsFeature', () => {
 
   test('highlights correctly', async () => {
     const context = new MockClangdContext();
-    const feature = new inactiveRegions.InactiveRegionsFeature(context);
+    const feature = new inactiveRegions.InactiveRegionsFeature(
+        context as unknown as ClangdContext);
     const serverCapabilities: vscodelc.ServerCapabilities&
         {inactiveRegionsProvider?: any} = {inactiveRegionsProvider: true};
     feature.initialize(serverCapabilities, undefined);
@@ -75,7 +76,8 @@ suite('InactiveRegionsFeature', () => {
 
   test('handles URIs sent from clangd server', async () => {
     const context = new MockClangdContext();
-    const feature = new inactiveRegions.InactiveRegionsFeature(context);
+    const feature = new inactiveRegions.InactiveRegionsFeature(
+        context as unknown as ClangdContext);
     const serverCapabilities: vscodelc.ServerCapabilities&
         {inactiveRegionsProvider?: any} = {inactiveRegionsProvider: true};
     feature.initialize(serverCapabilities, undefined);

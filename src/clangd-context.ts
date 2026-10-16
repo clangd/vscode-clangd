@@ -2,12 +2,12 @@ import * as vscode from 'vscode';
 import * as vscodelc from 'vscode-languageclient/node';
 
 import * as ast from './ast';
+import type {ClangdContextManager} from './clangd-context-manager';
 import * as config from './config';
 import * as configFileWatcher from './config-file-watcher';
 import * as fileStatus from './file-status';
 import * as inactiveRegions from './inactive-regions';
 import * as inlayHints from './inlay-hints';
-import * as install from './install';
 import * as memoryUsage from './memory-usage';
 import * as openConfig from './open-config';
 import * as switchSourceHeader from './switch-source-header';
@@ -58,22 +58,30 @@ class EnableEditsNearCursorFeature implements vscodelc.StaticFeature {
   clear() {}
 }
 
+// Disposes what is pushed to it.
+class DisposingArray extends Array<vscode.Disposable> {
+  push(...items: vscode.Disposable[]): number {
+    items.forEach((d) => d.dispose());
+    return this.length;
+  }
+}
+
 export class ClangdContext implements vscode.Disposable {
-  subscriptions: vscode.Disposable[];
+  // Disposed with the context. A client disposed while it starts still
+  // initializes its features; what they subscribe to is disposed right away.
+  subscriptions: vscode.Disposable[] = [];
   client: ClangdLanguageClient;
+  readonly manager: ClangdContextManager;
+  readonly documentSelector: vscode.DocumentSelector = clangdDocumentSelector;
+  // Resolves once the client has started.
+  private clientStarted: Promise<void>|undefined;
+  private disposed = false;
 
-  static async create(globalStoragePath: string,
-                      outputChannel: vscode.LogOutputChannel):
-      Promise<ClangdContext|null> {
-    const subscriptions: vscode.Disposable[] = [];
-    const clangdPath = await install.activate(subscriptions, globalStoragePath);
-    if (!clangdPath) {
-      subscriptions.forEach((d) => { d.dispose(); });
-      return null;
-    }
-
-    return new ClangdContext(subscriptions, await ClangdContext.createClient(
-                                                clangdPath, outputChannel));
+  static async create(clangdPath: string,
+                      outputChannel: vscode.LogOutputChannel,
+                      manager: ClangdContextManager): Promise<ClangdContext> {
+    return new ClangdContext(
+        manager, await ClangdContext.createClient(clangdPath, outputChannel));
   }
 
   private static async createClient(clangdPath: string,
@@ -220,12 +228,10 @@ export class ClangdContext implements vscode.Disposable {
     return client;
   }
 
-  private constructor(subscriptions: vscode.Disposable[],
+  private constructor(manager: ClangdContextManager,
                       client: ClangdLanguageClient) {
-    this.subscriptions = subscriptions;
+    this.manager = manager;
     this.client = client;
-
-    this.startClient();
   }
 
   async startClient() {
@@ -235,16 +241,28 @@ export class ClangdContext implements vscode.Disposable {
     ast.activate(this);
     openConfig.activate(this);
     inactiveRegions.activate(this);
-    await configFileWatcher.activate(this);
-    this.client.start();
-    console.log('Clang Language Server is now active!');
     fileStatus.activate(this);
     switchSourceHeader.activate(this);
+    const watcherActivated = configFileWatcher.activate(this);
+    // Assigned synchronously, so that dispose() can wait for the client to
+    // finish starting: a client can't be stopped while it is starting.
+    this.clientStarted = watcherActivated.then(async () => {
+      if (!this.disposed)
+        await this.client.start();
+    });
+    // The client reports a failed start itself.
+    this.clientStarted.catch(() => {});
+    await watcherActivated;
+    console.log('Clang Language Server is now active!');
+  }
+
+  servesDocument(document: vscode.TextDocument) {
+    return vscode.languages.match(this.documentSelector, document) > 0;
   }
 
   get visibleClangdEditors(): vscode.TextEditor[] {
     return vscode.window.visibleTextEditors.filter(
-        (e) => isClangdDocument(e.document));
+        (e) => this.servesDocument(e.document));
   }
 
   clientIsStarting() {
@@ -255,10 +273,37 @@ export class ClangdContext implements vscode.Disposable {
     return this.client && this.client.state == vscodelc.State.Running;
   }
 
+  // Whether the client takes requests: a starting client sends them once it
+  // runs.
+  clientIsStartingOrRunning() {
+    return this.clientIsStarting() || this.clientIsRunning();
+  }
+
+  // Resolves once the client is no longer starting: it is running, or it
+  // failed to start. A client that restarts after a crash is starting again.
+  async clientSettled(): Promise<void> {
+    try {
+      await this.clientStarted;
+    } catch {
+      return;
+    }
+    while (this.clientIsStarting())
+      await new Promise<void>((resolve) => {
+        const listener = this.client.onDidChangeState(() => {
+          listener.dispose();
+          resolve();
+        });
+      });
+  }
+
   dispose() {
+    if (this.disposed)
+      return;
+    this.disposed = true;
     this.subscriptions.forEach((d) => { d.dispose(); });
-    if (this.client)
-      this.client.stop();
-    this.subscriptions = []
+    this.subscriptions = new DisposingArray();
+    // A client can't be stopped while it is starting. stop() failures, e.g.
+    // a timeout, are logged by the client.
+    this.clientSettled().then(() => this.client.stop()).catch(() => {});
   }
 }

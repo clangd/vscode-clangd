@@ -41,3 +41,7 @@ const provideHover = async (document: vscode.TextDocument, position: vscode.Posi
 
 vscode.languages.registerHoverProvider(['c', 'cpp'], { provideHover });
 ```
+
+`languageClient` is the client at the time `getApi` is called. It is undefined
+while clangd is stopped, e.g. after the `clangd.shutdown` command or while a
+restart reinstalls clangd.
