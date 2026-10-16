@@ -197,7 +197,7 @@ export class ClangdContext implements vscode.Disposable {
         shell: useScriptAsExecutable
       }
     };
-    const traceFile = await config.get<string>('trace');
+    const traceFile = await config.get<string>('trace', workspaceFolder);
     if (!!traceFile) {
       const trace = {
         CLANGD_TRACE: project ? projectTraceFile(traceFile, project) : traceFile
@@ -238,10 +238,12 @@ export class ClangdContext implements vscode.Disposable {
       middleware: {
         provideCompletionItem: async (document, position, context, token,
                                       next) => {
-          if (!await config.get<boolean>('enableCodeCompletion'))
+          if (!await config.get<boolean>('enableCodeCompletion',
+                                         workspaceFolder))
             return new vscode.CompletionList([], /*isIncomplete=*/ false);
           let list = await next(document, position, context, token);
-          if (!await config.get<boolean>('serverCompletionRanking'))
+          if (!await config.get<boolean>('serverCompletionRanking',
+                                         workspaceFolder))
             return list;
           let items = (!list ? [] : Array.isArray(list) ? list : list.items);
           items = items.map(item => {
@@ -282,7 +284,7 @@ export class ClangdContext implements vscode.Disposable {
           return new vscode.CompletionList(items, /*isIncomplete=*/ true);
         },
         provideHover: async (document, position, token, next) => {
-          if (!await config.get<boolean>('enableHover'))
+          if (!await config.get<boolean>('enableHover', workspaceFolder))
             return null;
           return next(document, position, token);
         },
@@ -325,7 +327,9 @@ export class ClangdContext implements vscode.Disposable {
         serverOptions, clientOptions);
     client.clientOptions.errorHandler = client.createDefaultErrorHandler(
         // max restart count
-        await config.get<boolean>('restartAfterCrash') ? /*default*/ 4 : 0);
+        await config.get<boolean>('restartAfterCrash', workspaceFolder)
+            ? /*default*/ 4
+            : 0);
     client.registerFeature(new EnableEditsNearCursorFeature);
 
     return client;

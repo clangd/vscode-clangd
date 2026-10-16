@@ -5,7 +5,8 @@ import {ClangdContext} from './clangd-context';
 import * as config from './config';
 
 export async function activate(context: ClangdContext) {
-  if (await config.get<string>('onConfigChanged') !== 'ignore') {
+  if (await config.get<string>('onConfigChanged', context.workspaceFolder) !==
+      'ignore') {
     context.client.registerFeature(new ConfigFileWatcherFeature(context));
   }
 }
@@ -21,7 +22,8 @@ class ConfigFileWatcherFeature implements vscodelc.StaticFeature {
 
   async initialize(capabilities: vscodelc.ServerCapabilities,
                    _documentSelector: vscodelc.DocumentSelector|undefined) {
-    if (!await config.get<boolean>('onConfigChangedForceEnable') &&
+    if (!await config.get<boolean>('onConfigChangedForceEnable',
+                                   this.context.workspaceFolder) &&
         (capabilities as ClangdClientCapabilities)
             .compilationDatabase?.automaticReload) {
       return;
@@ -93,7 +95,8 @@ class ConfigFileWatcher implements vscode.Disposable {
     if ((await vscode.workspace.fs.stat(uri)).size <= 0)
       return;
 
-    switch (await config.get<string>('onConfigChanged')) {
+    switch (await config.get<string>('onConfigChanged',
+                                     this.context.workspaceFolder)) {
     case 'restart':
       this.restart();
       break;

@@ -62,8 +62,10 @@ export class InactiveRegionsFeature implements vscodelc.StaticFeature {
           vscode.workspace.onDidChangeConfiguration(async (conf) => {
             const inactiveSettingsChanged =
                 conf.affectsConfiguration(
-                    'clangd.inactiveRegions.useBackgroundHighlight') ||
-                conf.affectsConfiguration('clangd.inactiveRegions.opacity');
+                    'clangd.inactiveRegions.useBackgroundHighlight',
+                    this.context.workspaceFolder) ||
+                conf.affectsConfiguration('clangd.inactiveRegions.opacity',
+                                          this.context.workspaceFolder);
             if (!(conf.affectsConfiguration('workbench.colorTheme') ||
                   inactiveSettingsChanged))
               return;
@@ -92,7 +94,8 @@ export class InactiveRegionsFeature implements vscodelc.StaticFeature {
 
   async updateDecorationType() {
     this.decorationType?.dispose();
-    if (await config.get<boolean>('inactiveRegions.useBackgroundHighlight')) {
+    if (await config.get<boolean>('inactiveRegions.useBackgroundHighlight',
+                                  this.context.workspaceFolder)) {
       this.decorationType = vscode.window.createTextEditorDecorationType({
         isWholeLine: true,
         backgroundColor:
@@ -101,8 +104,9 @@ export class InactiveRegionsFeature implements vscodelc.StaticFeature {
     } else {
       this.decorationType = vscode.window.createTextEditorDecorationType({
         isWholeLine: true,
-        opacity:
-            (await config.get<number>('inactiveRegions.opacity')).toString()
+        opacity: (await config.get<number>('inactiveRegions.opacity',
+                                           this.context.workspaceFolder))
+                     .toString()
       });
     }
   }

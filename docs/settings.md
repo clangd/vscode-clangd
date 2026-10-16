@@ -27,6 +27,32 @@ Changing the setting restarts clangd.
 }
 ```
 
+### Per-folder settings
+
+The following settings have `resource` scope. When
+`clangd.enablePerFolderServer` is `true`, each clangd instance reads them from
+the settings of its workspace folder, so they can differ between folders:
+
+- `clangd.arguments`
+- `clangd.fallbackFlags`
+- `clangd.trace`
+- `clangd.restartAfterCrash`
+- `clangd.onConfigChanged`
+- `clangd.onConfigChangedForceEnable`
+- `clangd.enableCodeCompletion`
+- `clangd.enableHover`
+- `clangd.serverCompletionRanking`
+- `clangd.inactiveRegions.useBackgroundHighlight`
+- `clangd.inactiveRegions.opacity`
+
+When `clangd.enablePerFolderServer` is `false`, a multi-root workspace has a
+single clangd instance, and folder values of these settings are ignored in
+favor of the workspace and user values.
+
+Settings that concern the clangd executable or the extension as a whole, such
+as `clangd.path`, `clangd.useScriptAsExecutable`, `clangd.checkUpdates` and
+`clangd.enable`, are shared by all instances.
+
 ## Security
 
 This extension allows configuring command-line flags to the `clangd` executable.
