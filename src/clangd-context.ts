@@ -34,14 +34,16 @@ class ClangdLanguageClient extends vscodelc.LanguageClient {
   // For user-interactive operations (e.g. applyFixIt, applyTweaks), we will
   // prompt up the failure to users.
 
-  handleFailedRequest<T>(type: vscodelc.MessageSignature, error: any,
-                         token: vscode.CancellationToken|undefined,
-                         defaultValue: T): T {
+  handleFailedRequest<T>(type: vscodelc.MessageSignature,
+                         token: vscode.CancellationToken|undefined, error: any,
+                         defaultValue: T, showNotification?: boolean,
+                         throwOnCancel?: boolean): T {
     if (error instanceof vscodelc.ResponseError &&
         type.method === 'workspace/executeCommand')
       vscode.window.showErrorMessage(error.message);
 
-    return super.handleFailedRequest(type, token, error, defaultValue);
+    return super.handleFailedRequest(type, token, error, defaultValue,
+                                     showNotification, throwOnCancel);
   }
 }
 
