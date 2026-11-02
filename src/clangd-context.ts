@@ -1,3 +1,4 @@
+import * as readline from 'readline';
 import * as vscode from 'vscode';
 import * as vscodelc from 'vscode-languageclient/node';
 
@@ -23,6 +24,45 @@ export const clangdDocumentSelector = [
 
 export function isClangdDocument(document: vscode.TextDocument) {
   return vscode.languages.match(clangdDocumentSelector, document);
+}
+
+// clangd writes all its logs to stderr, prefixed with a level letter, e.g.
+// `I[09:29:19.224] message`.
+const CLANGD_LOG_LINE = /^([VDIEO])\[\d{2}:\d{2}:\d{2}\.\d{3}\] ?/;
+
+/**
+ * Forwards a clangd stderr line to the output channel using the level encoded
+ * in the line. The clangd level/timestamp prefix is removed because the log
+ * channel adds its own. Lines without a level prefix (continuations of
+ * multi-line messages) reuse the previous level.
+ *
+ * @param input the clangd stderr stream
+ * @param outputChannel the channel receiving the log lines
+ */
+function pipeClangdStderr(input: NodeJS.ReadableStream,
+                          outputChannel: vscode.LogOutputChannel): void {
+  let level = 'I';
+  readline
+      .createInterface(
+          {input, crlfDelay: Infinity, terminal: false, historySize: 0})
+      .on('line', rawLine => {
+        const match = CLANGD_LOG_LINE.exec(rawLine);
+        level = match?.[1] ?? level;
+        const line = match ? rawLine.slice(match[0].length) : rawLine;
+        switch (level) {
+        case 'E':
+          outputChannel.error(line);
+          break;
+        case 'V':
+          outputChannel.trace(line);
+          break;
+        case 'D':
+          outputChannel.debug(line);
+          break;
+        default:
+          outputChannel.info(line);
+        }
+      });
 }
 
 class ClangdLanguageClient extends vscodelc.LanguageClient {
@@ -112,7 +152,15 @@ export class ClangdContext implements vscode.Disposable {
       outputChannel: outputChannel,
       // Do not switch to output window when clangd returns output.
       revealOutputChannelOn: vscodelc.RevealOutputChannelOn.Never,
-
+      stdioOptions: {
+        stdout: (input, channel) => {
+          readline
+              .createInterface(
+                  {input, crlfDelay: Infinity, terminal: false, historySize: 0})
+              .on('line', line => channel.info(line));
+        },
+        stderr: pipeClangdStderr,
+      },
       // We hack up the completion items a bit to prevent VSCode from re-ranking
       // and throwing away all our delicious signals like type information.
       //
