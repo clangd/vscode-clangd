@@ -3,6 +3,7 @@
 ## Unreleased
 
 * Increase the minimum supported VS Code version from 1.75 to 1.91.
+* Add `clangd.waitForCompilationDatabase` to have extension wait for a specific file to exist before starting clangd [#988](https://github.com/clangd/vscode-clangd/pull/988).
 
 ## Version 0.6.0: May 21, 2026
 
