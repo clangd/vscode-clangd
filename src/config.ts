@@ -4,8 +4,14 @@ import * as vscode from 'vscode';
 
 // Gets the config value `clangd.<key>`. Applies ${variable} substitutions.
 export async function get<T>(key: string): Promise<T> {
-  return await substitute(
-      vscode.workspace.getConfiguration('clangd').get<T>(key)!);
+  const platform = process.platform;
+  const config = vscode.workspace.getConfiguration('clangd');
+  let value = config.get<T>(`${platform}.${key}`);
+  if (value !== undefined) {
+    return await substitute(value);
+  }
+  value = config.get<T>(key);
+  return await substitute(value!);
 }
 
 // Sets the config value `clangd.<key>`. Does not apply substitutions.
