@@ -43,6 +43,8 @@ suite('InactiveRegionsFeature', () => {
     const serverCapabilities: vscodelc.ServerCapabilities&
         {inactiveRegionsProvider?: any} = {inactiveRegionsProvider: true};
     feature.initialize(serverCapabilities, undefined);
+    // The decoration type is created once the visible editors change.
+    await feature.updateDecorationType();
 
     const document = new mocks.MockTextDocument(vscode.Uri.file('/foo.c'), 'c');
     const editor = new mocks.MockTextEditor(document);
@@ -77,6 +79,8 @@ suite('InactiveRegionsFeature', () => {
     const serverCapabilities: vscodelc.ServerCapabilities&
         {inactiveRegionsProvider?: any} = {inactiveRegionsProvider: true};
     feature.initialize(serverCapabilities, undefined);
+    // The decoration type is created once the visible editors change.
+    await feature.updateDecorationType();
 
     const uris = [
       {
