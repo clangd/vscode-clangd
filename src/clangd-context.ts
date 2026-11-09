@@ -1,6 +1,8 @@
 import * as vscode from 'vscode';
 import * as vscodelc from 'vscode-languageclient/node';
 
+import {ClangdProject} from '../api/vscode-clangd';
+
 import * as ast from './ast';
 import type {ClangdContextManager} from './clangd-context-manager';
 import * as config from './config';
@@ -10,12 +12,7 @@ import * as inactiveRegions from './inactive-regions';
 import * as inlayHints from './inlay-hints';
 import * as memoryUsage from './memory-usage';
 import * as openConfig from './open-config';
-import {
-  ClangdProject,
-  projectKey,
-  projectName,
-  projectTraceFile
-} from './project';
+import {projectKey, projectName, projectTraceFile} from './project';
 import {SharedServerCommandsFeature} from './server-commands';
 import * as switchSourceHeader from './switch-source-header';
 import * as typeHierarchy from './type-hierarchy';
@@ -179,8 +176,10 @@ export class ClangdContext implements vscode.Disposable {
       Promise<ClangdLanguageClient> {
     const useScriptAsExecutable =
         await config.get<boolean>('useScriptAsExecutable');
-    let clangdArguments =
-        await config.get<string[]>('arguments', workspaceFolder);
+    let clangdArguments = [
+      ...await config.get<string[]>('arguments', workspaceFolder),
+      ...project?.arguments ?? []
+    ];
     if (useScriptAsExecutable) {
       let quote = (str: string) => { return `"${str}"`; };
       clangdPath = quote(clangdPath)

@@ -210,7 +210,7 @@
                     "type": "boolean",
                     "default": false,
                     "scope": "window",
-                    "markdownDescription": "Run a separate clangd instance for each workspace folder. When disabled (default), a single clangd instance handles all folders. An instance starts when one of its files is shown in an editor. Files outside all folders are not served. Folder-level values of the clangd settings take effect only in this mode."
+                    "markdownDescription": "Run a separate clangd instance for each workspace folder. When disabled (default), a single clangd instance handles all folders. Extensions can contribute projects through the API, e.g. sub-folders, which then take the place of the folders. An instance starts when one of its files is shown in an editor. Files outside all projects are not served. Folder-level values of the clangd settings take effect only in this mode."
                 }
             }
         },

@@ -1,7 +1,13 @@
 import * as vscode from 'vscode';
 import {BaseLanguageClient} from 'vscode-languageclient';
 
-import {ClangdApiV1, ClangdApiV2, ClangdExtension} from '../api/vscode-clangd';
+import {
+  ClangdApiV1,
+  ClangdApiV2,
+  ClangdExtension,
+  ClangdProject,
+  ClangdProjectProvider
+} from '../api/vscode-clangd';
 
 import {ClangdContext} from './clangd-context';
 import {ClangdContextManager} from './clangd-context-manager';
@@ -36,6 +42,25 @@ class ClangdApiV2Impl implements ClangdApiV2 {
   }
 
   get onDidChangeClients() { return this.manager.onDidChangeClients; }
+
+  get projects() { return this.manager.projects; }
+
+  getProject(uri: vscode.Uri): ClangdProject|undefined {
+    return this.manager.projectFor(uri);
+  }
+
+  get activeProject() { return this.manager.activeProject; }
+
+  get onDidChangeActiveProject() {
+    return this.manager.onDidChangeActiveProject;
+  }
+
+  get onDidChangeProjects() { return this.manager.onDidChangeProjects; }
+
+  registerProjectProvider(id: string,
+                          provider: ClangdProjectProvider): vscode.Disposable {
+    return this.manager.registerProjectProvider(id, provider);
+  }
 }
 
 export class ClangdExtensionImpl implements ClangdExtension {

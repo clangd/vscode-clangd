@@ -51,9 +51,9 @@ dependency: consumers already depend on it as VS Code extensions.
 
 ## API version 2
 
-Version 2 adds access to the clients of the multi-project mode
+Version 2 adds access to the clients and projects of the multi-project mode
 (`clangd.enablePerFolderServer`), where every project is served by its own clangd
-instance. In the default mode, there is a single client.
+instance. In the default mode, there is a single client and no projects.
 
 - `getLanguageClient(uri)` returns the client serving `uri`, and without `uri`
   the client of the active editor if it shows a C/C++ file, otherwise the one
@@ -69,3 +69,37 @@ instance. In the default mode, there is a single client.
 Only clients that are starting or running are returned. Requests sent to a
 starting client are delayed until it runs; clients that have stopped, e.g.
 after crashing too often, are left out.
+
+`projects`, `getProject(uri)`, `activeProject` and the corresponding events
+describe the projects. They are kept while clangd restarts or is shut down.
+
+By default, there is one project per workspace folder. Extensions that know
+the layout of the code, e.g. build system integrations, can contribute projects
+instead, for instance one per build directory below a workspace folder:
+
+```typescript
+const api = (await clangdExtension.activate()).getApi(2);
+
+const changed = new vscode.EventEmitter<void>();
+context.subscriptions.push(api.registerProjectProvider('my-build-system', {
+  provideProjects: async () => [
+    { uri: vscode.Uri.joinPath(folder.uri, 'release_project'), name: 'release' },
+    { uri: vscode.Uri.joinPath(folder.uri, 'debug_project'), name: 'debug',
+      arguments: ['--log=verbose'] },
+  ],
+  onDidChangeProjects: changed.event,
+}));
+```
+
+While any provider is registered, the projects are the union of the results of
+all providers, and the workspace folders are no longer projects. Projects that
+are not on disk, duplicates and projects nested in another project are ignored:
+of nested projects, only the outermost one is served. Files outside all
+projects are not served. If a provider fails or doesn't respond within 10
+seconds, its previous projects are kept; a late answer is still applied.
+Providers take effect only in multi-project mode.
+
+A provider that registers after clangd has started replaces the clients of the
+workspace folders. To avoid starting those first, a provider extension should
+activate on the same events as clangd, e.g. `onLanguage:cpp`. When a project's
+name or arguments change, its clangd restarts.

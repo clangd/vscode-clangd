@@ -5,6 +5,9 @@
 ### `clangd.enablePerFolderServer`
 
 Controls whether to run a separate clangd instance for each workspace folder.
+Other extensions can contribute projects, e.g. sub-folders of a workspace
+folder, through the [extension API](../api/README.md); these then take the
+place of the folders.
 
 - **Default**: `false`
 - **Scope**: `window` (workspace-level setting)
@@ -14,12 +17,12 @@ folders. This is simpler and uses less memory.
 
 When `true`, each project gets its own clangd instance, which starts when one
 of the project's files is shown in an editor. Its working directory is the
-project's folder, and `${workspaceFolder}` in `clangd.arguments` and
-`clangd.fallbackFlags` refers to it. Files outside all projects are not
-served. Each instance writes its own trace: with `clangd.trace` set to
-`/tmp/trace.json`, the instance of the project `app` writes
-`/tmp/trace.app-<hash>.json`, where `<hash>` identifies the project's root.
-Changing the setting restarts clangd.
+project's root, and `${workspaceFolder}` in `clangd.arguments` and
+`clangd.fallbackFlags` refers to the workspace folder containing the project.
+Files outside all projects are not served. Each instance writes its own
+trace: with `clangd.trace` set to `/tmp/trace.json`, the instance of the
+project `app` writes `/tmp/trace.app-<hash>.json`, where `<hash>` identifies
+the project's root. Changing the setting restarts clangd.
 
 ```json
 {
@@ -31,7 +34,9 @@ Changing the setting restarts clangd.
 
 The following settings have `resource` scope. When
 `clangd.enablePerFolderServer` is `true`, each clangd instance reads them from
-the settings of its workspace folder, so they can differ between folders:
+the settings of its workspace folder, so they can differ between folders.
+Projects contributed through the API in the same workspace folder share its
+values:
 
 - `clangd.arguments`
 - `clangd.fallbackFlags`

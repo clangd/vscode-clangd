@@ -125,8 +125,10 @@ This works well when all folders share similar build configurations.
 ### Per-Project Clangd Instances
 
 For more complex setups, you can enable `clangd.enablePerFolderServer` to run
-a separate clangd instance for each project, i.e. each workspace folder. This
-is useful when:
+a separate clangd instance for each project. By default, each workspace folder
+is a project; other extensions, e.g. build system integrations, can contribute
+other projects through the [extension API](api/README.md). This is useful
+when:
 
  - **Different configurations**: Each project has its own compilation database,
    `.clangd` file or `clangd.arguments`

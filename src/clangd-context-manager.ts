@@ -1,19 +1,18 @@
 import * as vscode from 'vscode';
 
 import {
+  ClangdProject,
+  ClangdProjectProvider,
+  ClangdProjectsChangeEvent
+} from '../api/vscode-clangd';
+
+import {
   ClangdContext,
   isClangdDocument,
   registerFeatureCommands
 } from './clangd-context';
 import * as install from './install';
-import {
-  ClangdProject,
-  ClangdProjectsChangeEvent,
-  projectKey,
-  projectLabel,
-  projectName,
-  ProjectSet
-} from './project';
+import {projectKey, projectLabel, projectName, ProjectSet} from './project';
 import {ServerCommandRegistry} from './server-commands';
 
 // Returns a view of `channel` that drops all calls once closed() is true: a
@@ -43,7 +42,8 @@ function multiProjectSetting(): boolean {
 //
 // By default there is a single context serving all files. With
 // clangd.enablePerFolderServer, every project gets its own context, created
-// when one of its files is shown in an editor.
+// when one of its files is shown in an editor. The projects are the workspace
+// folders, or the projects of the providers registered through the API.
 //
 // The commands, views and status bar item of the features are registered once
 // per session and find the context to act on through the manager. Only the
@@ -88,6 +88,13 @@ export class ClangdContextManager implements vscode.Disposable {
   private readonly onDidRemoveContextEmitter =
       new vscode.EventEmitter<ClangdContext>();
   readonly onDidRemoveContext = this.onDidRemoveContextEmitter.event;
+  private readonly onDidChangeProjectsEmitter =
+      new vscode.EventEmitter<ClangdProjectsChangeEvent>();
+  readonly onDidChangeProjects = this.onDidChangeProjectsEmitter.event;
+  private readonly onDidChangeActiveProjectEmitter =
+      new vscode.EventEmitter<ClangdProject|undefined>();
+  readonly onDidChangeActiveProject =
+      this.onDidChangeActiveProjectEmitter.event;
   // Fired when a client is added or removed, or starts or stops running.
   private readonly onDidChangeClientsEmitter = new vscode.EventEmitter<void>();
   readonly onDidChangeClients = this.onDidChangeClientsEmitter.event;
@@ -95,7 +102,10 @@ export class ClangdContextManager implements vscode.Disposable {
   constructor(private readonly globalStoragePath: string,
               private readonly outputChannel: vscode.LogOutputChannel) {
     this.projectSet = new ProjectSet(outputChannel);
-    this.projectSet.onDidChange((diff) => { this.projectsChanged(diff); });
+    this.projectSet.onDidChange((diff) => {
+      this.projectsChanged(diff);
+      this.onDidChangeProjectsEmitter.fire(diff);
+    });
   }
 
   // Whether every project gets its own clangd. Read when the session starts.
@@ -131,6 +141,8 @@ export class ClangdContextManager implements vscode.Disposable {
                : this.active;
   }
 
+  get activeProject(): ClangdProject|undefined { return this.active?.project; }
+
   isRunning(): boolean { return this.contexts.some(c => c.clientIsRunning()); }
 
   isStarting(): boolean {
@@ -138,11 +150,14 @@ export class ClangdContextManager implements vscode.Disposable {
            this.contexts.some(c => c.clientIsStarting());
   }
 
-  // Resolves once no start or restart of the session is in progress.
+  // Resolves once no start or restart of the session is in progress, and in
+  // multi-project mode, the projects are up to date.
   async ready(): Promise<void> {
     let busy: Promise<void>|undefined;
     while ((busy = this.starting ?? this.restarting))
       await busy.catch(() => {});
+    if (this.multiProject)
+      await this.projectSet.settled();
   }
 
   async start(): Promise<void> {
@@ -228,6 +243,14 @@ export class ClangdContextManager implements vscode.Disposable {
     return created ?? this.contextMap.get(key);
   }
 
+  // Adds a source of projects. While any provider is registered, the projects
+  // are the union of the results of all providers instead of the workspace
+  // folders.
+  registerProjectProvider(id: string,
+                          provider: ClangdProjectProvider): vscode.Disposable {
+    return this.projectSet.register(id, provider);
+  }
+
   dispose() {
     this.stopSession();
     this.projectSet.dispose();
@@ -235,6 +258,8 @@ export class ClangdContextManager implements vscode.Disposable {
     this.serverCommands.dispose();
     this.onDidAddContextEmitter.dispose();
     this.onDidRemoveContextEmitter.dispose();
+    this.onDidChangeProjectsEmitter.dispose();
+    this.onDidChangeActiveProjectEmitter.dispose();
     this.onDidChangeClientsEmitter.dispose();
   }
 
@@ -328,8 +353,8 @@ export class ClangdContextManager implements vscode.Disposable {
       this.disposeChannel(key);
       this.stopped.delete(key);
     }
-    // An updated project's client restarts with the new name, in a channel
-    // named after it.
+    // An updated project's client restarts with the new name or arguments, in
+    // a channel named after it.
     for (const project of diff.updated) {
       const key = projectKey(project.uri);
       const hadContext = this.removeContext(key);
@@ -429,7 +454,12 @@ export class ClangdContextManager implements vscode.Disposable {
       this.setActive(context);
   }
 
-  private setActive(context: ClangdContext|undefined) { this.active = context; }
+  private setActive(context: ClangdContext|undefined) {
+    const project = this.activeProject;
+    this.active = context;
+    if (this.activeProject !== project)
+      this.onDidChangeActiveProjectEmitter.fire(this.activeProject);
+  }
 
   private addContext(key: string, context: ClangdContext) {
     this.contextMap.set(key, context);

@@ -1,7 +1,10 @@
 import * as assert from 'assert';
 import * as vscode from 'vscode';
 
+import {ClangdProject, ClangdProjectsChangeEvent} from '../api/vscode-clangd';
 import * as project from '../src/project';
+
+import {settle} from './mocks';
 
 const win32Test = process.platform === 'win32' ? test : test.skip;
 const ignoresCase =
@@ -104,6 +107,13 @@ suite('Project', () => {
     assert.deepStrictEqual(diff.updated, [b2]);
   });
 
+  test('diffProjects reports projects with new arguments as updated', () => {
+    const diff = project.diffProjects([{uri: file('/w/a'), arguments: ['-x']}],
+                                      [{uri: file('/w/a'), arguments: ['-y']}]);
+    assert.strictEqual(diff.updated.length, 1);
+    assert.strictEqual(diff.added.length + diff.removed.length, 0);
+  });
+
   test('diffProjects reports renamed projects as updated', () => {
     const diff = project.diffProjects([{uri: file('/w/a'), name: 'x'}],
                                       [{uri: file('/w/a'), name: 'y'}]);
@@ -137,5 +147,127 @@ suite('Project', () => {
     assert.strictEqual(project.projectLabel(a, [a, b, c]),
                        file('/r1/app').fsPath);
     assert.strictEqual(project.projectLabel(c, [a, b, c]), 'lib');
+  });
+
+  suite('ProjectSet', () => {
+    const log = {info() {}, error() {}} as unknown as vscode.LogOutputChannel;
+    let projects: project.ProjectSet;
+
+    setup(() => { projects = new project.ProjectSet(log, 20); });
+    teardown(() => { projects.dispose(); });
+
+    test('ignores providers that fail or do not respond', async () => {
+      const p = {uri: file('/w/p')};
+      projects.register('hanging',
+                        {provideProjects: () => new Promise(() => {})});
+      projects.register(
+          'failing', {provideProjects: () => { throw new Error('failed'); }});
+      projects.register('working', {provideProjects: async () => [p]});
+      projects.activate();
+      await projects.settled();
+      assert.deepStrictEqual(projects.projects, [p]);
+    });
+
+    test('keeps the projects of a provider that fails or does not respond',
+         async () => {
+           const p = {uri: file('/w/p')};
+           const q = {uri: file('/w/q')};
+           let answer: () => unknown = () => [p, q];
+           const changed = new vscode.EventEmitter<void>();
+           projects.register('flaky', {
+             provideProjects: () => answer() as ClangdProject[],
+             onDidChangeProjects: changed.event
+           });
+           projects.activate();
+           await projects.settled();
+           const changes: ClangdProjectsChangeEvent[] = [];
+           projects.onDidChange(diff => changes.push(diff));
+           for (const failure of [() => new Promise(() => {}),
+                                 () => { throw new Error('failed'); },
+                                 () => Promise.reject(new Error('failed')),
+                                 () => [p, {}],
+                                 () => 'no projects',
+           ]) {
+             answer = failure;
+             changed.fire();
+             await projects.settled();
+             assert.deepStrictEqual(projects.projects, [p, q]);
+           }
+           assert.deepStrictEqual(changes, []);
+           answer = () => [q];
+           changed.fire();
+           await projects.settled();
+           assert.deepStrictEqual(projects.projects, [q]);
+         });
+
+    test('applies an answer that arrives after the timeout', async () => {
+      const p = {uri: file('/w/p')};
+      let resolve!: (projects: ClangdProject[]) => void;
+      projects.register('slow', {
+        provideProjects: () => new Promise<ClangdProject[]>(r => resolve = r)
+      });
+      projects.activate();
+      await projects.settled();
+      assert.deepStrictEqual(projects.projects, []);
+      resolve([p]);
+      await settle();
+      assert.deepStrictEqual(projects.projects, [p]);
+    });
+
+    test('drops a late answer once the provider was queried again',
+         async () => {
+           const p = {uri: file('/w/p')};
+           const q = {uri: file('/w/q')};
+           const resolvers: ((projects: ClangdProject[]) => void)[] = [];
+           const changed = new vscode.EventEmitter<void>();
+           projects.register('slow', {
+             provideProjects: () =>
+                 new Promise<ClangdProject[]>(r => resolvers.push(r)),
+             onDidChangeProjects: changed.event
+           });
+           projects.activate();
+           await projects.settled();
+           changed.fire();
+           resolvers[1]([q]);
+           await projects.settled();
+           resolvers[0]([p]);
+           await settle();
+           assert.deepStrictEqual(projects.projects, [q]);
+         });
+
+    test('cancels a superseded query', async () => {
+      const tokens: vscode.CancellationToken[] = [];
+      const changed = new vscode.EventEmitter<void>();
+      projects.register('hanging', {
+        provideProjects: (token) => {
+          tokens.push(token);
+          return new Promise(() => {});
+        },
+        onDidChangeProjects: changed.event
+      });
+      projects.activate();
+      changed.fire();
+      assert.strictEqual(tokens.length, 2);
+      assert.ok(tokens[0].isCancellationRequested);
+      assert.ok(!tokens[1].isCancellationRequested);
+      projects.deactivate();
+      assert.ok(tokens[1].isCancellationRequested);
+      // The cancelled queries don't wait for the timeout.
+      await projects.settled();
+    });
+
+    test('queries no provider until activated', async () => {
+      let queries = 0;
+      projects.register('test', {
+        provideProjects: () => {
+          queries++;
+          return [];
+        }
+      });
+      await projects.settled();
+      assert.strictEqual(queries, 0);
+      projects.activate();
+      assert.strictEqual(queries, 1);
+    });
   });
 });

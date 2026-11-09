@@ -1,8 +1,8 @@
 import * as assert from 'assert';
 import * as vscode from 'vscode';
 
+import {ClangdProject} from '../api/vscode-clangd';
 import {ClangdContextManager} from '../src/clangd-context-manager';
-import {ClangdProject} from '../src/project';
 
 import {
   cppEditor as editor,

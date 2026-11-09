@@ -1,10 +1,11 @@
 import * as sinon from 'sinon';
 import * as vscode from 'vscode';
 
+import {ClangdProject, ClangdProjectProvider} from '../api/vscode-clangd';
 import * as clangdContext from '../src/clangd-context';
 import {ClangdContextManager} from '../src/clangd-context-manager';
 import * as install from '../src/install';
-import {ClangdProject, uriContains} from '../src/project';
+import {uriContains} from '../src/project';
 
 export class MockTextDocument implements vscode.TextDocument {
   readonly uri: vscode.Uri;
@@ -131,6 +132,17 @@ export class FakeContext {
     this.subscriptions.forEach((d) => { d.dispose(); });
     this.disposed = true;
   }
+}
+
+export class FakeProvider implements ClangdProjectProvider {
+  projects: ClangdProject[] = [];
+  private readonly emitter = new vscode.EventEmitter<void>();
+  readonly onDidChangeProjects = this.emitter.event;
+  provideProjects(_token: vscode.CancellationToken):
+      vscode.ProviderResult<ClangdProject[]> {
+    return this.projects;
+  }
+  change() { this.emitter.fire(); }
 }
 
 // Resolves once pending promise callbacks have run.

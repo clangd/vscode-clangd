@@ -12,6 +12,49 @@ export interface ClangdApiV1 {
   languageClient: BaseLanguageClient|undefined
 }
 
+/**
+ * A directory served by its own clangd instance when
+ * clangd.enablePerFolderServer is set.
+ */
+export interface ClangdProject {
+  /** The root directory. Files below it are served by the project's clangd. */
+  readonly uri: vscode.Uri;
+  /**
+   * Shown in the UI, e.g. in the output channel name. Defaults to the
+   * basename of the root directory.
+   */
+  readonly name?: string;
+  /** Arguments passed to the project's clangd after clangd.arguments. */
+  readonly arguments?: readonly string[];
+}
+
+export interface ClangdProjectsChangeEvent {
+  readonly added: readonly ClangdProject[];
+  readonly removed: readonly ClangdProject[];
+  /** Projects whose name or arguments changed. Their clangd restarts. */
+  readonly updated: readonly ClangdProject[];
+}
+
+/** Contributes projects in multi-project mode, e.g. from a build system. */
+export interface ClangdProjectProvider {
+  /**
+   * Lists all projects up front: a client serves the files below a project's
+   * root from the start. Projects that are not on disk (scheme other than
+   * `file`), duplicates and projects nested in another project are ignored.
+   *
+   * If the provider fails, doesn't respond within 10 seconds, or returns
+   * something other than a list of projects, the projects of its last
+   * successful call are kept (none if no call has succeeded yet). This is
+   * logged in the clangd output channel. An answer after the 10 seconds is
+   * still applied, unless provideProjects() was called again meanwhile.
+   * `token` is cancelled when the result is no longer needed.
+   */
+  provideProjects(token: vscode.CancellationToken):
+      vscode.ProviderResult<readonly ClangdProject[]>;
+  /** Fired when provideProjects() would return a different result. */
+  readonly onDidChangeProjects?: vscode.Event<void>;
+}
+
 export interface ClangdApiV2 {
   /**
    * Whether clangd.enablePerFolderServer is in effect, i.e. every project has
@@ -51,6 +94,38 @@ export interface ClangdApiV2 {
    * stops.
    */
   readonly onDidChangeClients: vscode.Event<void>;
+
+  /**
+   * The projects served in multi-project mode; empty in the default mode.
+   * They are kept while clangd restarts or is shut down.
+   */
+  readonly projects: readonly ClangdProject[];
+
+  /** Returns the project containing `uri`, if any. */
+  getProject(uri: vscode.Uri): ClangdProject|undefined;
+
+  /**
+   * The project of the clangd editor focused last. Without one, the project
+   * whose client is created next becomes active.
+   */
+  readonly activeProject: ClangdProject|undefined;
+
+  /** Fired when activeProject changes. */
+  readonly onDidChangeActiveProject: vscode.Event<ClangdProject|undefined>;
+
+  /** Fired when projects are added, removed or updated. */
+  readonly onDidChangeProjects: vscode.Event<ClangdProjectsChangeEvent>;
+
+  /**
+   * Registers a source of projects. While any provider is registered, the
+   * projects are the union of the results of all providers; otherwise there
+   * is one project per workspace folder. Providers take effect only in
+   * multi-project mode; in the default mode, they are kept but not queried.
+   * Throws if `id` is already registered, or if subscribing to the
+   * provider's onDidChangeProjects throws.
+   */
+  registerProjectProvider(id: string,
+                          provider: ClangdProjectProvider): vscode.Disposable;
 }
 
 export interface ClangdExtension {
