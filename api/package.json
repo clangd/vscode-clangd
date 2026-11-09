@@ -8,5 +8,8 @@
     "homepage": "https://github.com/clangd/vscode-clangd/blob/master/api/README.md",
     "dependencies": {
         "vscode-languageclient": "10.0.0-next.20"
+    },
+    "peerDependencies": {
+        "@types/vscode": "^1.91.0"
     }
 }

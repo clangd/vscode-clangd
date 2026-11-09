@@ -138,6 +138,13 @@ export class ClangdContextManager implements vscode.Disposable {
            this.contexts.some(c => c.clientIsStarting());
   }
 
+  // Resolves once no start or restart of the session is in progress.
+  async ready(): Promise<void> {
+    let busy: Promise<void>|undefined;
+    while ((busy = this.starting ?? this.restarting))
+      await busy.catch(() => {});
+  }
+
   async start(): Promise<void> {
     if (this.session)
       return;
@@ -250,7 +257,9 @@ export class ClangdContextManager implements vscode.Disposable {
     this.stopSession();
     await this.start();
     if (this.multiProject)
-      await this.ensureContexts(keys);
+      await Promise.all(
+          this.projects.filter(p => keys.includes(projectKey(p.uri)))
+              .map(p => this.ensureContext(p.uri)));
   }
 
   private async startSession(session: vscode.Disposable[]) {
@@ -335,13 +344,6 @@ export class ClangdContextManager implements vscode.Disposable {
     await Promise.all(vscode.window.visibleTextEditors
                           .filter(e => isClangdDocument(e.document))
                           .map(e => this.ensureContext(e.document.uri)));
-  }
-
-  // Ensures there is a context for each project of `keys`.
-  private async ensureContexts(keys: readonly string[]) {
-    await Promise.all(
-        this.projects.filter(p => keys.includes(projectKey(p.uri)))
-            .map(p => this.ensureContext(p.uri)));
   }
 
   private async restartProject(uri: vscode.Uri) {
