@@ -111,6 +111,18 @@ suite('Project', () => {
     assert.strictEqual(diff.added.length + diff.removed.length, 0);
   });
 
+  test('projectTraceFile adds the project name and a hash of its root', () => {
+    const p = {uri: file('/w/a'), name: 'my app'};
+    assert.match(project.projectTraceFile('/t/trace.json', p),
+                 /^\/t\/trace\.my_app-[0-9a-f]{8}\.json$/);
+    assert.match(project.projectTraceFile('/t.d/trace', p),
+                 /^\/t\.d\/trace\.my_app-[0-9a-f]{8}$/);
+    // Projects with the same name in different places.
+    assert.notStrictEqual(
+        project.projectTraceFile('/t/trace.json', {uri: file('/r1/src')}),
+        project.projectTraceFile('/t/trace.json', {uri: file('/r2/src')}));
+  });
+
   test('projectName defaults to the basename', () => {
     assert.strictEqual(project.projectName({uri: file('/w/a')}), 'a');
     assert.strictEqual(project.projectName({uri: file('/w/a'), name: 'n'}),

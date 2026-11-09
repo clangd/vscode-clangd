@@ -1,5 +1,32 @@
 # Settings
 
+## Multi-Root Workspaces
+
+### `clangd.enablePerFolderServer`
+
+Controls whether to run a separate clangd instance for each workspace folder.
+
+- **Default**: `false`
+- **Scope**: `window` (workspace-level setting)
+
+When `false` (default), a single clangd instance handles all workspace
+folders. This is simpler and uses less memory.
+
+When `true`, each project gets its own clangd instance, which starts when one
+of the project's files is shown in an editor. Its working directory is the
+project's folder, and `${workspaceFolder}` in `clangd.arguments` and
+`clangd.fallbackFlags` refers to it. Files outside all projects are not
+served. Each instance writes its own trace: with `clangd.trace` set to
+`/tmp/trace.json`, the instance of the project `app` writes
+`/tmp/trace.app-<hash>.json`, where `<hash>` identifies the project's root.
+Changing the setting restarts clangd.
+
+```json
+{
+  "clangd.enablePerFolderServer": true
+}
+```
+
 ## Security
 
 This extension allows configuring command-line flags to the `clangd` executable.

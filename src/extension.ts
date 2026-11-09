@@ -27,8 +27,8 @@ export async function activate(context: vscode.ExtensionContext):
         }
         vscode.commands.executeCommand('clangd.restart');
       }));
-  context.subscriptions.push(
-      vscode.commands.registerCommand('clangd.restart', async () => {
+  context.subscriptions.push(vscode.commands.registerCommand(
+      'clangd.restart', async (arg?: unknown) => {
         if (!get<boolean>('enable')) {
           vscode.window
               .showInformationMessage(
@@ -43,10 +43,19 @@ export async function activate(context: vscode.ExtensionContext):
           return;
         }
 
-        await manager.restart();
+        // With a Uri (e.g. from the config file watcher), only the clangd
+        // serving it restarts.
+        await manager.restart(arg instanceof vscode.Uri ? arg : undefined);
       }));
   context.subscriptions.push(vscode.commands.registerCommand(
-      'clangd.shutdown', async () => { await manager.stop(); }));
+      'clangd.shutdown', async (arg?: unknown) => {
+        await manager.stop(arg instanceof vscode.Uri ? arg : undefined);
+      }));
+  context.subscriptions.push(vscode.workspace.onDidChangeConfiguration((e) => {
+    if (e.affectsConfiguration('clangd.enablePerFolderServer') &&
+        vscode.workspace.getConfiguration('clangd').get<boolean>('enable'))
+      vscode.commands.executeCommand('clangd.restart');
+  }));
 
   let shouldCheck = false;
 

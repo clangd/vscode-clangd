@@ -1,6 +1,7 @@
 // The project model used when clangd.enablePerFolderServer is set: every
 // project is a directory that is served by its own clangd instance.
 
+import {createHash} from 'crypto';
 import * as path from 'path';
 import * as vscode from 'vscode';
 
@@ -34,6 +35,20 @@ export function projectLabel(project: ClangdProject,
                            projectKey(p.uri) !== key && projectName(p) === name)
              ? project.uri.fsPath
              : name;
+}
+
+// The trace file of the clangd of `project`: `file` with the project's name
+// and a hash of its root before the extension, e.g. trace.json becomes
+// trace.<name>-<hash>.json. Projects with the same name get different files.
+export function projectTraceFile(file: string, project: ClangdProject): string {
+  const extension = path.extname(file);
+  const name = projectName(project).replace(/[^\w.-]/g, '_');
+  const hash = createHash('sha256')
+                   .update(projectKey(project.uri))
+                   .digest('hex')
+                   .slice(0, 8);
+  return `${file.slice(0, file.length - extension.length)}.${name}-${hash}${
+      extension}`;
 }
 
 // Paths are compared case-insensitively where file systems usually are case
@@ -99,4 +114,67 @@ export function diffProjects(oldProjects: readonly ClangdProject[],
   }
   const removed = oldProjects.filter(p => !newKeys.has(projectKey(p.uri)));
   return {added, removed, updated};
+}
+
+// The projects of the multi-project mode: one per workspace folder. While it
+// is active, the set follows the workspace folders and reports the changes.
+export class ProjectSet implements vscode.Disposable {
+  private list: ClangdProject[] = [];
+  private active = false;
+  private readonly onDidChangeEmitter =
+      new vscode.EventEmitter<ClangdProjectsChangeEvent>();
+  readonly onDidChange = this.onDidChangeEmitter.event;
+  private readonly subscriptions: vscode.Disposable[];
+
+  constructor(private readonly log: vscode.LogOutputChannel) {
+    this.subscriptions = [
+      this.onDidChangeEmitter,
+      vscode.workspace.onDidChangeWorkspaceFolders(() => { this.update(); })
+    ];
+  }
+
+  get projects(): readonly ClangdProject[] { return this.list; }
+
+  projectFor(uri: vscode.Uri): ClangdProject|undefined {
+    return this.list.find((p) => uriContains(p.uri, uri));
+  }
+
+  // Updates the projects, and keeps them up to date until deactivate().
+  activate() {
+    this.active = true;
+    this.update();
+  }
+
+  // Stops updating the projects; they are kept.
+  deactivate() { this.active = false; }
+
+  clear() {
+    this.deactivate();
+    this.set([]);
+  }
+
+  dispose() {
+    this.subscriptions.forEach((d) => { d.dispose(); });
+  }
+
+  private update() {
+    if (!this.active)
+      return;
+    const {kept, dropped} =
+        normalizeProjects((vscode.workspace.workspaceFolders ??
+                           []).map(f => ({uri: f.uri, name: f.name})));
+    for (const project of dropped)
+      this.log.info(
+          `Ignoring project ${project.uri.toString()}: ` +
+          'it is not a local directory, or it is a duplicate of or nested in ' +
+          'another project');
+    this.set(kept);
+  }
+
+  private set(projects: ClangdProject[]) {
+    const diff = diffProjects(this.list, projects);
+    this.list = projects;
+    if (diff.added.length || diff.removed.length || diff.updated.length)
+      this.onDidChangeEmitter.fire(diff);
+  }
 }

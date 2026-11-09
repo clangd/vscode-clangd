@@ -114,6 +114,45 @@ Current refactorings include:
  - use raw strings
  - rename (bound to `<F2>`, rather than a contextual code action)
 
+## Multi-Root Workspaces
+
+The extension supports VS Code [multi-root workspaces](https://code.visualstudio.com/docs/editor/workspaces/multi-root-workspaces),
+allowing you to work with multiple project folders in a single VS Code instance.
+
+By default, a single clangd instance handles all workspace folders.
+This works well when all folders share similar build configurations.
+
+### Per-Project Clangd Instances
+
+For more complex setups, you can enable `clangd.enablePerFolderServer` to run
+a separate clangd instance for each project, i.e. each workspace folder. This
+is useful when:
+
+ - **Different configurations**: Each project has its own compilation database,
+   `.clangd` file or `clangd.arguments`
+ - **Crash isolation**: A crash in one instance won't affect other projects
+ - **Memory isolation**: Large projects won't impact the responsiveness of others
+
+To enable per-project mode, add to your workspace settings:
+
+```json
+{
+  "clangd.enablePerFolderServer": true
+}
+```
+
+The clangd instance of a project starts when one of its files is shown in an
+editor. Commands such as "Restart language server" act on all instances, while
+a change of a project's compilation database only restarts that project's
+instance. Each instance has its own output channel (e.g., "clangd (FolderName)")
+for easier debugging; projects with the same name are labeled with their path.
+
+**Limitation**: In per-project mode, each clangd instance only handles files
+within its project. Files outside all projects (such as system headers in
+`/usr/include`) will not have language server support when opened directly.
+If projects are nested, the outermost project's instance serves the files of
+the nested projects.
+
 ## Bugs/contributing
 
 clangd is part of the [LLVM project](https://llvm.org).

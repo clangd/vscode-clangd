@@ -8,7 +8,11 @@
 import * as vscode from 'vscode';
 import * as vscodelc from 'vscode-languageclient/node';
 
-import {ClangdContext, contextForCommand} from './clangd-context';
+import {
+  capabilityContextKey,
+  ClangdContext,
+  contextForCommand
+} from './clangd-context';
 import type {ClangdContextManager} from './clangd-context-manager';
 
 export function activate(context: ClangdContext) {
@@ -19,7 +23,20 @@ export function activate(context: ClangdContext) {
 // Creates the type hierarchy view and its commands, shared by all contexts.
 export function registerCommands(manager: ClangdContextManager):
     vscode.Disposable[] {
-  return [new TypeHierarchyProvider(manager)];
+  return [
+    capabilityContextKey(manager, 'clangd.enableTypeHierarchy',
+                         serverSupportsTypeHierarchy),
+    new TypeHierarchyProvider(manager)
+  ];
+}
+
+// Unfortunately clangd used the same capability name for its pre-standard
+// protocol as the standard ended up using. Either clangd has support for the
+// standard protocol, or for the pre-standard one this extension implements.
+function serverSupportsTypeHierarchy(capabilities: vscodelc.ServerCapabilities&
+                                     {standardTypeHierarchyProvider?: any}) {
+  return !!capabilities.typeHierarchyProvider &&
+         !capabilities.standardTypeHierarchyProvider;
 }
 
 export namespace TypeHierarchyDirection {
@@ -106,53 +123,23 @@ class TypeHierarchyTreeItem extends vscode.TreeItem {
 }
 
 class TypeHierarchyFeature implements vscodelc.StaticFeature {
-  private serverSupportsTypeHierarchy = false;
-  private state!: vscodelc.State;
-  private context: ClangdContext;
-
-  constructor(context: ClangdContext) {
-    this.context = context;
-    context.subscriptions.push(context.client.onDidChangeState(stateChange => {
-      this.state = stateChange.newState;
-      this.recomputeEnableTypeHierarchy();
-    }));
-  }
+  constructor(private readonly context: ClangdContext) {}
 
   fillClientCapabilities(capabilities: vscodelc.ClientCapabilities) {}
   fillInitializeParams(_params: vscodelc.InitializeParams) {}
 
   initialize(capabilities: vscodelc.ServerCapabilities,
              documentSelector: vscodelc.DocumentSelector|undefined) {
-    const serverCapabilities: vscodelc.ServerCapabilities&
-        {standardTypeHierarchyProvider?: any} = capabilities;
-    // Unfortunately clangd used the same capability name for its pre-standard
-    // protocol as the standard ended up using. We need to prevent
-    // vscode-languageclient from trying to query clangd versions that speak the
-    // incompatible protocol.
-    if (serverCapabilities.typeHierarchyProvider &&
-        !serverCapabilities.standardTypeHierarchyProvider) {
+    // We need to prevent vscode-languageclient from trying to query clangd
+    // versions that speak the incompatible protocol.
+    if (serverSupportsTypeHierarchy(capabilities)) {
       // Disable mis-guided support for standard type-hierarchy feature.
       this.context.client.getFeature('textDocument/prepareTypeHierarchy')
           .clear();
-      this.serverSupportsTypeHierarchy = true;
-      this.recomputeEnableTypeHierarchy();
-    } else {
-      // Either clangd has support for the standard protocol, or no
-      // implementation at all. In either case, don't turn on the extension.
     }
   }
   getState(): vscodelc.FeatureState { return {kind: 'static'}; }
   clear() {}
-
-  private recomputeEnableTypeHierarchy() {
-    if (this.state === vscodelc.State.Running) {
-      vscode.commands.executeCommand('setContext', 'clangd.enableTypeHierarchy',
-                                     this.serverSupportsTypeHierarchy);
-    } else if (this.state === vscodelc.State.Stopped) {
-      vscode.commands.executeCommand('setContext', 'clangd.enableTypeHierarchy',
-                                     false);
-    }
-  }
 }
 
 class TypeHierarchyProvider implements

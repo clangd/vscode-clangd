@@ -8,7 +8,7 @@ export class ClangdExtensionImpl implements ClangdExtension {
   public getApi(version: 1): ClangdApiV1;
   public getApi(version: number): unknown {
     if (version === 1) {
-      const context = this.manager.contextFor(undefined);
+      const context = this.manager.currentContext;
       return {
         languageClient: context?.clientIsStartingOrRunning() ? context.client
                                                              : undefined

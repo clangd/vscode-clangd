@@ -11,37 +11,48 @@
 import * as vscode from 'vscode';
 import * as vscodelc from 'vscode-languageclient/node';
 
-import {ClangdContext} from './clangd-context';
+import {capabilityContextKey, ClangdContext} from './clangd-context';
+import type {ClangdContextManager} from './clangd-context-manager';
 
 export function activate(context: ClangdContext) {
   const feature = new InlayHintsFeature(context);
   context.client.registerFeature(feature);
 }
 
-export function registerCommands(): vscode.Disposable[] {
+export function registerCommands(manager: ClangdContextManager):
+    vscode.Disposable[] {
   // The command provides a quick way to toggle inlay hints
   // (key-bindable).
   // FIXME: this is a core VSCode setting, ideally they provide the
   // command. We toggle it globally, language-specific is nicer but
   // undiscoverable.
   const enabledSetting = 'editor.inlayHints.enabled';
-  return [vscode.commands.registerCommand('clangd.inlayHints.toggle', () => {
-    // This used to be a boolean, and then became a 4-state enum.
-    var val = vscode.workspace.getConfiguration().get<boolean|string>(
-        enabledSetting, 'on');
-    if (val === true || val === 'on')
-      val = 'off';
-    else if (val === false || val === 'off')
-      val = 'on';
-    else if (val === 'offUnlessPressed')
-      val = 'onUnlessPressed';
-    else if (val == 'onUnlessPressed')
-      val = 'offUnlessPressed';
-    else
-      return;
-    vscode.workspace.getConfiguration().update(
-        enabledSetting, val, vscode.ConfigurationTarget.Global);
-  })];
+  return [
+    capabilityContextKey(manager, 'clangd.inlayHints.supported',
+                         (capabilities: vscodelc.ServerCapabilities&
+                          {clangdInlayHintsProvider?: boolean}) =>
+                             !!(capabilities.clangdInlayHintsProvider ||
+                                capabilities.inlayHintProvider)),
+    vscode.commands.registerCommand(
+        'clangd.inlayHints.toggle',
+        () => {
+          // This used to be a boolean, and then became a 4-state enum.
+          var val = vscode.workspace.getConfiguration().get<boolean|string>(
+              enabledSetting, 'on');
+          if (val === true || val === 'on')
+            val = 'off';
+          else if (val === false || val === 'off')
+            val = 'on';
+          else if (val === 'offUnlessPressed')
+            val = 'onUnlessPressed';
+          else if (val == 'onUnlessPressed')
+            val = 'offUnlessPressed';
+          else
+            return;
+          vscode.workspace.getConfiguration().update(
+              enabledSetting, val, vscode.ConfigurationTarget.Global);
+        })
+  ];
 }
 
 namespace protocol {
@@ -77,10 +88,6 @@ class InlayHintsFeature implements vscodelc.StaticFeature {
     const serverCapabilities: vscodelc.ServerCapabilities&
         {clangdInlayHintsProvider?: boolean, inlayHintProvider?: any} =
         capabilities;
-    vscode.commands.executeCommand(
-        'setContext', 'clangd.inlayHints.supported',
-        serverCapabilities.clangdInlayHintsProvider ||
-            serverCapabilities.inlayHintProvider);
     // If the clangd server supports LSP 3.17 inlay hints, these are handled by
     // the vscode-languageclient library - don't send custom requests too!
     if (!serverCapabilities.clangdInlayHintsProvider ||

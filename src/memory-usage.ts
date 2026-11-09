@@ -8,19 +8,18 @@
 import * as vscode from 'vscode';
 import * as vscodelc from 'vscode-languageclient/node';
 
-import {ClangdContext} from './clangd-context';
+import {capabilityContextKey} from './clangd-context';
 import type {ClangdContextManager} from './clangd-context-manager';
-
-export function activate(context: ClangdContext) {
-  const feature = new MemoryUsageFeature();
-  context.client.registerFeature(feature);
-}
+import {projectLabel} from './project';
 
 // Creates the memory usage view and its commands, shared by all contexts.
 export function registerCommands(manager: ClangdContextManager):
     vscode.Disposable[] {
   const adapter = new TreeAdapter();
   return [
+    capabilityContextKey(manager, 'clangd.memoryUsage.supported',
+                         (capabilities) =>
+                             'memoryUsageProvider' in capabilities),
     adapter.onDidChangeTreeData((e) => vscode.commands.executeCommand(
                                     'setContext', 'clangd.memoryUsage.hasData',
                                     adapter.roots !== undefined)),
@@ -34,13 +33,17 @@ export function registerCommands(manager: ClangdContextManager):
             vscode.window.showInformationMessage('clangd is not running');
             return;
           }
-          // One top-level node per client. A client whose request fails,
-          // e.g. because it is stopping, is left out, unless all requests
-          // fail.
-          const results = await Promise.allSettled(contexts.map(
-              async (c) =>
-                  convert(await c.client.sendRequest(MemoryUsageRequest, {}),
-                          '<root>')));
+          // One top-level node per client, i.e. per project in multi-project
+          // mode. A client whose request fails, e.g. because it is stopping, is
+          // left out, unless all requests fail.
+          const results = await Promise.allSettled(contexts.map(async (c) => {
+            const tree = convert(
+                await c.client.sendRequest(MemoryUsageRequest, {}), '<root>');
+            // convert() would shorten a label that is a path.
+            if (c.project)
+              tree.title = projectLabel(c.project, manager.projects);
+            return tree;
+          }));
           const roots =
               results.flatMap(r => r.status === 'fulfilled' ? [r.value] : []);
           if (!roots.length)
@@ -83,19 +86,6 @@ function convert(m: WireTree, title: string): InternalTree {
                   .map(e => convert(m[e] as WireTree, e))
                   .sort((x, y) => y.total - x.total),
   };
-}
-
-class MemoryUsageFeature implements vscodelc.StaticFeature {
-  fillClientCapabilities(capabilities: vscodelc.ClientCapabilities) {}
-  fillInitializeParams(_params: vscodelc.InitializeParams) {}
-
-  initialize(capabilities: vscodelc.ServerCapabilities,
-             _documentSelector: vscodelc.DocumentSelector|undefined) {
-    vscode.commands.executeCommand('setContext', 'clangd.memoryUsage.supported',
-                                   'memoryUsageProvider' in capabilities);
-  }
-  getState(): vscodelc.FeatureState { return {kind: 'static'}; }
-  clear() {}
 }
 
 class TreeAdapter implements vscode.TreeDataProvider<InternalTree> {

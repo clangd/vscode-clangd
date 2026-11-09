@@ -3,16 +3,11 @@
 import * as vscode from 'vscode';
 import * as vscodelc from 'vscode-languageclient/node';
 
-import {ClangdContext, contextForCommand} from './clangd-context';
+import {capabilityContextKey, contextForCommand} from './clangd-context';
 import type {ClangdContextManager} from './clangd-context-manager';
 import type {ASTParams, ASTNode} from '../api/vscode-clangd';
 
 const ASTRequestMethod = 'textDocument/ast';
-
-export function activate(context: ClangdContext) {
-  const feature = new ASTFeature();
-  context.client.registerFeature(feature);
-}
 
 // Creates the AST view and its commands, shared by all contexts.
 export function registerCommands(manager: ClangdContextManager):
@@ -23,6 +18,9 @@ export function registerCommands(manager: ClangdContextManager):
   const tree =
       vscode.window.createTreeView('clangd.ast', {treeDataProvider: adapter});
   return [
+    // The "Show AST" command is enabled if a server advertises the capability.
+    capabilityContextKey(manager, 'clangd.ast.supported',
+                         (capabilities) => 'astProvider' in capabilities),
     tree,
     // Ensure the AST view is visible exactly when the adapter has a node.
     // clangd.ast.hasData controls the view visibility (package.json).
@@ -62,19 +60,6 @@ export function registerCommands(manager: ClangdContextManager):
 
 const ASTRequestType =
     new vscodelc.RequestType<ASTParams, ASTNode|null, void>(ASTRequestMethod);
-
-class ASTFeature implements vscodelc.StaticFeature {
-  fillClientCapabilities(capabilities: vscodelc.ClientCapabilities) {}
-
-  // The "Show AST" command is enabled if the server advertises the capability.
-  initialize(capabilities: vscodelc.ServerCapabilities,
-             _documentSelector: vscodelc.DocumentSelector|undefined) {
-    vscode.commands.executeCommand('setContext', 'clangd.ast.supported',
-                                   'astProvider' in capabilities);
-  }
-  getState(): vscodelc.FeatureState { return {kind: 'static'}; }
-  clear() {}
-}
 
 // Icons used for nodes of particular roles and kinds. (Kind takes precedence).
 // IDs from https://code.visualstudio.com/api/references/icons-in-labels

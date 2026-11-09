@@ -3,6 +3,7 @@ import * as vscodelc from 'vscode-languageclient/node';
 
 import {ClangdContext} from './clangd-context';
 import type {ClangdContextManager} from './clangd-context-manager';
+import {projectLabel} from './project';
 
 // Creates the file status bar item, shared by all contexts.
 export function registerCommands(manager: ClangdContextManager):
@@ -11,7 +12,7 @@ export function registerCommands(manager: ClangdContextManager):
   return [
     vscode.commands.registerCommand(
         'clangd.openOutputPanel',
-        () => manager.activeContext?.client.outputChannel.show()),
+        () => manager.currentContext?.client.outputChannel.show()),
     status,
     vscode.window.onDidChangeActiveTextEditor(() => { status.updateStatus(); }),
     manager.onDidAddContext((context) => { status.addContext(context); }),
@@ -70,7 +71,10 @@ class FileStatus implements vscode.Disposable {
       this.statusBarItem.hide();
       return;
     }
-    this.statusBarItem.text = `clangd: ` + status.state;
+    const name =
+        context.project && projectLabel(context.project, this.manager.projects);
+    this.statusBarItem.text =
+        (name ? `clangd (${name}): ` : `clangd: `) + status.state;
     this.statusBarItem.show();
   }
 
