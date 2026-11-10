@@ -38,6 +38,40 @@ in the clangd documentation for details and alternatives.
 The clangd server also supports a number of feature customizations using its
 [config file](https://clangd.llvm.org/config.html).
 
+## Configuration
+
+The extension provides a few configuration options on top of the regular configuration provided by clangd.
+
+### Variable substitution
+
+Variable substitution is supported in settings such as
+`clangd.arguments`, `clangd.path`, `clangd.fallbackFlags`, and `clangd.trace`.
+For example, to look for `compile_commands.json` in a `build` directory under
+the workspace root, add this to `.vscode/settings.json`:
+
+```json
+{
+    "clangd.arguments": ["--compile-commands-dir=${workspaceFolder}/build"]
+}
+```
+
+| Variable | Expands to |
+| --- | --- |
+| `${workspaceFolder}`, `${workspaceRoot}`, `${cwd}` | The workspace root path. If no workspace root is available, these use the active file's directory, then the extension process's working directory as a fallback. |
+| `${workspaceFolderBasename}` | The name of the workspace root directory, if available. |
+| `${userHome}` | The user's home directory. |
+| `${env:NAME}` | The value of the environment variable `NAME`, or an empty string if it is unset. |
+| `${config:setting.name}` | The value of a VS Code setting, if it is a string. |
+| `${command:commandId}` | The result of running the named VS Code command. Use a command that returns a string. |
+
+While these substitutions are intended to mirror [VS Code variables reference](https://code.visualstudio.com/docs/reference/variables-reference), not everything listed there is supported.
+
+The extension leaves unresolved placeholders unchanged. It expands variables in
+string values, including those in arrays, in a single pass. A replacement that
+contains another placeholder is left as returned.
+
+These substitutions are available only in the extension settings and do not apply to other clangd functionality.
+
 ## Features
 
 ### Code completion
