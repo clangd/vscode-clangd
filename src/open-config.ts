@@ -2,7 +2,7 @@ import * as os from 'os'
 import * as path from 'path'
 import * as vscode from 'vscode';
 
-import {ClangdContext} from './clangd-context';
+import type {ClangdContextManager} from './clangd-context-manager';
 
 /**
  * @returns The path that corresponds to llvm::sys::path::user_config_directory.
@@ -48,11 +48,18 @@ async function openConfigFile(path: vscode.Uri) {
   }));
 }
 
-export function activate(context: ClangdContext) {
+export function registerCommands(manager: ClangdContextManager):
+    vscode.Disposable[] {
+  const subscriptions: vscode.Disposable[] = [];
   // Create a command to open the project root .clangd configuration file.
-  context.subscriptions.push(
+  // In multi-project mode, that is the root of the active editor's project.
+  subscriptions.push(
       vscode.commands.registerCommand('clangd.projectConfig', () => {
-        if (vscode.workspace.workspaceFolders?.length) {
+        const activeUri = vscode.window.activeTextEditor?.document.uri;
+        const project = activeUri && manager.projectFor(activeUri);
+        if (project) {
+          openConfigFile(vscode.Uri.joinPath(project.uri, '.clangd'));
+        } else if (vscode.workspace.workspaceFolders?.length) {
           const folder = vscode.workspace.workspaceFolders[0];
           openConfigFile(vscode.Uri.joinPath(folder.uri, '.clangd'))
         } else {
@@ -60,7 +67,7 @@ export function activate(context: ClangdContext) {
         }
       }));
 
-  context.subscriptions.push(
+  subscriptions.push(
       vscode.commands.registerCommand('clangd.userConfig', () => {
         const file = getUserConfigFile();
         if (file) {
@@ -70,4 +77,5 @@ export function activate(context: ClangdContext) {
               'Couldn\'t get global configuration directory');
         }
       }));
+  return subscriptions;
 }
