@@ -40,7 +40,7 @@ The clangd server also supports a number of feature customizations using its
 
 ## Configuration
 
-The extension provides a few configuration options on top of the regular configuration provided by clangd.
+The extension provides a few configuration options on top of the server-side configuration provided by clangd.
 
 ### Variable substitution
 
@@ -64,13 +64,13 @@ the workspace root, add this to `.vscode/settings.json`:
 | `${config:setting.name}` | The value of a VS Code setting, if it is a string. |
 | `${command:commandId}` | The result of running the named VS Code command. Use a command that returns a string. |
 
-While these substitutions are intended to mirror [VS Code variables reference](https://code.visualstudio.com/docs/reference/variables-reference), not everything listed there is supported.
+While these substitutions are intended to mirror the [VS Code variables reference](https://code.visualstudio.com/docs/reference/variables-reference), not everything listed there is supported.
 
 The extension leaves unresolved placeholders unchanged. It expands variables in
 string values, including those in arrays, in a single pass. A replacement that
 contains another placeholder is left as returned.
 
-These substitutions are available only in the extension settings and do not apply to other clangd functionality.
+Substitution only applies to the extension's `clangd.*` settings. It is not performed by clangd itself (e.g. in `.clangd` config files or compilation databases).
 
 ## Features
 
