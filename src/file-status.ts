@@ -14,7 +14,8 @@ export function activateGlobal(provider: ClangdClientProvider,
       vscode.commands.registerCommand(
           'clangd.openOutputPanel',
           () => { provider.activeContext()?.client.outputChannel.show(); }),
-      vscode.window.onDidChangeActiveTextEditor(() => status?.updateStatus()));
+      vscode.window.onDidChangeActiveTextEditor(() => status?.updateStatus()),
+      provider.onDidRemoveContext(context => status?.clear(context)));
 }
 
 export function activate(context: ClangdContext) {
@@ -23,15 +24,16 @@ export function activate(context: ClangdContext) {
       // clangd starts or restarts after crash.
       context.client.onNotification(
           'textDocument/clangd.fileStatus',
-          (fileStatus) => { status?.onFileUpdated(fileStatus); });
+          (fileStatus) => { status?.onFileUpdated(context, fileStatus); });
     } else if (newState === vscodelc.State.Stopped) {
-      status?.clear(context.folder);
+      status?.clear(context);
     }
   }));
 }
 
 class FileStatus {
-  private statuses = new Map<string, any>();
+  private statuses =
+      new Map<string, {context: ClangdContext, fileStatus: any}>();
   private readonly statusBarItem =
       vscode.window.createStatusBarItem(vscode.StatusBarAlignment.Left, 10);
 
@@ -39,9 +41,9 @@ class FileStatus {
     this.statusBarItem.command = onClickCommand;
   }
 
-  onFileUpdated(fileStatus: any) {
+  onFileUpdated(context: ClangdContext, fileStatus: any) {
     const filePath = vscode.Uri.parse(fileStatus.uri);
-    this.statuses.set(filePath.fsPath, fileStatus);
+    this.statuses.set(filePath.fsPath, {context, fileStatus});
     if (this.statuses.size)
       this.updateStatus();
     else
@@ -55,24 +57,19 @@ class FileStatus {
     // This aligns with the behavior of other panels, e.g. problems.
     if (!activeDoc || activeDoc.uri.scheme === 'output')
       return;
-    const status = this.statuses.get(activeDoc.fileName);
-    if (!status) {
+    const entry = this.statuses.get(activeDoc.fileName);
+    if (!entry) {
       this.statusBarItem.hide();
       return;
     }
-    this.statusBarItem.text = `clangd: ` + status.state;
+    this.statusBarItem.text = `clangd: ` + entry.fileStatus.state;
     this.statusBarItem.show();
   }
 
-  clear(folder?: vscode.WorkspaceFolder) {
-    if (!folder) {
-      this.statuses.clear();
-    } else {
-      for (const file of this.statuses.keys()) {
-        if (vscode.workspace.getWorkspaceFolder(vscode.Uri.file(file)) ===
-            folder)
-          this.statuses.delete(file);
-      }
+  clear(context: ClangdContext) {
+    for (const [file, entry] of this.statuses) {
+      if (entry.context === context)
+        this.statuses.delete(file);
     }
     this.updateStatus();
   }

@@ -18,6 +18,11 @@ export function activate(context: ClangdContext,
 export function activateGlobal(provider: ClangdClientProvider,
                                subscriptions: vscode.Disposable[]) {
   const adapter = new TreeAdapter();
+  let owner: ClangdContext|undefined;
+  const clear = () => {
+    owner = undefined;
+    adapter.setRoot(undefined, undefined);
+  };
   const tree =
       vscode.window.createTreeView('clangd.ast', {treeDataProvider: adapter});
   subscriptions.push(
@@ -40,13 +45,19 @@ export function activateGlobal(provider: ClangdClientProvider,
               textDocument: converter.asTextDocumentIdentifier(editor.document),
               range: converter.asRange(editor.selection),
             });
+            if (provider.contextForUri(editor.document.uri) !== context)
+              return;
             if (!item)
               void vscode.window.showInformationMessage(
                   'No AST node at selection');
+            owner = item ? context : undefined;
             adapter.setRoot(item ?? undefined, editor.document.uri);
           }),
-      vscode.commands.registerCommand(
-          'clangd.ast.close', () => adapter.setRoot(undefined, undefined)));
+      vscode.commands.registerCommand('clangd.ast.close', clear),
+      provider.onDidRemoveContext(context => {
+        if (owner === context)
+          clear();
+      }));
 }
 
 const ASTRequestType =

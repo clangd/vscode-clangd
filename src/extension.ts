@@ -50,7 +50,7 @@ export async function activate(context: vscode.ExtensionContext):
                               clangdContext.clientIsRunning())) {
           return;
         }
-        await manager.start();
+        await vscode.commands.executeCommand('clangd.restart');
       }));
   context.subscriptions.push(
       vscode.commands.registerCommand('clangd.restart', async () => {

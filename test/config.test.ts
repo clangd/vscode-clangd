@@ -1,4 +1,6 @@
 import * as assert from 'assert';
+import * as fs from 'fs';
+import * as path from 'path';
 import * as sinon from 'sinon';
 import * as vscode from 'vscode';
 
@@ -60,5 +62,27 @@ suite('Config', () => {
 
     assert.deepStrictEqual(await config.get<string[]>('arguments', folder),
                            ['--query-driver=/workspace/two/bin/clang++']);
+  });
+
+  test('declares folder-specific settings with resource scope', () => {
+    const packageJson = JSON.parse(
+        fs.readFileSync(path.resolve(__dirname, '../../package.json'), 'utf8'));
+    const properties = packageJson.contributes.configuration.properties;
+    const folderSettings = [
+      'clangd.arguments',
+      'clangd.trace',
+      'clangd.fallbackFlags',
+      'clangd.serverCompletionRanking',
+      'clangd.restartAfterCrash',
+      'clangd.checkUpdates',
+      'clangd.onConfigChanged',
+      'clangd.onConfigChangedForceEnable',
+      'clangd.inactiveRegions.useBackgroundHighlight',
+      'clangd.inactiveRegions.opacity',
+      'clangd.enableCodeCompletion',
+      'clangd.enableHover',
+    ];
+    for (const setting of folderSettings)
+      assert.strictEqual(properties[setting].scope, 'resource', setting);
   });
 });

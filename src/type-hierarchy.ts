@@ -188,7 +188,10 @@ class TypeHierarchyProvider implements
 
     this.treeView = vscode.window.createTreeView('clangd.typeHierarchyView',
                                                  {treeDataProvider: this});
-    subscriptions.push(this.treeView);
+    subscriptions.push(this.treeView, provider.onDidRemoveContext(context => {
+      if (this.context === context)
+        this.close();
+    }));
     // Show children by default.
     this.direction = TypeHierarchyDirection.Children;
   }
@@ -299,31 +302,32 @@ class TypeHierarchyProvider implements
   }
 
   private async reveal(editor: vscode.TextEditor) {
-    this.context = this.provider.contextForUri(editor.document.uri);
-    if (!this.context)
+    const context = this.provider.contextForUri(editor.document.uri);
+    if (!context)
       return;
+    this.context = context;
     // This makes the type hierarchy view visible by causing the condition
     // "when": "extension.vscode-clangd.typeHierarchyVisible" from
     // package.json to evaluate to true.
     vscode.commands.executeCommand('setContext', 'clangd.typeHierarchyVisible',
                                    true);
 
-    const item =
-        await this.context.client.sendRequest(TypeHierarchyRequest.type, {
-          ...this.context.client.code2ProtocolConverter
-              .asTextDocumentPositionParams(editor.document,
-                                            editor.selection.active),
-          // Resolve up to 5 initial levels. Any additional levels will be
-          // resolved on the fly if the user expands the tree item.
-          resolve: 5,
-          // Resolve both directions initially. That way, if the user switches
-          // to the Parents view, we have the data already. Note that clangd
-          // does not support resolving parents via typeHierarchy/resolve,
-          // so otherwise we'd have to remember the TextDocumentPositionParams
-          // to make another textDocument/typeHierarchy request when switching
-          // to Parents view.
-          direction: TypeHierarchyDirection.Both
-        });
+    const item = await context.client.sendRequest(TypeHierarchyRequest.type, {
+      ...context.client.code2ProtocolConverter.asTextDocumentPositionParams(
+          editor.document, editor.selection.active),
+      // Resolve up to 5 initial levels. Any additional levels will be
+      // resolved on the fly if the user expands the tree item.
+      resolve: 5,
+      // Resolve both directions initially. That way, if the user switches
+      // to the Parents view, we have the data already. Note that clangd
+      // does not support resolving parents via typeHierarchy/resolve,
+      // so otherwise we'd have to remember the TextDocumentPositionParams
+      // to make another textDocument/typeHierarchy request when switching
+      // to Parents view.
+      direction: TypeHierarchyDirection.Both
+    });
+    if (this.context !== context)
+      return;
     if (item) {
       this.startingItem = item;
       this.root = this.computeRoot();
@@ -358,6 +362,7 @@ class TypeHierarchyProvider implements
                                    false);
 
     this.root = undefined;
+    this.context = undefined;
     this._onDidChangeTreeData.fire(null);
   }
 }

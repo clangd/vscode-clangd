@@ -95,8 +95,13 @@ export class ClangdContext implements vscode.Disposable {
         subscriptions,
         await ClangdContext.createClient(clangdPath, outputChannel, folder),
         folder);
-    await context.startClient(provider);
-    return context;
+    try {
+      await context.startClient(provider);
+      return context;
+    } catch (error) {
+      await context.stop();
+      throw error;
+    }
   }
 
   private static async createClient(clangdPath: string,
@@ -263,9 +268,10 @@ export class ClangdContext implements vscode.Disposable {
     ast.activate(this, provider);
     inactiveRegions.activate(this);
     await configFileWatcher.activate(this, provider);
-    this.startPromise = this.client.start();
-    console.log('Clang Language Server is now active!');
     fileStatus.activate(this);
+    this.startPromise = this.client.start();
+    await this.startPromise;
+    console.log('Clang Language Server is now active!');
   }
 
   get visibleClangdEditors(): vscode.TextEditor[] {
@@ -292,9 +298,23 @@ export class ClangdContext implements vscode.Disposable {
       } catch {
         // A failed start leaves no running client to stop.
       }
+      if (this.client.state === vscodelc.State.Starting) {
+        await new Promise<void>(resolve => {
+          const disposable = this.client.onDidChangeState(({newState}) => {
+            if (newState !== vscodelc.State.Starting) {
+              disposable.dispose();
+              resolve();
+            }
+          });
+          if (this.client.state !== vscodelc.State.Starting) {
+            disposable.dispose();
+            resolve();
+          }
+        });
+      }
       this.subscriptions.forEach((d) => { d.dispose(); });
       this.subscriptions = [];
-      if (this.client && this.client.state !== vscodelc.State.Stopped)
+      if (this.client.state === vscodelc.State.Running)
         await this.client.stop();
     })();
     return this.stopPromise;

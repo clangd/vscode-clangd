@@ -20,6 +20,11 @@ export function activate(context: ClangdContext,
 export function activateGlobal(provider: ClangdClientProvider,
                                subscriptions: vscode.Disposable[]) {
   const adapter = new TreeAdapter();
+  let owner: ClangdContext|undefined;
+  const clear = () => {
+    owner = undefined;
+    adapter.root = undefined;
+  };
   subscriptions.push(
       adapter.onDidChangeTreeData((e) => void vscode.commands.executeCommand(
                                       'setContext',
@@ -34,10 +39,16 @@ export function activateGlobal(provider: ClangdClientProvider,
               return;
             const usage =
                 await context.client.sendRequest(MemoryUsageRequest, {});
+            if (provider.activeContext() !== context)
+              return;
+            owner = context;
             adapter.root = convert(usage, '<root>');
           }),
-      vscode.commands.registerCommand('clangd.memoryUsage.close',
-                                      () => adapter.root = undefined));
+      vscode.commands.registerCommand('clangd.memoryUsage.close', clear),
+      provider.onDidRemoveContext(context => {
+        if (owner === context)
+          clear();
+      }));
 }
 
 // LSP wire format for this clangd feature.

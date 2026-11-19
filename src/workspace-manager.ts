@@ -19,6 +19,9 @@ export class WorkspaceManager implements ClangdClientProvider,
   private folders = new Map<string, vscode.WorkspaceFolder|undefined>();
   private generation = new Map<string, number>();
   private disposables: vscode.Disposable[] = [];
+  private automaticStartEnabled = false;
+  private removeContextEmitter = new vscode.EventEmitter<ClangdContext>();
+  readonly onDidRemoveContext = this.removeContextEmitter.event;
 
   constructor(private installer: ClangdInstaller,
               private globalStoragePath: string,
@@ -29,15 +32,16 @@ export class WorkspaceManager implements ClangdClientProvider,
                   ClangdContextFactory = ClangdContext.create) {
     this.disposables.push(
         vscode.workspace.onDidOpenTextDocument(
-            document => void this.ensureForDocument(document)),
+            document => this.runInBackground(this.ensureForDocument(document))),
         vscode.workspace.onDidChangeWorkspaceFolders(
-            event => void this.workspaceFoldersChanged(event)),
+            event => this.runInBackground(this.workspaceFoldersChanged(event))),
         vscode.window.onDidChangeActiveTextEditor(
             () => { this.updateActiveContext(); }));
   }
 
   async start(): Promise<void> {
-    await Promise.all(vscode.workspace.textDocuments.map(
+    this.automaticStartEnabled = true;
+    await this.settle(vscode.workspace.textDocuments.map(
         document => this.ensureForDocument(document)));
     this.updateActiveContext();
   }
@@ -57,22 +61,21 @@ export class WorkspaceManager implements ClangdClientProvider,
   }
 
   async restart(folder?: vscode.WorkspaceFolder): Promise<void> {
+    this.automaticStartEnabled = true;
     const targets = folder ? [folder] : Array.from(this.folders.values());
     if (!targets.length) {
       await this.start();
       return;
     }
     await Promise.all(targets.map(target => this.remove(target)));
-    await Promise.all(targets.map(target => this.startForFolder(target)));
+    await this.settle(targets.map(target => this.startForFolder(target)));
     this.updateActiveContext();
   }
 
   async shutdown(): Promise<void> {
-    for (const key of this.folders.keys())
-      this.generation.set(key, (this.generation.get(key) ?? 0) + 1);
+    this.automaticStartEnabled = false;
     await Promise.all(
-        Array.from(this.contexts.values(), context => context.stop()));
-    this.contexts.clear();
+        Array.from(this.folders.values(), folder => this.remove(folder)));
     this.starting.clear();
     this.folders.clear();
     this.featureSupport.clear();
@@ -94,12 +97,13 @@ export class WorkspaceManager implements ClangdClientProvider,
   dispose(): void {
     void this.shutdown();
     this.disposables.forEach(disposable => disposable.dispose());
+    this.removeContextEmitter.dispose();
     this.disposables = [];
   }
 
   private async ensureForDocument(document: vscode.TextDocument):
       Promise<ClangdContext|null> {
-    if (!isClangdDocument(document))
+    if (!this.automaticStartEnabled || !isClangdDocument(document))
       return null;
     return this.startForFolder(
         vscode.workspace.getWorkspaceFolder(document.uri));
@@ -111,7 +115,7 @@ export class WorkspaceManager implements ClangdClientProvider,
     // The default client's broad selector would overlap folder clients.
     if (event.added.length && vscode.workspace.workspaceFolders?.length)
       await this.remove(undefined);
-    await Promise.all(vscode.workspace.textDocuments.map(
+    await this.settle(vscode.workspace.textDocuments.map(
         document => this.ensureForDocument(document)));
   }
 
@@ -153,19 +157,42 @@ export class WorkspaceManager implements ClangdClientProvider,
   private async remove(folder?: vscode.WorkspaceFolder): Promise<void> {
     const key = this.key(folder);
     this.generation.set(key, (this.generation.get(key) ?? 0) + 1);
+    const pending = this.starting.get(key);
     this.starting.delete(key);
     this.folders.delete(key);
     const context = this.contexts.get(key);
     if (context) {
       this.contexts.delete(key);
       this.featureSupport.delete(context);
+      this.removeContextEmitter.fire(context);
     }
     this.updateActiveContext();
-    await context?.stop();
+    if (context) {
+      await context.stop();
+    } else if (pending) {
+      try {
+        await (await pending)?.stop();
+      } catch {
+        // Failed starts are already reported by the operation that created it.
+      }
+    }
   }
 
   private key(folder?: vscode.WorkspaceFolder): string {
     return folder?.uri.toString() ?? DEFAULT_CLIENT;
+  }
+
+  private runInBackground(task: Promise<unknown>): void {
+    void task.catch(error => this.outputChannel.error(
+                        'clangd client operation failed', error));
+  }
+
+  private async settle(tasks: Array<Promise<unknown>>): Promise<void> {
+    for (const result of await Promise.allSettled(tasks)) {
+      if (result.status === 'rejected')
+        this.outputChannel.error('clangd client operation failed',
+                                 result.reason);
+    }
   }
 
   private updateActiveContext(): void {
