@@ -5,6 +5,10 @@ import * as ast from './ast';
 import {ClangdClientProvider} from './client-provider';
 import * as config from './config';
 import * as configFileWatcher from './config-file-watcher';
+import {
+  ExecuteCommandRouter,
+  RoutedExecuteCommandFeature,
+} from './execute-command';
 import * as fileStatus from './file-status';
 import * as inactiveRegions from './inactive-regions';
 import * as inlayHints from './inlay-hints';
@@ -12,13 +16,15 @@ import * as install from './install';
 import * as memoryUsage from './memory-usage';
 import * as typeHierarchy from './type-hierarchy';
 
-const clangdDocumentFilters: vscode.DocumentFilter[] = [
-  {scheme: 'file', language: 'c'},
-  {scheme: 'file', language: 'cpp'},
-  {scheme: 'file', language: 'cuda-cpp'},
-  {scheme: 'file', language: 'objective-c'},
-  {scheme: 'file', language: 'objective-cpp'},
+const clangdLanguages = [
+  'c',
+  'cpp',
+  'cuda-cpp',
+  'objective-c',
+  'objective-cpp',
 ];
+const clangdDocumentFilters: vscode.DocumentFilter[] =
+    clangdLanguages.map(language => ({scheme: 'file', language}));
 
 export const clangdDocumentSelector: vscode.DocumentSelector =
     clangdDocumentFilters;
@@ -27,14 +33,28 @@ export function documentSelector(folder?: vscode.WorkspaceFolder):
     vscode.DocumentSelector {
   if (!folder)
     return clangdDocumentFilters;
-  return clangdDocumentFilters.map(filter => {
-    if (filter.scheme !== 'file')
-      return filter;
-    return {
-      ...filter,
-      pattern: new vscode.RelativePattern(folder, '**/*'),
-    };
-  });
+  return clangdLanguages.map(
+      language => ({
+        scheme: 'file',
+        language,
+        pattern: new vscode.RelativePattern(folder, '**/*'),
+      }));
+}
+
+export function protocolDocumentSelector(folder?: vscode.WorkspaceFolder):
+    vscodelc.DocumentSelector {
+  if (!folder)
+    return clangdLanguages.map(language => ({scheme: 'file', language}));
+  return clangdLanguages.map(language => ({
+                               scheme: 'file',
+                               language,
+                               // This crosses the protocol-to-code conversion,
+                               // so use an LSP RelativePattern.
+                               pattern: {
+                                 baseUri: folder.uri.toString(),
+                                 pattern: '**/*',
+                               },
+                             }));
 }
 
 export function isClangdDocument(document: vscode.TextDocument) {
@@ -42,6 +62,23 @@ export function isClangdDocument(document: vscode.TextDocument) {
 }
 
 class ClangdLanguageClient extends vscodelc.LanguageClient {
+  constructor(name: string, serverOptions: vscodelc.ServerOptions,
+              clientOptions: vscodelc.LanguageClientOptions,
+              commandRouter: ExecuteCommandRouter) {
+    super(name, serverOptions, clientOptions);
+    super.registerFeature(new RoutedExecuteCommandFeature(this, commandRouter));
+  }
+
+  registerFeature(feature: vscodelc.StaticFeature|
+                  vscodelc.DynamicFeature<any>): void {
+    const dynamicFeature = feature as vscodelc.DynamicFeature<unknown>;
+    if (dynamicFeature.registrationType?.method ===
+        vscodelc.ExecuteCommandRequest.type.method) {
+      return;
+    }
+    super.registerFeature(feature);
+  }
+
   // Override the default implementation for failed requests. The default
   // behavior is just to log failures in the output panel, however output panel
   // is designed for extension debugging purpose, normal users will not open it,
@@ -50,8 +87,8 @@ class ClangdLanguageClient extends vscodelc.LanguageClient {
   // For user-interactive operations (e.g. applyFixIt, applyTweaks), we will
   // prompt up the failure to users.
 
-  handleFailedRequest<T>(type: vscodelc.MessageSignature, error: any,
-                         token: vscode.CancellationToken|undefined,
+  handleFailedRequest<T>(type: vscodelc.MessageSignature,
+                         token: vscode.CancellationToken|undefined, error: any,
                          defaultValue: T): T {
     if (error instanceof vscodelc.ResponseError &&
         type.method === 'workspace/executeCommand')
@@ -93,7 +130,8 @@ export class ClangdContext implements vscode.Disposable {
 
     const context = new ClangdContext(
         subscriptions,
-        await ClangdContext.createClient(clangdPath, outputChannel, folder),
+        await ClangdContext.createClient(clangdPath, outputChannel,
+                                         provider.executeCommandRouter, folder),
         folder);
     try {
       await context.startClient(provider);
@@ -106,6 +144,7 @@ export class ClangdContext implements vscode.Disposable {
 
   private static async createClient(clangdPath: string,
                                     outputChannel: vscode.LogOutputChannel,
+                                    commandRouter: ExecuteCommandRouter,
                                     folder?: vscode.WorkspaceFolder):
       Promise<ClangdLanguageClient> {
     const useScriptAsExecutable =
@@ -135,8 +174,7 @@ export class ClangdContext implements vscode.Disposable {
 
     const clientOptions: vscodelc.LanguageClientOptions = {
       // Register the server for c-family and cuda files.
-      documentSelector: documentSelector(folder) as unknown as
-                            vscodelc.DocumentSelector,
+      documentSelector: protocolDocumentSelector(folder),
       workspaceFolder: folder,
       initializationOptions: {
         clangdFileStatus: true,
@@ -244,7 +282,7 @@ export class ClangdContext implements vscode.Disposable {
     const client = new ClangdLanguageClient(
         folder ? `Clang Language Server (${folder.name})`
                : 'Clang Language Server',
-        serverOptions, clientOptions);
+        serverOptions, clientOptions, commandRouter);
     client.clientOptions.errorHandler = client.createDefaultErrorHandler(
         // max restart count
         await config.get<boolean>('restartAfterCrash', folder) ? /*default*/ 4
@@ -316,6 +354,7 @@ export class ClangdContext implements vscode.Disposable {
       this.subscriptions = [];
       if (this.client.state === vscodelc.State.Running)
         await this.client.stop();
+      this.client.getFeature(vscodelc.ExecuteCommandRequest.method).clear();
     })();
     return this.stopPromise;
   }

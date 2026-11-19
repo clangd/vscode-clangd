@@ -5,6 +5,7 @@ import {
   ClangdClientProvider,
   ClangdFeature,
 } from './client-provider';
+import {ExecuteCommandRouter} from './execute-command';
 import {ClangdInstaller} from './install';
 
 const DEFAULT_CLIENT = '<default>';
@@ -12,6 +13,7 @@ export type ClangdContextFactory = typeof ClangdContext.create;
 
 export class WorkspaceManager implements ClangdClientProvider,
                                          vscode.Disposable {
+  readonly executeCommandRouter = new ExecuteCommandRouter(this);
   private contexts = new Map<string, ClangdContext>();
   private starting = new Map<string, Promise<ClangdContext|null>>();
   private featureSupport =
@@ -97,6 +99,7 @@ export class WorkspaceManager implements ClangdClientProvider,
   dispose(): void {
     void this.shutdown();
     this.disposables.forEach(disposable => disposable.dispose());
+    this.executeCommandRouter.dispose();
     this.removeContextEmitter.dispose();
     this.disposables = [];
   }

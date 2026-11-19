@@ -2,7 +2,10 @@ import * as assert from 'assert';
 import * as sinon from 'sinon';
 import * as vscode from 'vscode';
 
-import {ClangdContext, documentSelector} from '../src/clangd-context';
+import {
+  ClangdContext,
+  protocolDocumentSelector,
+} from '../src/clangd-context';
 import {ClangdInstaller} from '../src/install';
 import {
   ClangdContextFactory,
@@ -19,11 +22,20 @@ suite('WorkspaceManager', () => {
 
   test('uses a folder-restricted document selector', () => {
     const folder = workspaceFolder('/workspace/one', 'one', 0);
-    const selector = documentSelector(folder) as vscode.DocumentFilter[];
+    const selector = protocolDocumentSelector(folder);
     assert.ok(selector.length > 0);
     for (const filter of selector) {
-      const pattern = filter.pattern as vscode.RelativePattern;
-      assert.strictEqual(pattern.baseUri.toString(), folder.uri.toString());
+      assert.notStrictEqual(typeof filter, 'string');
+      if (typeof filter === 'string')
+        continue;
+      assert.ok('pattern' in filter);
+      if (!('pattern' in filter))
+        continue;
+      const pattern = filter.pattern as {
+        baseUri: string;
+        pattern: string;
+      };
+      assert.strictEqual(pattern.baseUri, folder.uri.toString());
       assert.strictEqual(pattern.pattern, '**/*');
     }
   });
