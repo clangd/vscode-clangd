@@ -3,8 +3,16 @@ import * as vscode from 'vscode';
 import {ClangdExtension} from '../api/vscode-clangd';
 
 import {ClangdExtensionImpl} from './api';
-import {ClangdContext} from './clangd-context';
+import * as ast from './ast';
 import {get, update} from './config';
+import * as fileStatus from './file-status';
+import * as inlayHints from './inlay-hints';
+import * as install from './install';
+import * as memoryUsage from './memory-usage';
+import * as openConfig from './open-config';
+import * as switchSourceHeader from './switch-source-header';
+import * as typeHierarchy from './type-hierarchy';
+import {WorkspaceManager} from './workspace-manager';
 
 let apiInstance: ClangdExtensionImpl|undefined;
 
@@ -18,19 +26,35 @@ export async function activate(context: vscode.ExtensionContext):
       vscode.window.createOutputChannel('clangd', {log: true});
   context.subscriptions.push(outputChannel);
 
-  let clangdContext: ClangdContext|null = null;
+  const installer =
+      await install.activate(context.subscriptions, context.globalStoragePath);
+  const manager = new WorkspaceManager(
+      installer, context.globalStoragePath, outputChannel, clangdContext => {
+        if (apiInstance)
+          apiInstance.client = clangdContext?.client;
+      });
+  context.subscriptions.push(manager);
+
+  ast.activateGlobal(manager, context.subscriptions);
+  fileStatus.activateGlobal(manager, context.subscriptions);
+  inlayHints.activateGlobal(context.subscriptions);
+  memoryUsage.activateGlobal(manager, context.subscriptions);
+  openConfig.activate(manager, context.subscriptions);
+  switchSourceHeader.activate(manager, context.subscriptions);
+  typeHierarchy.activateGlobal(manager, context.subscriptions);
 
   context.subscriptions.push(
       vscode.commands.registerCommand('clangd.activate', async () => {
+        const clangdContext = manager.activeContext();
         if (clangdContext && (clangdContext.clientIsStarting() ||
                               clangdContext.clientIsRunning())) {
           return;
         }
-        vscode.commands.executeCommand('clangd.restart');
+        await manager.start();
       }));
   context.subscriptions.push(
       vscode.commands.registerCommand('clangd.restart', async () => {
-        if (!get<boolean>('enable')) {
+        if (!await get<boolean>('enable')) {
           vscode.window
               .showInformationMessage(
                   'Language features from Clangd are currently disabled. Would you like to enable them?',
@@ -44,41 +68,15 @@ export async function activate(context: vscode.ExtensionContext):
           return;
         }
 
-        // clangd.restart can be called when the extension is not yet activated.
-        // In such a case, vscode will activate the extension and then run this
-        // handler. Detect this situation and bail out (doing an extra
-        // stop/start cycle in this situation is pointless, and doesn't work
-        // anyways because the client can't be stop()-ped when it's still in the
-        // Starting state).
-        if (clangdContext && clangdContext.clientIsStarting()) {
-          return;
-        }
-        if (clangdContext)
-          clangdContext.dispose();
-        clangdContext = await ClangdContext.create(context.globalStoragePath,
-                                                   outputChannel);
-        if (clangdContext)
-          context.subscriptions.push(clangdContext);
-        if (apiInstance) {
-          apiInstance.client = clangdContext?.client;
-        }
+        await manager.restart();
       }));
-  context.subscriptions.push(
-      vscode.commands.registerCommand('clangd.shutdown', async () => {
-        if (clangdContext && clangdContext.clientIsStarting()) {
-          return;
-        }
-        if (clangdContext)
-          clangdContext.dispose();
-      }));
+  context.subscriptions.push(vscode.commands.registerCommand(
+      'clangd.shutdown', async () => { await manager.shutdown(); }));
 
   let shouldCheck = false;
 
   if (vscode.workspace.getConfiguration('clangd').get<boolean>('enable')) {
-    clangdContext =
-        await ClangdContext.create(context.globalStoragePath, outputChannel);
-    if (clangdContext)
-      context.subscriptions.push(clangdContext);
+    await manager.start();
 
     shouldCheck = vscode.workspace.getConfiguration('clangd').get<boolean>(
                       'detectExtensionConflicts') ??
@@ -117,6 +115,6 @@ export async function activate(context: vscode.ExtensionContext):
     }, 5000);
   }
 
-  apiInstance = new ClangdExtensionImpl(clangdContext?.client);
+  apiInstance = new ClangdExtensionImpl(manager.firstContext()?.client);
   return apiInstance;
 }

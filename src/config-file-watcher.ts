@@ -2,11 +2,15 @@ import * as vscode from 'vscode';
 import * as vscodelc from 'vscode-languageclient/node';
 
 import {ClangdContext} from './clangd-context';
+import {ClangdClientProvider} from './client-provider';
 import * as config from './config';
 
-export async function activate(context: ClangdContext) {
-  if (await config.get<string>('onConfigChanged') !== 'ignore') {
-    context.client.registerFeature(new ConfigFileWatcherFeature(context));
+export async function activate(context: ClangdContext,
+                               provider: ClangdClientProvider) {
+  if (await config.get<string>('onConfigChanged', context.folder) !==
+      'ignore') {
+    context.client.registerFeature(
+        new ConfigFileWatcherFeature(context, provider));
   }
 }
 
@@ -16,17 +20,20 @@ interface ClangdClientCapabilities {
 }
 
 class ConfigFileWatcherFeature implements vscodelc.StaticFeature {
-  constructor(private context: ClangdContext) {}
+  constructor(private context: ClangdContext,
+              private provider: ClangdClientProvider) {}
   fillClientCapabilities(capabilities: vscodelc.ClientCapabilities) {}
 
   async initialize(capabilities: vscodelc.ServerCapabilities,
                    _documentSelector: vscodelc.DocumentSelector|undefined) {
-    if (!await config.get<boolean>('onConfigChangedForceEnable') &&
+    if (!await config.get<boolean>('onConfigChangedForceEnable',
+                                   this.context.folder) &&
         (capabilities as ClangdClientCapabilities)
             .compilationDatabase?.automaticReload) {
       return;
     }
-    this.context.subscriptions.push(new ConfigFileWatcher(this.context));
+    this.context.subscriptions.push(
+        new ConfigFileWatcher(this.context, this.provider));
   }
   getState(): vscodelc.FeatureState { return {kind: 'static'}; }
   clear() {}
@@ -39,22 +46,23 @@ class ConfigFileWatcher implements vscode.Disposable {
   dispose() {
     if (this.databaseWatcher)
       this.databaseWatcher.dispose();
+    if (this.debounceTimer)
+      clearTimeout(this.debounceTimer);
   }
 
-  constructor(private context: ClangdContext) {
+  constructor(private context: ClangdContext,
+              private provider: ClangdClientProvider) {
     this.createFileSystemWatcher();
-    context.subscriptions.push(vscode.workspace.onDidChangeWorkspaceFolders(
-        () => { this.createFileSystemWatcher(); }));
   }
 
   createFileSystemWatcher() {
     if (this.databaseWatcher)
       this.databaseWatcher.dispose();
-    if (vscode.workspace.workspaceFolders) {
-      this.databaseWatcher = vscode.workspace.createFileSystemWatcher(
-          '{' +
-          vscode.workspace.workspaceFolders.map(f => f.uri.fsPath).join(',') +
-          '}/{build/compile_commands.json,compile_commands.json,compile_flags.txt}');
+    if (this.context.folder) {
+      this.databaseWatcher =
+          vscode.workspace.createFileSystemWatcher(new vscode.RelativePattern(
+              this.context.folder,
+              '{build/compile_commands.json,compile_commands.json,compile_flags.txt}'));
       this.context.subscriptions.push(this.databaseWatcher.onDidChange(
           this.debouncedHandleConfigFilesChanged.bind(this)));
       this.context.subscriptions.push(this.databaseWatcher.onDidCreate(
@@ -82,9 +90,9 @@ class ConfigFileWatcher implements vscode.Disposable {
     if ((await vscode.workspace.fs.stat(uri)).size <= 0)
       return;
 
-    switch (await config.get<string>('onConfigChanged')) {
+    switch (await config.get<string>('onConfigChanged', this.context.folder)) {
     case 'restart':
-      vscode.commands.executeCommand('clangd.restart');
+      await this.provider.restart(this.context.folder);
       break;
     case 'ignore':
       break;
@@ -95,16 +103,22 @@ class ConfigFileWatcher implements vscode.Disposable {
               uri.fsPath}' has been changed. Do you want to restart it?`,
           'Yes', 'Yes, always', 'No, never')) {
       case 'Yes':
-        vscode.commands.executeCommand('clangd.restart');
+        await this.provider.restart(this.context.folder);
         break;
       case 'Yes, always':
-        vscode.commands.executeCommand('clangd.restart');
+        await this.provider.restart(this.context.folder);
         config.update<string>('onConfigChanged', 'restart',
-                              vscode.ConfigurationTarget.Global);
+                              this.context.folder
+                                  ? vscode.ConfigurationTarget.WorkspaceFolder
+                                  : vscode.ConfigurationTarget.Global,
+                              this.context.folder);
         break;
       case 'No, never':
         config.update<string>('onConfigChanged', 'ignore',
-                              vscode.ConfigurationTarget.Global);
+                              this.context.folder
+                                  ? vscode.ConfigurationTarget.WorkspaceFolder
+                                  : vscode.ConfigurationTarget.Global,
+                              this.context.folder);
         break;
       default:
         break;

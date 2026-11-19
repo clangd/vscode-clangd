@@ -11,11 +11,35 @@
 import * as vscode from 'vscode';
 import * as vscodelc from 'vscode-languageclient/node';
 
-import {ClangdContext, clangdDocumentSelector} from './clangd-context';
+import {ClangdContext, documentSelector} from './clangd-context';
+import {ClangdClientProvider} from './client-provider';
 
-export function activate(context: ClangdContext) {
-  const feature = new InlayHintsFeature(context);
+export function activate(context: ClangdContext,
+                         provider: ClangdClientProvider) {
+  const feature = new InlayHintsFeature(context, provider);
   context.client.registerFeature(feature);
+}
+
+export function activateGlobal(subscriptions: vscode.Disposable[]) {
+  const enabledSetting = 'editor.inlayHints.enabled';
+  subscriptions.push(
+      vscode.commands.registerCommand('clangd.inlayHints.toggle', () => {
+        // This used to be a boolean, and then became a 4-state enum.
+        var val = vscode.workspace.getConfiguration().get<boolean|string>(
+            enabledSetting, 'on');
+        if (val === true || val === 'on')
+          val = 'off';
+        else if (val === false || val === 'off')
+          val = 'on';
+        else if (val === 'offUnlessPressed')
+          val = 'onUnlessPressed';
+        else if (val == 'onUnlessPressed')
+          val = 'offUnlessPressed';
+        else
+          return;
+        void vscode.workspace.getConfiguration().update(
+            enabledSetting, val, vscode.ConfigurationTarget.Global);
+      }));
 }
 
 namespace protocol {
@@ -41,9 +65,8 @@ export const type =
 } // namespace protocol
 
 class InlayHintsFeature implements vscodelc.StaticFeature {
-  private commandRegistered = false;
-
-  constructor(private readonly context: ClangdContext) {}
+  constructor(private readonly context: ClangdContext,
+              private provider: ClangdClientProvider) {}
 
   fillClientCapabilities(_capabilities: vscodelc.ClientCapabilities) {}
   fillInitializeParams(_params: vscodelc.InitializeParams) {}
@@ -53,44 +76,17 @@ class InlayHintsFeature implements vscodelc.StaticFeature {
     const serverCapabilities: vscodelc.ServerCapabilities&
         {clangdInlayHintsProvider?: boolean, inlayHintProvider?: any} =
         capabilities;
-    vscode.commands.executeCommand(
-        'setContext', 'clangd.inlayHints.supported',
-        serverCapabilities.clangdInlayHintsProvider ||
-            serverCapabilities.inlayHintProvider);
-    if (!this.commandRegistered) {
-      // The command provides a quick way to toggle inlay hints
-      // (key-bindable).
-      // FIXME: this is a core VSCode setting, ideally they provide the
-      // command. We toggle it globally, language-specific is nicer but
-      // undiscoverable.
-      this.commandRegistered = true;
-      const enabledSetting = 'editor.inlayHints.enabled';
-      this.context.subscriptions.push(
-          vscode.commands.registerCommand('clangd.inlayHints.toggle', () => {
-            // This used to be a boolean, and then became a 4-state enum.
-            var val = vscode.workspace.getConfiguration().get<boolean|string>(
-                enabledSetting, 'on');
-            if (val === true || val === 'on')
-              val = 'off';
-            else if (val === false || val === 'off')
-              val = 'on';
-            else if (val === 'offUnlessPressed')
-              val = 'onUnlessPressed';
-            else if (val == 'onUnlessPressed')
-              val = 'offUnlessPressed';
-            else
-              return;
-            vscode.workspace.getConfiguration().update(
-                enabledSetting, val, vscode.ConfigurationTarget.Global);
-          }));
-    }
+    this.provider.setFeatureSupport(
+        this.context, 'inlayHints',
+        !!(serverCapabilities.clangdInlayHintsProvider ||
+           serverCapabilities.inlayHintProvider));
     // If the clangd server supports LSP 3.17 inlay hints, these are handled by
     // the vscode-languageclient library - don't send custom requests too!
     if (!serverCapabilities.clangdInlayHintsProvider ||
         serverCapabilities.inlayHintProvider)
       return;
     this.context.subscriptions.push(vscode.languages.registerInlayHintsProvider(
-        clangdDocumentSelector, new Provider(this.context)));
+        documentSelector(this.context.folder), new Provider(this.context)));
   }
   getState(): vscodelc.FeatureState { return {kind: 'static'}; }
   clear() {}
