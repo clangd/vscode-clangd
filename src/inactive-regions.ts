@@ -45,11 +45,12 @@ export class InactiveRegionsFeature implements vscodelc.StaticFeature {
       };
     }
   }
-  initialize(capabilities: vscodelc.ServerCapabilities,
-             documentSelector: vscodelc.DocumentSelector|undefined) {
+  async initialize(capabilities: vscodelc.ServerCapabilities,
+                   documentSelector: vscodelc.DocumentSelector|undefined) {
     const serverCapabilities: vscodelc.ServerCapabilities&
         {inactiveRegionsProvider?: any} = capabilities;
     if (serverCapabilities.inactiveRegionsProvider) {
+      await this.updateDecorationType();
       this.context.subscriptions.push(
           vscode.window.onDidChangeVisibleTextEditors(async (editors) => {
             if (!this.decorationType) {

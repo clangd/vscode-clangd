@@ -44,7 +44,7 @@ suite('InactiveRegionsFeature', () => {
     const feature = new inactiveRegions.InactiveRegionsFeature(context);
     const serverCapabilities: vscodelc.ServerCapabilities&
         {inactiveRegionsProvider?: any} = {inactiveRegionsProvider: true};
-    feature.initialize(serverCapabilities, undefined);
+    await feature.initialize(serverCapabilities, undefined);
 
     const document = new mocks.MockTextDocument(vscode.Uri.file('/foo.c'), 'c');
     const editor = new mocks.MockTextEditor(document);
@@ -78,7 +78,7 @@ suite('InactiveRegionsFeature', () => {
     const feature = new inactiveRegions.InactiveRegionsFeature(context);
     const serverCapabilities: vscodelc.ServerCapabilities&
         {inactiveRegionsProvider?: any} = {inactiveRegionsProvider: true};
-    feature.initialize(serverCapabilities, undefined);
+    await feature.initialize(serverCapabilities, undefined);
 
     const uris = [
       {
