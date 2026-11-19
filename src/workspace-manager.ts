@@ -30,12 +30,8 @@ export class WorkspaceManager implements ClangdClientProvider,
     this.disposables.push(
         vscode.workspace.onDidOpenTextDocument(
             document => void this.ensureForDocument(document)),
-        vscode.workspace.onDidChangeWorkspaceFolders(event => {
-          for (const folder of event.removed)
-            void this.remove(folder);
-          for (const document of vscode.workspace.textDocuments)
-            void this.ensureForDocument(document);
-        }),
+        vscode.workspace.onDidChangeWorkspaceFolders(
+            event => void this.workspaceFoldersChanged(event)),
         vscode.window.onDidChangeActiveTextEditor(
             () => { this.updateActiveContext(); }));
   }
@@ -109,6 +105,16 @@ export class WorkspaceManager implements ClangdClientProvider,
         vscode.workspace.getWorkspaceFolder(document.uri));
   }
 
+  private async workspaceFoldersChanged(
+      event: vscode.WorkspaceFoldersChangeEvent): Promise<void> {
+    await Promise.all(event.removed.map(folder => this.remove(folder)));
+    // The default client's broad selector would overlap folder clients.
+    if (event.added.length && vscode.workspace.workspaceFolders?.length)
+      await this.remove(undefined);
+    await Promise.all(vscode.workspace.textDocuments.map(
+        document => this.ensureForDocument(document)));
+  }
+
   async startForFolder(folder
                        ?: vscode.WorkspaceFolder): Promise<ClangdContext|null> {
     // A client without a folder has a broad selector, so it is only safe when
@@ -150,11 +156,12 @@ export class WorkspaceManager implements ClangdClientProvider,
     this.starting.delete(key);
     this.folders.delete(key);
     const context = this.contexts.get(key);
-    if (!context)
-      return;
-    this.contexts.delete(key);
-    this.featureSupport.delete(context);
-    await context.stop();
+    if (context) {
+      this.contexts.delete(key);
+      this.featureSupport.delete(context);
+    }
+    this.updateActiveContext();
+    await context?.stop();
   }
 
   private key(folder?: vscode.WorkspaceFolder): string {
