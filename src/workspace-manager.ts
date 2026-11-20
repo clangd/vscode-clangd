@@ -7,6 +7,7 @@ import {
 } from './client-provider';
 import {ExecuteCommandRouter} from './execute-command';
 import {ClangdInstaller} from './install';
+import {workspaceFolderForUri} from './workspace-folder';
 
 const DEFAULT_CLIENT = '<default>';
 export type ClangdContextFactory = typeof ClangdContext.create;
@@ -49,8 +50,7 @@ export class WorkspaceManager implements ClangdClientProvider,
   }
 
   contextForUri(uri: vscode.Uri): ClangdContext|undefined {
-    return this.contexts.get(
-        this.key(vscode.workspace.getWorkspaceFolder(uri)));
+    return this.contexts.get(this.key(workspaceFolderForUri(uri)));
   }
 
   activeContext(): ClangdContext|undefined {
@@ -108,16 +108,18 @@ export class WorkspaceManager implements ClangdClientProvider,
       Promise<ClangdContext|null> {
     if (!this.automaticStartEnabled || !isClangdDocument(document))
       return null;
-    return this.startForFolder(
-        vscode.workspace.getWorkspaceFolder(document.uri));
+    return this.startForFolder(workspaceFolderForUri(document.uri));
   }
 
   private async workspaceFoldersChanged(
-      event: vscode.WorkspaceFoldersChangeEvent): Promise<void> {
-    await Promise.all(event.removed.map(folder => this.remove(folder)));
-    // The default client's broad selector would overlap folder clients.
-    if (event.added.length && vscode.workspace.workspaceFolders?.length)
-      await this.remove(undefined);
+      _event: vscode.WorkspaceFoldersChangeEvent): Promise<void> {
+    // Adding or removing a more-specific folder can transfer ownership of open
+    // documents. Restart all clients so the old owner is stopped and the new
+    // owner starts with didOpen.
+    await Promise.all(
+        Array.from(this.folders.values(), folder => this.remove(folder)));
+    if (!this.automaticStartEnabled)
+      return;
     await this.settle(vscode.workspace.textDocuments.map(
         document => this.ensureForDocument(document)));
   }

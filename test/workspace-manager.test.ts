@@ -20,25 +20,18 @@ suite('WorkspaceManager', () => {
   setup(() => { sandbox = sinon.createSandbox(); });
   teardown(() => { sandbox.restore(); });
 
-  test('uses a folder-restricted document selector', () => {
-    const folder = workspaceFolder('/workspace/one', 'one', 0);
-    const selector = protocolDocumentSelector(folder);
-    assert.ok(selector.length > 0);
-    for (const filter of selector) {
-      assert.notStrictEqual(typeof filter, 'string');
-      if (typeof filter === 'string')
-        continue;
-      assert.ok('pattern' in filter);
-      if (!('pattern' in filter))
-        continue;
-      const pattern = filter.pattern as {
-        baseUri: string;
-        pattern: string;
-      };
-      assert.strictEqual(pattern.baseUri, folder.uri.toString());
-      assert.strictEqual(pattern.pattern, '**/*');
-    }
-  });
+  test('uses a broad selector so canonical ownership can route symlinks',
+       () => {
+         const folder = workspaceFolder('/workspace/one', 'one', 0);
+         const selector = protocolDocumentSelector(folder);
+         assert.ok(selector.length > 0);
+         for (const filter of selector) {
+           assert.notStrictEqual(typeof filter, 'string');
+           if (typeof filter === 'string')
+             continue;
+           assert.ok(!('pattern' in filter) || filter.pattern === undefined);
+         }
+       });
 
   test('owns an independent context for each workspace folder', async () => {
     const one = workspaceFolder('/workspace/one', 'one', 0);
@@ -178,6 +171,53 @@ suite('WorkspaceManager', () => {
           manager.dispose();
         }
       });
+
+  test('transfers open documents when a more-specific folder is added',
+       async () => {
+         let onFoldersChanged!: (event: vscode.WorkspaceFoldersChangeEvent) =>
+             unknown;
+         sandbox.stub(vscode.workspace, 'onDidChangeWorkspaceFolders')
+             .callsFake(listener => {
+               onFoldersChanged = listener;
+               return {dispose() {}} as vscode.Disposable;
+             });
+         const parent = workspaceFolder('/workspace', 'parent', 0);
+         const child = workspaceFolder('/workspace/child', 'child', 1);
+         let folders: readonly vscode.WorkspaceFolder[] = [parent];
+         sandbox.stub(vscode.workspace, 'workspaceFolders').get(() => folders);
+         const document = new mocks.MockTextDocument(
+             vscode.Uri.file('/workspace/child/main.cpp'), 'cpp');
+         sandbox.stub(vscode.workspace, 'textDocuments').value([document]);
+
+         const created: Array<vscode.WorkspaceFolder|undefined> = [];
+         const stopped: Array<vscode.WorkspaceFolder|undefined> = [];
+         const factory: ClangdContextFactory =
+             async (_installer, _storage, _output, _provider, folder) => {
+           created.push(folder);
+           return {
+             folder,
+             client: {},
+             subscriptions: [],
+             stop: async () => { stopped.push(folder); },
+           } as unknown as ClangdContext;
+         };
+         const manager = new WorkspaceManager({} as ClangdInstaller, '/storage',
+                                              {} as vscode.LogOutputChannel,
+                                              () => {}, factory);
+         try {
+           await manager.start();
+           folders = [parent, child];
+           onFoldersChanged({added: [child], removed: []});
+           await new Promise(resolve => setImmediate(resolve));
+           await new Promise(resolve => setImmediate(resolve));
+
+           assert.deepStrictEqual(created, [parent, child]);
+           assert.deepStrictEqual(stopped, [parent]);
+         } finally {
+           await manager.shutdown();
+           manager.dispose();
+         }
+       });
 });
 
 function workspaceFolder(path: string, name: string,

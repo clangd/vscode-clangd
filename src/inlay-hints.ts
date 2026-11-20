@@ -13,6 +13,7 @@ import * as vscodelc from 'vscode-languageclient/node';
 
 import {ClangdContext, documentSelector} from './clangd-context';
 import {ClangdClientProvider} from './client-provider';
+import {folderOwnsUri} from './workspace-folder';
 
 export function activate(context: ClangdContext,
                          provider: ClangdClientProvider) {
@@ -117,6 +118,8 @@ class Provider implements vscode.InlayHintsProvider {
   async provideInlayHints(document: vscode.TextDocument, range: vscode.Range,
                           token: vscode.CancellationToken):
       Promise<vscode.InlayHint[]> {
+    if (!folderOwnsUri(this.context.folder, document.uri))
+      return [];
     const request: protocol.InlayHintsParams = {
       textDocument: {uri: document.uri.toString()},
       range: this.context.client.code2ProtocolConverter.asRange(range),

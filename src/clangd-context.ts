@@ -15,6 +15,7 @@ import * as inlayHints from './inlay-hints';
 import * as install from './install';
 import * as memoryUsage from './memory-usage';
 import * as typeHierarchy from './type-hierarchy';
+import {folderOwnsUri} from './workspace-folder';
 
 const clangdLanguages = [
   'c',
@@ -29,36 +30,44 @@ const clangdDocumentFilters: vscode.DocumentFilter[] =
 export const clangdDocumentSelector: vscode.DocumentSelector =
     clangdDocumentFilters;
 
-export function documentSelector(folder?: vscode.WorkspaceFolder):
+export function documentSelector(_folder?: vscode.WorkspaceFolder):
     vscode.DocumentSelector {
-  if (!folder)
-    return clangdDocumentFilters;
-  return clangdLanguages.map(
-      language => ({
-        scheme: 'file',
-        language,
-        pattern: new vscode.RelativePattern(folder, '**/*'),
-      }));
+  return clangdDocumentFilters;
 }
 
-export function protocolDocumentSelector(folder?: vscode.WorkspaceFolder):
+export function protocolDocumentSelector(_folder?: vscode.WorkspaceFolder):
     vscodelc.DocumentSelector {
-  if (!folder)
-    return clangdLanguages.map(language => ({scheme: 'file', language}));
-  return clangdLanguages.map(language => ({
-                               scheme: 'file',
-                               language,
-                               // This crosses the protocol-to-code conversion,
-                               // so use an LSP RelativePattern.
-                               pattern: {
-                                 baseUri: folder.uri.toString(),
-                                 pattern: '**/*',
-                               },
-                             }));
+  // Every client must register for every workspace URI because a document may
+  // be opened through a symlink outside its owning folder's lexical path.
+  // Middleware below forwards each message only to the owning client.
+  return clangdLanguages.map(language => ({scheme: 'file', language}));
 }
 
 export function isClangdDocument(document: vscode.TextDocument) {
   return vscode.languages.match(clangdDocumentSelector, document);
+}
+
+export function ownsProtocolMessage(folder: vscode.WorkspaceFolder|undefined,
+                                    params: unknown): boolean {
+  const uri = protocolDocumentUri(params);
+  return !uri || folderOwnsUri(folder, uri);
+}
+
+function protocolDocumentUri(params: unknown): vscode.Uri|undefined {
+  if (!params || typeof params !== 'object')
+    return undefined;
+  const value = params as {
+    textDocument?: {uri?: unknown};
+    item?: {uri?: unknown};
+  };
+  const uri = value.textDocument?.uri ?? value.item?.uri;
+  if (typeof uri !== 'string')
+    return undefined;
+  try {
+    return vscode.Uri.parse(uri, true);
+  } catch {
+    return undefined;
+  }
 }
 
 class ClangdLanguageClient extends vscodelc.LanguageClient {
@@ -199,6 +208,32 @@ export class ClangdContext implements vscode.Disposable {
       // We also mark the list as incomplete to force retrieving new rankings.
       // See https://github.com/microsoft/language-server-protocol/issues/898
       middleware: {
+        didOpen: (document, next) => {
+          return folderOwnsUri(folder, document.uri) ? next(document)
+                                                     : Promise.resolve();
+        },
+        didChange: (event, next) => {
+          return folderOwnsUri(folder, event.document.uri) ? next(event)
+                                                           : Promise.resolve();
+        },
+        didSave: (document, next) => {
+          return folderOwnsUri(folder, document.uri) ? next(document)
+                                                     : Promise.resolve();
+        },
+        didClose: (document, next) => {
+          return folderOwnsUri(folder, document.uri) ? next(document)
+                                                     : Promise.resolve();
+        },
+        sendRequest: (type, param, token, next) => {
+          if (!ownsProtocolMessage(folder, param))
+            return Promise.resolve(null as never);
+          return next(type, param, token);
+        },
+        sendNotification: (type, next, params) => {
+          if (!ownsProtocolMessage(folder, params))
+            return Promise.resolve();
+          return next(type, params);
+        },
         provideCompletionItem: async (document, position, context, token,
                                       next) => {
           if (!await config.get<boolean>('enableCodeCompletion', folder))
@@ -315,8 +350,7 @@ export class ClangdContext implements vscode.Disposable {
   get visibleClangdEditors(): vscode.TextEditor[] {
     return vscode.window.visibleTextEditors.filter(
         (e) => isClangdDocument(e.document) &&
-               vscode.workspace.getWorkspaceFolder(e.document.uri) ===
-                   this.folder);
+               folderOwnsUri(this.folder, e.document.uri));
   }
 
   clientIsStarting() {

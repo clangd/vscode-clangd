@@ -3,6 +3,7 @@ import * as path from 'path'
 import * as vscode from 'vscode';
 
 import {ClangdClientProvider} from './client-provider';
+import {workspaceFolderForUri} from './workspace-folder';
 
 /**
  * @returns The path that corresponds to llvm::sys::path::user_config_directory.
@@ -54,10 +55,9 @@ export function activate(provider: ClangdClientProvider,
   subscriptions.push(
       vscode.commands.registerCommand('clangd.projectConfig', () => {
         const activeUri = vscode.window.activeTextEditor?.document.uri;
-        const folder =
-            (activeUri && vscode.workspace.getWorkspaceFolder(activeUri)) ??
-            provider.activeContext()?.folder ??
-            vscode.workspace.workspaceFolders?.[0];
+        const folder = provider.activeContext()?.folder ??
+                       (activeUri && workspaceFolderForUri(activeUri)) ??
+                       vscode.workspace.workspaceFolders?.[0];
         if (folder) {
           openConfigFile(vscode.Uri.joinPath(folder.uri, '.clangd'))
         } else {
