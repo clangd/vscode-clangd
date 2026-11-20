@@ -292,6 +292,20 @@
                 "icon": "$(panel-close)"
             },
             {
+                "command": "clangd.astSearch",
+                "category": "clangd",
+                "title": "Search AST",
+                "enablement": "clangd.astSearch.supported",
+                "icon": "$(search)"
+            },
+            {
+                "command": "clangd.astSearch.close",
+                "category": "clangd",
+                "title": "Close AST Search",
+                "enablement": "clangd.astSearch.hasData",
+                "icon": "$(panel-close)"
+            },
+            {
                 "command": "clangd.projectConfig",
                 "category": "clangd",
                 "title": "Open project configuration file",
@@ -339,6 +353,10 @@
                 {
                     "command": "clangd.ast",
                     "when": "(resourceLangId == c || resourceLangId == cpp || resourceLangId == cuda-cpp || resourceLangId == objective-c || resourceLangId == objective-cpp) && clangd.ast.supported"
+                },
+                {
+                    "command": "clangd.astSearch",
+                    "when": "(resourceLangId == c || resourceLangId == cpp || resourceLangId == cuda-cpp || resourceLangId == objective-c || resourceLangId == objective-cpp) && clangd.astSearch.supported"
                 }
             ],
             "view/title": [
@@ -371,6 +389,11 @@
                     "command": "clangd.ast.close",
                     "when": "view == clangd.ast",
                     "group": "navigation"
+                },
+                {
+                    "command": "clangd.astSearch.close",
+                    "when": "view == clangd.astSearchResults",
+                    "group": "navigation"
                 }
             ],
             "commandPalette": [
@@ -385,6 +408,15 @@
                 {
                     "command": "clangd.memoryUsage",
                     "when": "clangd.memoryUsage.supported"
+                }
+            ]
+        },"viewsContainers": {
+            "activitybar": [
+                {
+                    "id": "clangdASTSearchContainer",
+                    "title": "AST Search",
+                    "icon": "$(search)",
+                    "when": "clangd.astSearch.supported"
                 }
             ]
         },
@@ -404,6 +436,21 @@
                     "id": "clangd.ast",
                     "name": "AST",
                     "when": "clangd.ast.hasData"
+                }
+            ],
+            "clangdASTSearchContainer": [
+                {
+                    "id": "clangd.astSearch",
+                    "name": "AST Search",
+                    "type": "webview",
+                    "when": "clangd.astSearch.supported",
+                    "icon": "$(search)"
+                },
+                {
+                    "id": "clangd.astSearchResults",
+                    "name": "AST Search Results",
+                    "when": "clangd.astSearch.hasData",
+                    "icon": "$(search)"
                 }
             ]
         }
