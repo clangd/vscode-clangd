@@ -22,6 +22,8 @@ class MockClangdContext implements ClangdContext {
 
   clientIsRunning() { return true; }
 
+  async stop() {}
+
   dispose() { throw new Error('Method not implemented.'); }
 }
 
@@ -31,7 +33,7 @@ suite('InactiveRegionsFeature', () => {
   setup(() => {
     sandbox = sinon.createSandbox();
     sandbox.stub(config, 'get')
-        .withArgs('inactiveRegions.opacity')
+        .withArgs('inactiveRegions.opacity', undefined)
         .returns(Promise.resolve(0.55));
   });
 
@@ -42,7 +44,7 @@ suite('InactiveRegionsFeature', () => {
     const feature = new inactiveRegions.InactiveRegionsFeature(context);
     const serverCapabilities: vscodelc.ServerCapabilities&
         {inactiveRegionsProvider?: any} = {inactiveRegionsProvider: true};
-    feature.initialize(serverCapabilities, undefined);
+    await feature.initialize(serverCapabilities, undefined);
 
     const document = new mocks.MockTextDocument(vscode.Uri.file('/foo.c'), 'c');
     const editor = new mocks.MockTextEditor(document);
@@ -76,7 +78,7 @@ suite('InactiveRegionsFeature', () => {
     const feature = new inactiveRegions.InactiveRegionsFeature(context);
     const serverCapabilities: vscodelc.ServerCapabilities&
         {inactiveRegionsProvider?: any} = {inactiveRegionsProvider: true};
-    feature.initialize(serverCapabilities, undefined);
+    await feature.initialize(serverCapabilities, undefined);
 
     const uris = [
       {

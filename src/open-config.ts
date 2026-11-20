@@ -2,7 +2,8 @@ import * as os from 'os'
 import * as path from 'path'
 import * as vscode from 'vscode';
 
-import {ClangdContext} from './clangd-context';
+import {ClangdClientProvider} from './client-provider';
+import {workspaceFolderForUri} from './workspace-folder';
 
 /**
  * @returns The path that corresponds to llvm::sys::path::user_config_directory.
@@ -48,19 +49,23 @@ async function openConfigFile(path: vscode.Uri) {
   }));
 }
 
-export function activate(context: ClangdContext) {
+export function activate(provider: ClangdClientProvider,
+                         subscriptions: vscode.Disposable[]) {
   // Create a command to open the project root .clangd configuration file.
-  context.subscriptions.push(
+  subscriptions.push(
       vscode.commands.registerCommand('clangd.projectConfig', () => {
-        if (vscode.workspace.workspaceFolders?.length) {
-          const folder = vscode.workspace.workspaceFolders[0];
+        const activeUri = vscode.window.activeTextEditor?.document.uri;
+        const folder = provider.activeContext()?.folder ??
+                       (activeUri && workspaceFolderForUri(activeUri)) ??
+                       vscode.workspace.workspaceFolders?.[0];
+        if (folder) {
           openConfigFile(vscode.Uri.joinPath(folder.uri, '.clangd'))
         } else {
           vscode.window.showErrorMessage('No project is open');
         }
       }));
 
-  context.subscriptions.push(
+  subscriptions.push(
       vscode.commands.registerCommand('clangd.userConfig', () => {
         const file = getUserConfigFile();
         if (file) {

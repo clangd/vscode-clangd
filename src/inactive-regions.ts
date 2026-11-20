@@ -45,11 +45,12 @@ export class InactiveRegionsFeature implements vscodelc.StaticFeature {
       };
     }
   }
-  initialize(capabilities: vscodelc.ServerCapabilities,
-             documentSelector: vscodelc.DocumentSelector|undefined) {
+  async initialize(capabilities: vscodelc.ServerCapabilities,
+                   documentSelector: vscodelc.DocumentSelector|undefined) {
     const serverCapabilities: vscodelc.ServerCapabilities&
         {inactiveRegionsProvider?: any} = capabilities;
     if (serverCapabilities.inactiveRegionsProvider) {
+      await this.updateDecorationType();
       this.context.subscriptions.push(
           vscode.window.onDidChangeVisibleTextEditors(async (editors) => {
             if (!this.decorationType) {
@@ -62,8 +63,10 @@ export class InactiveRegionsFeature implements vscodelc.StaticFeature {
           vscode.workspace.onDidChangeConfiguration(async (conf) => {
             const inactiveSettingsChanged =
                 conf.affectsConfiguration(
-                    'clangd.inactiveRegions.useBackgroundHighlight') ||
-                conf.affectsConfiguration('clangd.inactiveRegions.opacity');
+                    'clangd.inactiveRegions.useBackgroundHighlight',
+                    this.context.folder?.uri) ||
+                conf.affectsConfiguration('clangd.inactiveRegions.opacity',
+                                          this.context.folder?.uri);
             if (!(conf.affectsConfiguration('workbench.colorTheme') ||
                   inactiveSettingsChanged))
               return;
@@ -92,7 +95,8 @@ export class InactiveRegionsFeature implements vscodelc.StaticFeature {
 
   async updateDecorationType() {
     this.decorationType?.dispose();
-    if (await config.get<boolean>('inactiveRegions.useBackgroundHighlight')) {
+    if (await config.get<boolean>('inactiveRegions.useBackgroundHighlight',
+                                  this.context.folder)) {
       this.decorationType = vscode.window.createTextEditorDecorationType({
         isWholeLine: true,
         backgroundColor:
@@ -101,8 +105,9 @@ export class InactiveRegionsFeature implements vscodelc.StaticFeature {
     } else {
       this.decorationType = vscode.window.createTextEditorDecorationType({
         isWholeLine: true,
-        opacity:
-            (await config.get<number>('inactiveRegions.opacity')).toString()
+        opacity: (await config.get<number>('inactiveRegions.opacity',
+                                           this.context.folder))
+                     .toString()
       });
     }
   }

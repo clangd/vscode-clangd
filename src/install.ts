@@ -7,30 +7,50 @@ import * as vscode from 'vscode';
 
 import * as config from './config';
 
-// Returns the clangd path to be used, or null if clangd is not installed.
+export class ClangdInstaller {
+  private constructor(private disposables: vscode.Disposable[],
+                      private globalStoragePath: string) {}
+
+  static async activate(disposables: vscode.Disposable[],
+                        globalStoragePath: string): Promise<ClangdInstaller> {
+    const installer = new ClangdInstaller(disposables, globalStoragePath);
+    const ui = await UI.create(disposables, globalStoragePath);
+    disposables.push(vscode.commands.registerCommand(
+        'clangd.install', async () => common.installLatest(ui)));
+    disposables.push(vscode.commands.registerCommand(
+        'clangd.update', async () => common.checkUpdates(true, ui)));
+    return installer;
+  }
+
+  // Returns the clangd path for a folder, or null if clangd is not installed.
+  async resolve(folder?: vscode.WorkspaceFolder): Promise<string|null> {
+    const ui =
+        await UI.create(this.disposables, this.globalStoragePath, folder);
+    const status = await common.prepare(
+        ui, await config.get<boolean>('checkUpdates', folder));
+    return status.clangdPath;
+  }
+}
+
+// Registers the installer commands once for the extension.
 export async function activate(disposables: vscode.Disposable[],
                                globalStoragePath: string):
-    Promise<string|null> {
-  const ui = await UI.create(disposables, globalStoragePath);
-  disposables.push(vscode.commands.registerCommand(
-      'clangd.install', async () => common.installLatest(ui)));
-  disposables.push(vscode.commands.registerCommand(
-      'clangd.update', async () => common.checkUpdates(true, ui)));
-  const status =
-      await common.prepare(ui, await config.get<boolean>('checkUpdates'));
-  return status.clangdPath;
+    Promise<ClangdInstaller> {
+  return ClangdInstaller.activate(disposables, globalStoragePath);
 }
 
 class UI {
   static async create(disposables: vscode.Disposable[],
-                      globalStoragePath: string): Promise<UI> {
-    const ui = new UI(disposables, globalStoragePath);
+                      globalStoragePath: string,
+                      folder?: vscode.WorkspaceFolder): Promise<UI> {
+    const ui = new UI(disposables, globalStoragePath, folder);
     await ui.resolveClangdPath();
     return ui;
   }
 
   private constructor(private disposables: vscode.Disposable[],
-                      private globalStoragePath: string) {}
+                      private globalStoragePath: string,
+                      private folder?: vscode.WorkspaceFolder) {}
 
   get storagePath(): string { return this.globalStoragePath; }
   async choose(prompt: string, options: string[]): Promise<string|undefined> {
@@ -138,13 +158,11 @@ class UI {
   }
 
   async resolveClangdPath() {
-    let p = await config.get<string>('path');
+    let p = await config.get<string>('path', this.folder);
     // Backwards compatibility: if it's a relative path with a slash, interpret
     // relative to project root.
-    if (!path.isAbsolute(p) && p.includes(path.sep) &&
-        vscode.workspace.rootPath !== undefined) {
-      p = path.join(vscode.workspace.rootPath, p);
-    }
+    if (!path.isAbsolute(p) && p.includes(path.sep) && this.folder)
+      p = path.join(this.folder.uri.fsPath, p);
 
     this._clangdPath = p;
   }
@@ -154,7 +172,9 @@ class UI {
   get clangdPath(): string { return this._clangdPath as string; }
   set clangdPath(p: string) {
     this._pathUpdated = new Promise(resolve => {
-      config.update('path', p, vscode.ConfigurationTarget.Global).then(() => {
+      const target = this.folder ? vscode.ConfigurationTarget.WorkspaceFolder
+                                 : vscode.ConfigurationTarget.Global;
+      config.update('path', p, target, this.folder).then(() => {
         this._clangdPath = p;
         resolve();
       });
