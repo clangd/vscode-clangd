@@ -2,6 +2,7 @@ import * as vscode from 'vscode';
 import * as vscodelc from 'vscode-languageclient/node';
 
 import * as ast from './ast';
+import {getCompilationDatabasePathOverride} from './api';
 import * as config from './config';
 import * as configFileWatcher from './config-file-watcher';
 import * as fileStatus from './file-status';
@@ -80,6 +81,12 @@ export class ClangdContext implements vscode.Disposable {
     const useScriptAsExecutable =
         await config.get<boolean>('useScriptAsExecutable');
     let clangdArguments = await config.get<string[]>('arguments');
+    // Apply the API-driven --compile-commands-dir override (if any). It always
+    // wins over any --compile-commands-dir the user may have in their
+    // clangd.arguments setting, so callers like the CMSIS Solution extension
+    // can switch compile databases without writing to settings.json.
+    clangdArguments = ClangdContext.applyCompilationDatabaseOverride(
+        clangdArguments);
     if (useScriptAsExecutable) {
       let quote = (str: string) => { return `"${str}"`; };
       clangdPath = quote(clangdPath)
@@ -216,6 +223,19 @@ export class ClangdContext implements vscode.Disposable {
     client.registerFeature(new EnableEditsNearCursorFeature);
 
     return client;
+  }
+
+  // Returns clangdArguments with any --compile-commands-dir=... flag
+  // replaced (or appended) by the API-set override. Exposed as a static
+  // method so tests can exercise it without spinning up a full client.
+  static applyCompilationDatabaseOverride(args: string[]): string[] {
+    const override = getCompilationDatabasePathOverride();
+    const filtered = args.filter(
+        a => !a.startsWith('--compile-commands-dir='));
+    if (override === undefined)
+      return filtered;
+    filtered.push(`--compile-commands-dir=${override}`);
+    return filtered;
   }
 
   private constructor(subscriptions: vscode.Disposable[],

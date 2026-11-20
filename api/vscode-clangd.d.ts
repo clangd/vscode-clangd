@@ -8,7 +8,13 @@ export interface ClangdApiV1 {
   // https://microsoft.github.io/language-server-protocol/specifications/specification-current
   // clangd custom requests:
   // https://clangd.llvm.org/extensions
-  languageClient: BaseLanguageClient|undefined
+  languageClient: BaseLanguageClient|undefined;
+
+  // Set the directory containing compile_commands.json that clangd should use,
+  // without modifying the user's `clangd.arguments` setting. Triggers a clangd
+  // restart; the returned Thenable resolves once the new client has been
+  // scheduled to start. Resolves to undefined.
+  setCompilationDatabasePath(path: string): Thenable<void>;
 }
 
 export interface ClangdExtension {

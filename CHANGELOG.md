@@ -2,6 +2,9 @@
 
 ## Unreleased
 
+* Add `ClangdApiV1.setCompilationDatabasePath` so other extensions can set
+  the `--compile-commands-dir` clangd argument without modifying the user's
+  `clangd.arguments` setting ([#1000](https://github.com/clangd/vscode-clangd/issues/1000)).
 * Increase the minimum supported VS Code version from 1.75 to 1.91.
 
 ## Version 0.6.0: May 21, 2026
