@@ -20,14 +20,16 @@
         "C++",
         "clang",
         "clangd",
-        "LLVM"
+        "LLVM",
+        "HLSL"
     ],
     "activationEvents": [
         "onLanguage:c",
         "onLanguage:cpp",
         "onLanguage:cuda-cpp",
         "onLanguage:objective-c",
-        "onLanguage:objective-cpp"
+        "onLanguage:objective-cpp",
+        "onLanguage:hlsl"
     ],
     "main": "./out/bundle",
     "scripts": {
@@ -194,6 +196,11 @@
                     "type": "boolean",
                     "default": true,
                     "description": "Enable clangd language server features"
+                },
+                "clangd.enableHLSL": {
+                    "type": "boolean",
+                    "default": false,
+                    "description": "Enable experimental HLSL Support."
                 }
             }
         },
