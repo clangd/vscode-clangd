@@ -25,6 +25,7 @@ export function activate(context: ClangdContext) {
 
 class FileStatus {
   private statuses = new Map<string, any>();
+  private updateStatusTimer?: NodeJS.Timeout;
   private readonly statusBarItem =
       vscode.window.createStatusBarItem(vscode.StatusBarAlignment.Left, 10);
 
@@ -35,7 +36,16 @@ class FileStatus {
   onFileUpdated(fileStatus: any) {
     const filePath = vscode.Uri.parse(fileStatus.uri);
     this.statuses.set(filePath.fsPath, fileStatus);
-    this.updateStatus();
+    this.scheduleStatusUpdate();
+  }
+
+  scheduleStatusUpdate() {
+    if (this.updateStatusTimer)
+      clearTimeout(this.updateStatusTimer);
+    this.updateStatusTimer = setTimeout(() => {
+      this.updateStatus();
+      this.updateStatusTimer = undefined;
+    }, 200);
   }
 
   updateStatus() {
@@ -56,8 +66,16 @@ class FileStatus {
 
   clear() {
     this.statuses.clear();
+    if (this.updateStatusTimer) {
+      clearTimeout(this.updateStatusTimer);
+      this.updateStatusTimer = undefined;
+    }
     this.statusBarItem.hide();
   }
 
-  dispose() { this.statusBarItem.dispose(); }
+  dispose() {
+    if (this.updateStatusTimer)
+      clearTimeout(this.updateStatusTimer);
+    this.statusBarItem.dispose();
+  }
 }
