@@ -248,13 +248,13 @@
                 "command": "clangd.typeHierarchy.viewParents",
                 "category": "clangd",
                 "title": "Types: Show Base Classes",
-                "icon": "$(triangle-up)"
+                "icon": "$(type-hierarchy-super)"
             },
             {
                 "command": "clangd.typeHierarchy.viewChildren",
                 "category": "clangd",
                 "title": "Types: Show Derived Classes",
-                "icon": "$(triangle-down)"
+                "icon": "$(type-hierarchy-sub)"
             },
             {
                 "command": "clangd.typeHierarchy.close",
